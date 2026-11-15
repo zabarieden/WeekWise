@@ -18,12 +18,13 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
+import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const SUPPORT_EMAIL = Deno.env.get("SUPPORT_EMAIL") || "obeko.support@gmail.com";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const ANTHROPIC_API_KEY = anthropicKey();
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
 const HEBREW_CHAR_RE = new RegExp("[\\u0590-\\u05FF]");
@@ -55,6 +56,7 @@ async function translateToHebrewForSupportEmail(text: string): Promise<string | 
                 ],
             }),
         });
+        if (!res.ok) await noteAiProviderError(supabase, "send-feedback", res.clone());
         if (!res.ok) return null;
         const data = await res.json();
         const translated = data?.content?.[0]?.text?.trim();

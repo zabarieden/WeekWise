@@ -22,10 +22,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
+import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_API_KEY = anthropicKey();
 // כדאי לבדוק שהמודל הזה עדיין נתמך/מומלץ לפני הפריסה:
 // https://docs.anthropic.com/en/docs/about-claude/models
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
@@ -179,6 +180,7 @@ Deno.serve(async (req) => {
             }),
         });
 
+        if (!anthropicRes.ok) await noteAiProviderError(supabase, "parse-table-request", anthropicRes.clone());
         if (!anthropicRes.ok) {
             const errText = await anthropicRes.text();
             return jsonResponse({ error: "ai_provider_error", detail: errText }, 502);

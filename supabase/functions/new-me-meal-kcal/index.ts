@@ -13,10 +13,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
+import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_API_KEY = anthropicKey();
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 const DAILY_LIMIT = 40;
 const DEV_SUPERUSER_EMAILS = ["zabarieden111@gmail.com"];
@@ -108,6 +109,7 @@ Deno.serve(async (req) => {
                 tool_choice: { type: "tool", name: "estimate_meal" },
             }),
         });
+        if (!anthropicRes.ok) await noteAiProviderError(supabase, "new-me-meal-kcal", anthropicRes.clone());
         if (!anthropicRes.ok) return jsonResponse({ error: "ai_provider_error", detail: await anthropicRes.text() }, 502);
         const anthropicJson = await anthropicRes.json();
         const tool = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");

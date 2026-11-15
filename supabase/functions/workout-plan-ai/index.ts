@@ -13,10 +13,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
+import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_API_KEY = anthropicKey();
 // כמו בשאר ה-Edge Functions של האפליקציה
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
@@ -242,6 +243,7 @@ Deno.serve(async (req) => {
             }),
         });
 
+        if (!anthropicRes.ok) await noteAiProviderError(supabase, "workout-plan-ai", anthropicRes.clone());
         if (!anthropicRes.ok) return jsonResponse({ error: "ai_provider_error", detail: await anthropicRes.text() }, 502);
         const anthropicJson = await anthropicRes.json();
         const toolUse = (anthropicJson.content || []).find((b: any) => b.type === "tool_use");

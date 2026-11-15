@@ -14,10 +14,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
+import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const ANTHROPIC_API_KEY = anthropicKey();
 const ANTHROPIC_MODEL = Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5";
 
 const PREMIUM_IMAGE_SCAN_MONTHLY_LIMIT = 50;
@@ -151,6 +152,7 @@ Deno.serve(async (req) => {
             }),
         });
 
+        if (!anthropicRes.ok) await noteAiProviderError(supabase, "scan-homework-photo", anthropicRes.clone());
         if (!anthropicRes.ok) {
             const errText = await anthropicRes.text();
             return jsonResponse({ error: "ai_provider_error", detail: errText }, 502);
