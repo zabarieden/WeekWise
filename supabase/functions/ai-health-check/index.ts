@@ -8,7 +8,7 @@
 // Only the service role may call it (the gateway checks the JWT signature, this checks the role).
 
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { anthropicKey, noteAiProviderError, sendAiAlert } from "../_shared/ai-alert.ts";
+import { anthropicKey, lastResend, noteAiProviderError, sendAiAlert } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -44,7 +44,15 @@ Deno.serve(async (req) => {
         // also proves the alerts table is there and writable (the real alerts need it to send at most once a day)
         const { error } = await supabase.from("ai_provider_alerts").insert({ kind: "test", fn: "ai-health-check", detail: "test" });
         const sent = await sendAiAlert(supabase, "test", "ai-health-check", "test", true);
-        return jsonResponse({ test: true, table_ok: !error || error.code === "23505", sent });
+        return jsonResponse({ test: true, table_ok: !error || error.code === "23505", sent, resend: lastResend });
+    }
+
+    if (typeof body?.email_id === "string" && /^[A-Za-z0-9-]{8,64}$/.test(body.email_id)) {
+        // what happened to a sent email (delivered / bounced / complained ...), for when a test doesn't show up
+        const r = await fetch(`https://api.resend.com/emails/${body.email_id}`, {
+            headers: { Authorization: `Bearer ${Deno.env.get("RESEND_API_KEY") || ""}` },
+        });
+        return jsonResponse({ status: r.status, email: await r.json().catch(() => null) });
     }
 
     if (!ANTHROPIC_API_KEY.trim()) {

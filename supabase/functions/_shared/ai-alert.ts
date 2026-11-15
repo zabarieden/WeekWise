@@ -110,11 +110,15 @@ export async function sendAiAlert(supabase: any, kind: AiAlertKind, fn: string, 
                     `מייל אחד לכל היותר ביום לכל סוג תקלה.</p></div>`,
             }),
         });
+        lastResend = { status: res.status, body: (await res.clone().text()).slice(0, 300) };
         return res.ok;
     } catch {
         return false;
     }
 }
+
+// Resend's answer to the last email sent (status + body with the email id) - ai-health-check's test shows it.
+export let lastResend: { status: number; body: string } | null = null;
 
 // Call right after a failed Anthropic response; pass a clone so the caller can still read the body.
 // deno-lint-ignore no-explicit-any
