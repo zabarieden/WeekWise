@@ -21973,8 +21973,10 @@ function renderGoalsTodayStrip(activeGoals) {
     section.classList.toggle('hidden', !activeGoals.length);
     list.innerHTML = '';
     if (count) count.textContent = '';
+    const items = activeGoals.length ? getPeekGoalTaskItems() : [];
+    // the flame stays between renders (so it grows smoothly) and goes only when there are no steps today
+    if (!items.length) { const oldFlame = document.getElementById('gv-today-flame'); if (oldFlame) oldFlame.remove(); }
     if (!activeGoals.length) return;
-    const items = getPeekGoalTaskItems();
     if (!items.length) {
         const hint = document.createElement('div');
         hint.className = 'gv-today-empty';
@@ -21984,8 +21986,25 @@ function renderGoalsTodayStrip(activeGoals) {
     }
     const doneCount = items.filter(it => it.done).length;
     if (count) count.textContent = doneCount === items.length ? t('gv_today_all_done') : visionLtr(`${doneCount} / ${items.length}`);
+    // 🔥 להבה שגדלה עם כל צעד של היום, ובוערת במלואה כשכולם נעשו (הבחירה שלה, 2026-11-15: r3 במקום טבעת)
+    const head = section.querySelector('.gv-section-head h3');
+    let flame = document.getElementById('gv-today-flame');
+    if (!flame && head) {
+        flame = document.createElement('span');
+        flame.id = 'gv-today-flame';
+        flame.className = 'gv-flame';
+        flame.setAttribute('aria-hidden', 'true');
+        flame.innerHTML = GV_FLAME_SVG;
+        head.appendChild(flame);
+    }
+    if (flame) {
+        const p = items.length ? doneCount / items.length : 0;
+        flame.style.setProperty('--p', p.toFixed(2));
+        flame.classList.toggle('is-full', p >= 1);
+    }
     items.forEach(item => list.appendChild(buildGoalsTodayCard(item)));
 }
+const GV_FLAME_SVG = '<svg viewBox="0 0 24 32" width="18" height="24"><path class="gv-flame-out" d="M12 1c2 6 8 9 8 18a8 8 0 0 1-16 0c0-5 3-7 4-11 1 3 2 4 3 4 0-4 0-7 1-11z"/><path class="gv-flame-in" d="M12 14c1 3 4 5 4 9a4 4 0 0 1-8 0c0-3 2-4 2-6 1 1 1 2 2 2 0-2 0-3 0-5z"/></svg>';
 function buildGoalsTodayCard(item) {
     const card = document.createElement('div');
     card.className = 'gv-today-card' + (item.done ? ' is-done' : '');

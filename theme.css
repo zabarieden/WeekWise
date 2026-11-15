@@ -11992,3 +11992,11 @@ html[lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
 .glass-ach-btn:focus-visible { outline: 3px solid #ffd27a; outline-offset: 2px; }
 .glass-ach-btn:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .glass-ach-card, .glass-ach-shine, .glass-ach-glitter i, .glass-ach-overlay { animation: none; } }
+
+/* 🔥 today's small steps: a flame that grows with each step done today and burns fully when all are done (her pick r3, 2026-11-15) */
+.gv-flame { display: inline-flex; vertical-align: -4px; margin-inline-start: 8px; transform-origin: 50% 100%; transform: scale(calc(.55 + .45 * var(--p, 0))); opacity: calc(.45 + .55 * var(--p, 0)); transition: transform .5s cubic-bezier(.3, 1.4, .5, 1), opacity .5s ease; }
+.gv-flame .gv-flame-out { fill: #ffb547; }
+.gv-flame .gv-flame-in { fill: #fff1b8; }
+.gv-flame.is-full { filter: drop-shadow(0 0 6px rgba(255, 181, 71, .85)); animation: gvFlicker 1.6s ease-in-out infinite alternate; }
+@keyframes gvFlicker { 0% { transform: scale(1) skewX(0); } 50% { transform: scale(.97, 1.04) skewX(2deg); } 100% { transform: scale(1.03, .98) skewX(-2deg); } }
+@media (prefers-reduced-motion: reduce) { .gv-flame.is-full { animation: none; } }
