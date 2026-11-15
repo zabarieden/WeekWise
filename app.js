@@ -2140,6 +2140,11 @@ const APP_TOUR_STEPS = [
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
     // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
     { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
+    // בתוך "השגרה שלי" (לפי בקשה מפורשת, 2026-11-15: "האם יש סיור לשגרה שלי סופר חשוב?"): טאבים, שעות, ➕ ועוזר השגרה
+    { id: 'r_tabs', ch: 'menu', ctx: 'routine', icon: '🗂️', target: '#daily-board-tabs-list', titleKey: 'apptour_r_tabs_title', text: 'apptour_r_tabs_text' },
+    { id: 'r_hours', ch: 'menu', ctx: 'routine', icon: '⏰', target: '#daily-board-body', titleKey: 'apptour_r_hours_title', text: 'apptour_r_hours_text' },
+    { id: 'r_add', ch: 'menu', ctx: 'routine', icon: '➕', target: '#daily-board-add-btn', titleKey: 'daily_board_add_tab_title', text: 'apptour_r_add_text' },
+    { id: 'r_ai', ch: 'menu', ctx: 'routine', icon: '✨', target: '#daily-board-ai-btn', titleKey: 'routine_ai_title', text: 'apptour_r_ai_text' },
     // 🎒 התיק שלי: הפריט בתפריט, ואז התיק עצמו (הכיסים)
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
     { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#bag-content', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
@@ -2401,6 +2406,8 @@ async function appTourEnsureContext(step) {
     if (ctx === 'focus' && !focusOn && typeof toggleHomeFocus === 'function') { toggleHomeFocus(true); changed = true; }
     if (ctx !== 'goals' && goalsOverlay && goalsOverlay.classList.contains('open')) { closeGoalsVisionDrawer(); changed = true; }
     if (ctx !== 'notebooks' && notebooksSection && notebooksSection.classList.contains('active-tab')) { goHome(); changed = true; }
+    const routineModal = document.getElementById('modal-daily-board');
+    if (ctx !== 'routine' && routineModal && routineModal.classList.contains('open')) { closeModal('modal-daily-board'); changed = true; }
     if (ctx !== 'ai' && aiModal && aiModal.classList.contains('open')) { closeModal('modal-ai-brain'); changed = true; }
     if (ctx !== 'ai' && typeof aiChatIsOpen === 'function' && aiChatIsOpen()) { closeAiChat(); changed = true; }
     const inSettings = ctx === 'settings' || ctx === 'settings_sub';
@@ -2445,6 +2452,10 @@ async function appTourEnsureContext(step) {
         // "דבר בתוך דבר": אחרי הפריט בתפריט נכנסים לתיק עצמו (מהמטמון, בלי לטעון מחדש)
         switchToTab('notebooks-section');
         renderNotebookShelves();
+        changed = true;
+    } else if (ctx === 'routine' && routineModal && !routineModal.classList.contains('open')) {
+        // "דבר בתוך דבר": אחרי הפריט בתפריט נכנסים ל"השגרה שלי" עצמה
+        await openDailyBoardModal();
         changed = true;
     } else if (ctx === 'newme') {
         // הסיור של New Me: המסך הראשי של New Me פתוח (בלי לטעון מחדש אם כבר שם)
@@ -2796,6 +2807,7 @@ function closeAppTour() {
     if (appTourCtx === 'menu') closeHamburgerMenu();
     if (appTourCtx === 'goals') closeGoalsVisionDrawer();
     if (appTourCtx === 'focus' && typeof toggleHomeFocus === 'function') toggleHomeFocus(false);
+    if (appTourCtx === 'routine') closeModal('modal-daily-board');
     clearTimeout(appTourDemoTimer);
     appTourCtx = null;
     // הסיור של New Me נשאר במסך של New Me (גלילה חזרה למעלה)
@@ -9927,7 +9939,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
     { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
-    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'habits_streaks', 'routine_nudge'] },
+    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'habits_streaks', 'routine_nudge'] },
     // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
     { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
@@ -9940,7 +9952,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
     { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
-    { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'routine_ai', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
+    { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
     { tab: 'new_me', head: 'faq_cat_nm_plan', ids: ['new_me_what', 'new_me_preview', 'new_me_plans', 'new_me_tour', 'nm_me1_guide', 'new_me_home_btn', 'new_me_no_ai', 'new_me_weight_optional', 'new_me_magic_themes'] },
     { tab: 'new_me', head: 'faq_cat_nm_menu', ids: ['new_me_times', 'new_me_menu_build', 'new_me_tracking', 'new_me_swap', 'new_me_flexible_menu', 'new_me_favorites', 'new_me_small_breakfast', 'new_me_coffee', 'new_me_day_total', 'new_me_free_meal', 'new_me_month', 'new_me_journey', 'new_me_checkin', 'new_me_body', 'new_me_shopping', 'new_me_reminders', 'new_me_routine_meals', 'routine_newme_sync'] },
     { tab: 'new_me', head: 'faq_cat_nm_world', ids: ['new_me_hall', 'new_me_game', 'nm_me_card', 'new_me_week_challenge', 'new_me_challenges', 'new_me_challenge_journal', 'new_me_letter_gift', 'new_me_advanced', 'secret_room', 'secret_room_places', 'room_genie', 'secret_room_yoga', 'secret_room_diary', 'room_computer', 'room_records', 'room_roof_gifts', 'room_wish_jar'] },
@@ -18353,6 +18365,9 @@ const ROUTINE_DAY_TEMPLATES = [
     { id: 'week', days: [0, 1, 2, 3, 4, 5, 6] },
 ];
 const ROUTINE_READY_TEMPLATES = [
+    // 🌱 התחלה פשוטה - קטנה, חינם לכולם, ומוצעת גם בטאב ריק (לפי בקשה מפורשת, 2026-11-15: "תבנית מוכנה כללית
+    // כזו קטנה רק שיהיה להם כבר משהו מוכן")
+    { id: 'starter', icon: '🌱', free: true },
     { id: 'morning', icon: '🌅' },
     { id: 'evening', icon: '🌙' },
     { id: 'workday', icon: '💼' },
@@ -18423,12 +18438,12 @@ function renderRoutineTemplates() {
         const chip = (mode, label) => `<button type="button" class="calendar-kind-chip${routineDaysFillMode === mode ? ' on' : ''}" role="radio" aria-checked="${routineDaysFillMode === mode}" onclick="setRoutineDaysFillMode('${mode}')">${escapeHtmlForReport(label)}</button>`;
         fill.innerHTML = chip('empty', t('routine_fill_empty')) + (canCopy ? chip('copy', t('routine_fill_copy').replace('{name}', src.name)) : '');
     }
-    const tile = (icon, title, sub, onclick) => `
-        <button type="button" class="routine-template-tile${locked ? ' locked' : ''}" onclick="${onclick}">
+    const tile = (icon, title, sub, onclick, free) => `
+        <button type="button" class="routine-template-tile${locked && !free ? ' locked' : ''}" onclick="${onclick}">
             <span class="routine-template-icon">${icon}</span>
             <span class="routine-template-title">${escapeHtmlForReport(title)}</span>
             <span class="routine-template-sub">${escapeHtmlForReport(sub)}</span>
-            ${locked ? '<span class="routine-template-lock">🔒</span>' : ''}
+            ${locked && !free ? '<span class="routine-template-lock">🔒</span>' : ''}
         </button>`;
     const daysGrid = document.getElementById('routine-template-days');
     if (daysGrid) {
@@ -18439,7 +18454,7 @@ function renderRoutineTemplates() {
     if (readyGrid) {
         readyGrid.innerHTML = ROUTINE_READY_TEMPLATES.map(tpl => tile(tpl.icon, t(`routine_tpl_${tpl.id}`),
             t('routine_tpl_items_count').replace('{n}', parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).length),
-            `applyRoutineReadyTemplate('${tpl.id}')`)).join('');
+            `applyRoutineReadyTemplate('${tpl.id}')`, tpl.free)).join('');
     }
 }
 
@@ -18531,7 +18546,7 @@ async function applyRoutineDaysTemplate(templateId) {
 async function applyRoutineReadyTemplate(templateId) {
     const tpl = ROUTINE_READY_TEMPLATES.find(x => x.id === templateId);
     if (!tpl || !supabaseClient || !currentUserId) return;
-    if (!isPremiumUser) { closeModal('modal-routine-add-choice'); openPremiumUpgradeModal(); return; }
+    if (!isPremiumUser && !tpl.free) { closeModal('modal-routine-add-choice'); openPremiumUpgradeModal(); return; }
     const items = parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).filter(it => routineBucketOfHour(it.hour));
     if (!items.length) return;
     const hours = { morning: [], noon: [], afternoon: [], evening: [] };
@@ -18679,41 +18694,130 @@ async function requestRoutineFromAI(text, days, btn) {
     }
 }
 
-function openRoutineAiModal() {
+// ✨ עוזר השגרה (לפי בקשה מפורשת, 2026-11-15: "שה-AI של זה ישאל את השם של הטאב בהתחלה"): קודם שם השגרה - שם
+// של טאב קיים מוסיף אליו, שם חדש יוצר טאב חדש - ואז מה יש בה. נפתח מ-➕, מ-✨ בשורת הטאבים, מ-⚙️ ומחלון הוספת פריט
+let routineAiName = '';
+function routineActiveTabName() {
+    const tab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    return tab && !tab.day_off ? tab.name : '';
+}
+function openRoutineAiModal(prefillName) {
     closeModal('modal-routine-add-choice');
+    closeModal('modal-add-routine-item');
+    const nameInput = document.getElementById('routine-ai-name');
+    if (nameInput) nameInput.value = typeof prefillName === 'string' ? prefillName : '';
     const ta = document.getElementById('routine-ai-text');
     if (ta) ta.value = '';
+    const chips = document.getElementById('routine-ai-tab-chips');
+    if (chips) {
+        chips.innerHTML = '';
+        dailyBoardTabs.filter(tb => !tb.day_off).forEach(tb => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'calendar-kind-chip';
+            chip.textContent = tb.name;
+            chip.onclick = () => { if (nameInput) nameInput.value = tb.name; routineAiNext(); };
+            chips.appendChild(chip);
+        });
+    }
+    routineAiShowStep('name');
     openModalOverDailyBoard('modal-routine-ai');
-    setTimeout(() => { if (ta) ta.focus(); }, 120);
+    setTimeout(() => { if (nameInput) nameInput.focus(); }, 120);
+}
+function routineAiShowStep(step) {
+    document.getElementById('routine-ai-step-name').classList.toggle('hidden', step !== 'name');
+    document.getElementById('routine-ai-step-text').classList.toggle('hidden', step !== 'text');
+}
+function routineAiNext() {
+    const nameInput = document.getElementById('routine-ai-name');
+    const name = nameInput ? nameInput.value.trim() : '';
+    if (!name) { showAppToast(t('routine_ai_q_name'), 'error'); if (nameInput) nameInput.focus(); return; }
+    routineAiName = name;
+    document.getElementById('routine-ai-q-items').textContent = t('routine_ai_q_items').replace('{name}', name);
+    const left = document.getElementById('routine-ai-left');
+    if (left) {
+        const n = Math.max(0, SCHEDULE_AI_FREE_LIFETIME_LIMIT - cachedScheduleAiLifetimeUsed);
+        left.textContent = isPremiumUser ? '' : t('routine_ai_left').replace('{n}', n);
+        left.classList.toggle('hidden', !!isPremiumUser);
+    }
+    routineAiShowStep('text');
+    const ta = document.getElementById('routine-ai-text');
+    setTimeout(() => { if (ta) ta.focus(); }, 60);
+}
+
+// הפריטים מה-AI לתוך טאב: גם בשעה שכבר יש בה משהו ("גם וגם", כל אחד בשורה משלו), עם הימים שנכתבו לפריט
+async function routineAddAiItems(tab, items) {
+    const hours = mergeRoutineHours(getDailyBoardCustomHours(tab.id), routineHoursForItems(items));
+    const { error: hoursError } = await supabaseClient.from('routine_tabs').update({ custom_hours: hours }).eq('id', tab.id);
+    if (!hoursError) tab.custom_hours = hours;
+    const rows = items.map(it => ({
+        tab_id: tab.id, user_id: currentUserId, title: it.title, time: routineItemTime(it), kind: 'scheduled',
+        days_of_week: (it.days && it.days.length ? it.days : ROUTINE_ALL_DAYS).join(','),
+    }));
+    const { error } = await supabaseClient.from('routine_items').insert(rows);
+    if (error) throw error;
 }
 
 async function createRoutineWithAI() {
     const ta = document.getElementById('routine-ai-text');
     const text = ta ? ta.value.trim() : '';
     if (!text) { showAppToast(t('routine_ai_empty'), 'error'); if (ta) ta.focus(); return; }
-    const tabs = await requestRoutineFromAI(text, null, document.getElementById('routine-ai-create'));
-    if (!tabs) return;
-    let firstId = null;
+    const name = routineAiName;
+    // השם עוזר ל-AI להבין את ההקשר ("סוף שבוע: ...")
+    const aiTabs = await requestRoutineFromAI(`${name}: ${text}`, null, document.getElementById('routine-ai-create'));
+    if (!aiTabs) return;
+    const existing = dailyBoardTabs.find(tb => !tb.day_off && tb.name.trim().toLowerCase() === name.toLowerCase());
+    // שגרות לימים שונים נכנסות לאותו טאב, וכל פריט מקבל את הימים שלו (בטאב חדש עם שגרה אחת - הימים הם של הטאב)
+    const days = ai => (ai.weekdays && ai.weekdays.length && ai.weekdays.length < 7 ? ai.weekdays : null);
+    const perItemDays = !!existing || aiTabs.length > 1;
+    const items = aiTabs.flatMap(ai => (ai.items || []).map(it => ({ ...it, days: perItemDays ? days(ai) : null })));
+    if (!items.length) { showAppToast(t('routine_ai_failed'), 'error'); return; }
+    let tab = existing;
     try {
-        for (const ai of tabs) {
-            if (ai.weekdays.length) await routineReleaseDays(ai.weekdays);
+        if (!tab) {
+            const weekdays = aiTabs.length === 1 ? days(aiTabs[0]) : null;
+            if (weekdays) await routineReleaseDays(weekdays);
             const { data, error } = await supabaseClient.from('routine_tabs').insert({
-                user_id: currentUserId, username: currentUsername, name: uniqueRoutineTabName(ai.name || t('routine_ai_default_name')),
-                sort_order: nextRoutineTabSortOrder(), weekdays: ai.weekdays.length ? ai.weekdays : null, custom_hours: routineHoursForItems(ai.items),
+                user_id: currentUserId, username: currentUsername, name: uniqueRoutineTabName(name),
+                sort_order: nextRoutineTabSortOrder(), weekdays, custom_hours: routineHoursForItems(items),
             }).select('*').single();
             if (error || !data) throw error || new Error('insert failed');
             dailyBoardTabs.push(data);
-            await insertRoutineItemsAtHours(data.id, ai.items);
-            if (!firstId) firstId = data.id;
+            tab = data;
         }
+        await routineAddAiItems(tab, items);
     } catch (e) {
         showAppToast(t('error_adding_item') + (e && e.message ? e.message : ''), 'error');
     }
     closeModal('modal-routine-ai');
-    if (!firstId) return;
-    await finishRoutineTabsChange(firstId);
-    const first = dailyBoardTabs.find(tb => tb.id === firstId);
-    showAppToast(tabs.length > 1 ? t('routine_ai_done_many').replace('{n}', tabs.length) : t('routine_ai_done').replace('{name}', first ? first.name : ''));
+    if (!tab) return;
+    await finishRoutineTabsChange(tab.id);
+    showAppToast(existing ? t('routine_ai_added').replace('{n}', items.length).replace('{name}', tab.name) : t('routine_ai_done').replace('{name}', tab.name));
+}
+
+// 🌱 טאב ריק מציע את "התחלה פשוטה" - נגיעה אחת ממלאת אותו (פריטים רגילים, אפשר לערוך הכל)
+function routineStarterCard() {
+    const card = document.createElement('div');
+    card.className = 'routine-starter';
+    const items = parseRoutineTemplateItems(t('routine_tpl_starter_items'));
+    card.innerHTML = `<div class="routine-starter-head"><span aria-hidden="true">🌱</span>${escapeHtmlForReport(t('routine_tpl_starter'))}</div>
+        <ul class="routine-starter-list">${items.map(it => `<li><span class="routine-starter-time">${String(it.hour).padStart(2, '0')}:00</span><span>${escapeHtmlForReport(it.title)}</span></li>`).join('')}</ul>
+        <button type="button" class="btn-primary routine-starter-btn" onclick="routineAddStarterToTab()">${escapeHtmlForReport(t('routine_starter_add'))}</button>`;
+    return card;
+}
+async function routineAddStarterToTab() {
+    const tab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
+    if (!tab || !supabaseClient || !currentUserId) return;
+    const items = parseRoutineTemplateItems(t('routine_tpl_starter_items')).filter(it => routineBucketOfHour(it.hour));
+    if (!items.length) return;
+    try {
+        await routineAddAiItems(tab, items);
+    } catch (e) {
+        showAppToast(t('error_adding_item') + (e && e.message ? e.message : ''), 'error');
+        return;
+    }
+    await finishRoutineTabsChange(tab.id);
+    showAppToast(t('routine_ai_added').replace('{n}', items.length).replace('{name}', tab.name));
 }
 
 // --- 🌴 ימי חופש (לפי בקשה מפורשת, 2026-10-09: "אפשרות ל-2 ימי חופש - ואיזה ימים אלה, ומה תהיה השגרה;
@@ -23355,6 +23459,7 @@ async function renderDailyBoard() {
         return;
     }
     body.innerHTML = '';
+    if (!(items || []).length && activeTab && !activeTab.day_off) body.appendChild(routineStarterCard());
     bucketOrder.forEach(key => {
         // השורות: השעות שנבחרו לטאב + כל שעה שיש בה פריט (גם מדויקת, כמו 16:10) - כך פריט לא נעלם לעולם
         const slots = new Set((customHours[key] || []).map(routineSlotTime));

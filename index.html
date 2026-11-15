@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=614">
+    <link rel="stylesheet" href="theme.css?v=615">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -3709,11 +3709,13 @@
                     <button type="button" class="daily-board-tab-add" id="daily-board-overview-btn" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
                     <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <!-- ➕ פותח בחירה: טאב ריק / שכפול הטאב הנוכחי / תבניות מוכנות (פרימיום) - לפי בקשה מפורשת -->
-                    <button type="button" class="daily-board-tab-add" onclick="openRoutineAddChoice()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
+                    <!-- ✨ עוזר השגרה - גלוי בשורת הטאבים (לפי בקשה מפורשת, 2026-11-15), נפתח עם שם הטאב הנוכחי -->
+                    <button type="button" class="daily-board-tab-add" id="daily-board-ai-btn" onclick="openRoutineAiModal(routineActiveTabName())" data-i18n-title="routine_ai_title" title="Routine assistant">✨</button>
+                    <button type="button" class="daily-board-tab-add" id="daily-board-add-btn" onclick="openRoutineAddChoice()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
                 <div id="daily-board-hours-panel" class="daily-board-hours-settings hidden">
                     <!-- ✨ לו"ז AI בהגדרות (לפי בקשה מפורשת): מתארים במילים, וה-AI מוסיף טאב חדש עם הכול -->
-                    <button type="button" class="routine-ai-settings-btn" onclick="openRoutineAiModal()">✨ <span data-i18n="routine_add_ai">A new routine with AI</span></button>
+                    <button type="button" class="routine-ai-settings-btn" onclick="openRoutineAiModal(routineActiveTabName())">✨ <span data-i18n="routine_ai_title">Routine assistant</span></button>
                     <!-- לאילו ימים הטאב (לא חובה): ביום הזה "השגרה שלי" נפתחת ישר עליו, ושאלת "3 ימים בלי ✓"
                          סופרת רק את הימים שבהם הפריט באמת קיים - לפי בקשה מפורשת -->
                     <div class="daily-board-hours-settings-group">
@@ -3794,11 +3796,12 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="daily_board_add_tab_title">Add tab</h3>
                 <div class="routine-add-options">
+                    <!-- ✨ עוזר השגרה ראשון - למי שלא רוצה להוסיף ידנית (לפי בקשה מפורשת, 2026-11-15) -->
+                    <button type="button" class="routine-add-option is-ai" onclick="openRoutineAiModal()">✨ <span data-i18n="routine_ai_title">Routine assistant</span></button>
                     <button type="button" class="routine-add-option" onclick="routineAddEmptyTab()">✏️ <span data-i18n="routine_add_empty">New empty tab</span></button>
                     <button type="button" class="routine-add-option" id="routine-add-duplicate-btn" onclick="routineStartDuplicateTab()">📄 <span id="routine-add-duplicate-label"></span></button>
-                    <!-- 🌴 ימי חופש ו-✨ שגרה עם AI (לפי בקשה מפורשת, 2026-10-09) -->
+                    <!-- 🌴 ימי חופש (לפי בקשה מפורשת, 2026-10-09) -->
                     <button type="button" class="routine-add-option" onclick="openRoutineDaysOff()">🌴 <span data-i18n="routine_add_daysoff">Days off</span></button>
-                    <button type="button" class="routine-add-option" onclick="openRoutineAiModal()">✨ <span data-i18n="routine_add_ai">A new routine with AI</span></button>
                 </div>
                 <div class="routine-templates-head">
                     <span data-i18n="routine_templates_title">Ready templates</span>
@@ -3832,15 +3835,29 @@
             </div>
         </div>
 
-        <!-- ✨ שגרה חדשה עם AI: כותבים מה השגרה, ונוצר טאב חדש (ר' createRoutineWithAI ב-app.js) -->
+        <!-- ✨ עוזר השגרה: קודם שם השגרה (טאב קיים - מוסיף אליו, שם חדש - טאב חדש), ואז מה יש בה
+             (ר' openRoutineAiModal / createRoutineWithAI ב-app.js) -->
         <div id="modal-routine-ai" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>✨ <span data-i18n="routine_add_ai">A new routine with AI</span></h3>
-                <textarea id="routine-ai-text" class="routine-ai-input" rows="5" maxlength="2000" data-i18n-placeholder="routine_ai_ph" data-i18n-aria-label="routine_add_ai" aria-label="A new routine with AI"></textarea>
-                <div class="action-buttons-wrap" style="margin-top: 12px;">
-                    <button type="button" class="btn-primary" id="routine-ai-create" onclick="createRoutineWithAI()" data-i18n="routine_ai_create">Create the routine</button>
-                    <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-ai')" data-i18n="cancel_btn">Cancel</button>
+                <h3>✨ <span data-i18n="routine_ai_title">Routine assistant</span></h3>
+                <div id="routine-ai-step-name" class="routine-ai-step">
+                    <p class="routine-ai-bubble" data-i18n="routine_ai_q_name">What's this routine called?</p>
+                    <input type="text" id="routine-ai-name" class="routine-ai-name" maxlength="40" autocomplete="off" data-i18n-placeholder="routine_ai_name_ph" placeholder="e.g. Morning routine" data-i18n-aria-label="routine_ai_q_name" aria-label="What's this routine called?" onkeydown="if (event.key === 'Enter') { event.preventDefault(); routineAiNext(); }">
+                    <div class="routine-ai-tab-chips" id="routine-ai-tab-chips"></div>
+                    <div class="action-buttons-wrap" style="margin-top: 12px;">
+                        <button type="button" class="btn-primary" onclick="routineAiNext()" data-i18n="apptour_next">Continue</button>
+                        <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-ai')" data-i18n="cancel_btn">Cancel</button>
+                    </div>
+                </div>
+                <div id="routine-ai-step-text" class="routine-ai-step hidden">
+                    <p class="routine-ai-bubble" id="routine-ai-q-items"></p>
+                    <textarea id="routine-ai-text" class="routine-ai-input" rows="5" maxlength="2000" data-i18n-placeholder="routine_ai_ph" data-i18n-aria-label="routine_ai_title" aria-label="Routine assistant"></textarea>
+                    <p class="routine-ai-left hidden" id="routine-ai-left"></p>
+                    <div class="action-buttons-wrap" style="margin-top: 12px;">
+                        <button type="button" class="btn-primary" id="routine-ai-create" onclick="createRoutineWithAI()" data-i18n="routine_ai_create">Create the routine</button>
+                        <button type="button" class="btn-clear-specific" onclick="routineAiShowStep('name')" data-i18n="apptour_back">Back</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3855,6 +3872,8 @@
                 <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
                 <div class="routine-item-time-row"><button type="button" class="nm-time-btn" id="routine-item-time-btn" data-time-id="routine-item" aria-expanded="false" data-i18n-aria-label="nm_time_hour" aria-label="Time" onclick="nmToggleTimePicker(this)"><bdi dir="ltr">--:--</bdi></button></div>
                 <input type="text" id="routine-item-title-input" autocomplete="off" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
+                <!-- ✨ במקום להקליד - עוזר השגרה, עם שם הטאב הנוכחי (לפי בקשה מפורשת, 2026-11-15: "שיהיה בתוך ההוספה") -->
+                <button type="button" class="routine-item-ai-link" onclick="openRoutineAiModal(routineActiveTabName())">✨ <span data-i18n="routine_ai_item_link">Or tell the routine assistant</span></button>
                 <!-- 📅 ימים לפריט הזה בלבד (routine_items.days_of_week) - אותם צ'יפים כמו "ימים לטאב"; רק הימים של הטאב
                      (אם נבחרו לו), ומוסתר בטאב של יום אחד (renderRoutineItemDaysChips ב-app.js) -->
                 <div class="routine-item-days" id="routine-item-days-row">
@@ -4486,9 +4505,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=521"></script>
+    <script src="i18n/core.js?v=522"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=643"></script>
+    <script src="app.js?v=644"></script>
     <script src="ai-chat.js?v=8"></script>
     <script src="goals-library.js?v=5"></script>
     <script src="bag.js?v=10"></script>
@@ -4502,7 +4521,7 @@
     <script src="new-me-game.js?v=17"></script>
     <script src="world3d.js?v=15"></script>
     <script src="books.js?v=9"></script>
-    <script src="home.js?v=32"></script>
+    <script src="home.js?v=33"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=7"></script>

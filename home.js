@@ -27,22 +27,34 @@ async function loadMyDayRoutine(todayStr) {
             tabs = data || [];
         }
         const todayIdx = new Date().getDay();
-        const tab = tabs.find(tb => routineTabWeekdays(tb).includes(todayIdx)) || tabs.find(tb => !routineTabWeekdays(tb).length) || null;
-        if (!tab) return empty;
-        const { data: rows } = await supabaseClient.from('routine_items').select('*').eq('tab_id', tab.id).eq('user_id', currentUserId).eq('kind', 'scheduled');
+        // כל הטאבים של היום ביחד (לפי בקשה מפורשת, 2026-11-15: "אם זה היום שלו הוא צריך להתווסף ולרשום בקטן איזה טאב
+        // זה"): טאב עם ימים - בימים שלו, טאב בלי ימים - כל יום (וכל פריט לפי הימים שלו). ביום חופש - רק טאב ימי החופש
+        const dayOff = tabs.find(tb => tb.day_off && routineTabWeekdays(tb).includes(todayIdx));
+        const todayTabs = dayOff ? [dayOff] : tabs.filter(tb => !tb.day_off && (!routineTabWeekdays(tb).length || routineTabWeekdays(tb).includes(todayIdx)));
+        if (!todayTabs.length) return empty;
+        const { data: rows } = await supabaseClient.from('routine_items').select('*').in('tab_id', todayTabs.map(tb => tb.id)).eq('user_id', currentUserId).eq('kind', 'scheduled');
         // אימון מטבלת האימונים שנמצא גם בשגרה - כבר בצ'יפ ליד המים, לא פעמיים
         if (typeof workoutPlanLoaded !== 'undefined' && !workoutPlanLoaded && typeof loadWorkoutPlan === 'function') await loadWorkoutPlan();
         // כל פריט עם כותרת - גם בשעה מדויקת (16:10), בדיוק כמו בלוח של "השגרה שלי" (שם פריט לא נעלם לעולם).
         // ארוחות שהוסתרו כי הן כבר בתפריט של New Me - לא מופיעות פעמיים
         // ופריט עם ימים משלו (📅 ימים לפריט) - רק בימים שלו
-        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)) && !(typeof routineItemIsWorkout === 'function' && routineItemIsWorkout(it)) && (typeof routineItemOnDay !== 'function' || routineItemOnDay(it, todayIdx)));
+        const tabOrder = new Map(tabs.map((tb, i) => [tb.id, i]));
+        const seen = new Set();
+        const items = (rows || []).filter(it => (it.title || '').trim() && !(typeof routineItemInNewMe === 'function' && routineItemInNewMe(it)) && !(typeof routineItemIsWorkout === 'function' && routineItemIsWorkout(it)) && (typeof routineItemOnDay !== 'function' || routineItemOnDay(it, todayIdx)))
+            // אותו פריט בשני טאבים (טאב לכל יום "כהעתק") - פעם אחת, מהטאב הראשון
+            .sort((a, b) => (tabOrder.get(a.tab_id) ?? 99) - (tabOrder.get(b.tab_id) ?? 99))
+            .filter(it => { const k = `${String(it.time || '').slice(0, 5)}|${it.title.trim().toLowerCase()}`; if (seen.has(k)) return false; seen.add(k); return true; });
         const checksOn = isRoutineGoalsOn();
         let doneIds = new Set();
         if (checksOn && items.length) {
             const { data: checks } = await supabaseClient.from('routine_item_checkins').select('item_id').in('item_id', items.map(it => it.id)).eq('checkin_date', todayStr);
             doneIds = new Set((checks || []).map(c => c.item_id));
         }
-        return { items, doneIds, checksOn, tab };
+        // שם הטאב בקטן - לכל טאב חוץ מהראשי (הראשון), כשיותר מטאב אחד מופיע היום
+        const mainId = tabs[0] ? tabs[0].id : null;
+        const names = new Map(todayTabs.map(tb => [tb.id, tb.name]));
+        const tabOf = it => (todayTabs.length > 1 && it.tab_id !== mainId ? names.get(it.tab_id) || null : null);
+        return { items, doneIds, checksOn, tab: todayTabs[0], tabOf };
     } catch (e) {
         console.error('my day routine failed', e);
         return empty;
@@ -164,7 +176,8 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
             kind: 'routine', group: 'routine', minutes: scheduleTimeToMinutes(time), done: routine.checksOn ? done : false, checkable: routine.checksOn,
             title: it.title, toggle: checked => myDayToggleRoutine(it, checked),
             build: () => myDayRow({
-                done: routine.checksOn && done, time, text: `${myDayIcon(it.title)}${it.title}`, tag: t('myday_filter_routine'),
+                done: routine.checksOn && done, time, text: `${myDayIcon(it.title)}${it.title}`,
+                tag: routine.tabOf && routine.tabOf(it) ? `${t('myday_filter_routine')} · ${routine.tabOf(it)}` : t('myday_filter_routine'),
                 kindClass: 'routine', onchange: routine.checksOn ? checked => myDayToggleRoutine(it, checked) : null,
             }),
         });

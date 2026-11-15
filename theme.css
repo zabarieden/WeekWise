@@ -7360,6 +7360,26 @@ button.nm-letter-card { cursor: pointer; }
 .routine-daysoff-mode-icon { flex: none; font-size: 1.1rem; }
 .routine-ai-input { display: block; width: 100%; box-sizing: border-box; min-height: 110px; margin-top: 10px; padding: 12px 14px; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .95rem; line-height: 1.55; resize: vertical; }
 .routine-ai-input.hidden { display: none; }
+/* ✨ עוזר השגרה (2026-11-15): שאלה בבועה, שם השגרה (או טאב קיים בנגיעה), ואז מה יש בה */
+.routine-ai-step.hidden { display: none; }
+.routine-ai-bubble { margin: 4px 0 10px; padding: 12px 14px; border-radius: 16px 16px 16px 6px; background: color-mix(in srgb, var(--accent-purple) 12%, var(--bg-row)); border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent); color: var(--text-primary); font-weight: 700; font-size: .98rem; line-height: 1.45; overflow-wrap: anywhere; }
+[dir="rtl"] .routine-ai-bubble { border-radius: 16px 16px 6px 16px; }
+.routine-ai-name { display: block; width: 100%; box-sizing: border-box; min-height: 46px; padding: 10px 14px; border-radius: 14px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 1rem; }
+.routine-ai-tab-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.routine-ai-tab-chips:empty { display: none; }
+.routine-ai-tab-chips .calendar-kind-chip { max-width: 100%; overflow-wrap: anywhere; }
+.routine-ai-left { margin: 8px 2px 0; font-size: .8rem; color: var(--text-secondary); }
+.routine-ai-left.hidden { display: none; }
+.routine-add-option.is-ai { border-color: color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 10%, var(--bg-row)); }
+.routine-item-ai-link { display: inline-flex; align-items: center; gap: 6px; margin: 8px 0 2px; padding: 6px 2px; border: 0; background: none; color: var(--accent-purple); font: inherit; font-weight: 700; font-size: .86rem; cursor: pointer; text-align: start; }
+.routine-item-ai-link:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; border-radius: 8px; }
+/* 🌱 "התחלה פשוטה" בטאב ריק - נגיעה אחת ממלאת אותו */
+.routine-starter { margin: 4px 0 14px; padding: 14px; border-radius: 18px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-row)); }
+.routine-starter-head { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1rem; color: var(--text-primary); margin-bottom: 8px; }
+.routine-starter-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.routine-starter-list li { display: flex; gap: 10px; align-items: baseline; font-size: .9rem; color: var(--text-primary); overflow-wrap: anywhere; }
+.routine-starter-time { flex: 0 0 auto; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent-purple); direction: ltr; }
+.routine-starter-btn { width: 100%; }
 #routine-daysoff-save.confirm { background: var(--accent-red); border-color: var(--accent-red); color: #fff; }
 .routine-dayoff-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 34px 16px 26px; text-align: center; }
 .routine-dayoff-empty-icon { font-size: 2.2rem; }
