@@ -22414,28 +22414,29 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
     };
     const radius = { done: 21, future: 19, current: 16, start: 16, flag: 27 };
     const lastIdx = Math.max(1, nodes.length - 1);
-    // 🌟 גחליליות שמובילות בשביל עד התחנה של היום (הבחירה שלה, 2026-11-15: f4 "גחליליות"): על העקומה עצמה,
-    // בין התחנה הקודמת לתחנה של היום (או מתחתית השביל, כשעוד אין תחנה מאחור)
+    // 🌟 גחליליות לאורך כל השביל שכבר עברנו, עד התחנה של היום (הבחירה שלה, 2026-11-15: f4 "גחליליות", ואחר כך: "על הכל
+    // על השביל כל מה שעברנו עד היום"). על העקומה עצמה, בין התחנות; הצבע לפי ערכת הנושא (theme.css .gv-fly)
     const curIdx = nodes.findIndex(n => n.kind === 'current' || n.kind === 'start');
     if (curIdx !== -1 && !goal.is_achieved) {
         const bez = (a, b, c, d, tt) => { const u = 1 - tt; return u * u * u * a + 3 * u * u * tt * b + 3 * u * tt * tt * c + tt * tt * tt * d; };
-        let P0, C1, C2, P3;
-        if (curIdx > 0) {
-            const s = curIdx - 1, q0 = pts[s - 1] || pts[s], q1 = pts[s], q2 = pts[s + 1], q3 = pts[s + 2] || pts[s + 1];
-            P0 = q1; P3 = q2;
-            C1 = { x: q1.x + (q2.x - q0.x) / 6, y: q1.y + (q2.y - q0.y) / 6 };
-            C2 = { x: q2.x - (q3.x - q1.x) / 6, y: q2.y - (q3.y - q1.y) / 6 };
-        } else {
-            P0 = { x: pts[0].x, y: H - 8 }; C1 = P0; C2 = pts[0]; P3 = pts[0];
-        }
-        (curIdx > 0 ? [0.4, 0.56, 0.72] : [0.15, 0.55]).forEach((tt, j) => {
+        const addFly = (x, y, j) => {
             const fly = document.createElement('span');
             fly.className = 'gv-fly';
-            fly.style.left = `${f(bez(P0.x, C1.x, C2.x, P3.x, tt))}%`;
-            fly.style.top = `${f(bez(P0.y, C1.y, C2.y, P3.y, tt))}px`;
-            fly.style.setProperty('--d', j);
+            fly.style.left = `${f(x)}%`;
+            fly.style.top = `${f(y)}px`;
+            fly.style.setProperty('--d', j % 5);
             wrap.appendChild(fly);
-        });
+        };
+        let j = 0;
+        // the short tail below the first station
+        [0.35, 0.7].forEach(tt => addFly(pts[0].x, (H - 8) + (pts[0].y - (H - 8)) * tt, j++));
+        // every walked segment, up to today's station
+        for (let s = 0; s < curIdx; s++) {
+            const q0 = pts[s - 1] || pts[s], q1 = pts[s], q2 = pts[s + 1], q3 = pts[s + 2] || pts[s + 1];
+            const C1 = { x: q1.x + (q2.x - q0.x) / 6, y: q1.y + (q2.y - q0.y) / 6 };
+            const C2 = { x: q2.x - (q3.x - q1.x) / 6, y: q2.y - (q3.y - q1.y) / 6 };
+            (s === curIdx - 1 ? [0.36, 0.52, 0.68] : [0.34, 0.66]).forEach(tt => addFly(bez(q1.x, C1.x, C2.x, q2.x, tt), bez(q1.y, C1.y, C2.y, q2.y, tt), j++));
+        }
     }
     nodes.forEach((n, i) => {
         const p = pts[i];
