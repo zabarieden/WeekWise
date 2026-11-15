@@ -689,6 +689,8 @@ const NM_STRUCTURES = [
     { id: 'snack', hidden: ['snack2'] },
     { id: 'dinner', hidden: ['snack1'] },
     { id: 'both', hidden: [] },
+    // only lunch and dinner, for days with little time (her ask 2026-11-15) - all of the day's calories go to the two
+    { id: 'two', hidden: ['snack1', 'snack2'] },
 ];
 function nmStructureId(hidden) {
     const key = (hidden || []).slice().sort().join(',');
@@ -914,7 +916,8 @@ function nmSlotName(slot) {
     return nmPosName(Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot)));
 }
 // המבנה "2 ארוחות + נשנוש" (רק הארוחה של הערב הקל ירדה) - בשאלון / בחלון השעות לפי מה שנבחר שם
-function nmTwoMeals(hidden) { const h = hidden || (nmTimes ? nmTimes.hidden : nmHiddenSlots()); return h.length === 1 && h[0] === 'snack2'; }
+// the two main meals are lunch and dinner: "2 meals + a snack" (only snack2 hidden) and "just 2 meals" (both snacks hidden)
+function nmTwoMeals(hidden) { const h = hidden || (nmTimes ? nmTimes.hidden : nmHiddenSlots()); return h.includes('snack2') && h.every(s => s === 'snack1' || s === 'snack2'); }
 // ארוחות שהוסרו מהתפריט (למשל 3 ארוחות במקום 4) - לפי בקשה מפורשת. ארוחה שהוסרה שומרת על
 // המיקום שלה ביום (השם לפי שעת היום לא זז), והקלוריות שלה פנויות למילוי עד סך התוכנית
 // לפחות 3 ארוחות ביום (לפי בקשה מפורשת: "תוריד את ה2 ארוחות")
