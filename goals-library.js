@@ -12,7 +12,7 @@ const GLIB_TOPICS = [
     { id: 'career', icon: '💼', hue: 220, sat: 22, category: 'career', subs: [['career_job', '🔎'], ['career_grow', '📈'], ['career_skills', '🧩']] },
     { id: 'money', icon: '💰', hue: 100, sat: 50, category: 'finance', subs: [['money_save', '🐷'], ['money_budget', '📊'], ['money_debt', '💳']] },
     { id: 'buy', icon: '🛍️', hue: 330, sat: 65, category: 'finance', subs: [['buy_big', '🚗'], ['buy_wants', '🎁'], ['buy_smart', '🛒']] },
-    { id: 'mind', icon: '🧘', hue: 172, sat: 55, category: 'personal', subs: [['mind_calm', '🌬️'], ['mind_screen', '📵'], ['mind_thanks', '🙏'], ['mind_conf', '✨']] },
+    { id: 'mind', icon: '🧘', hue: 172, sat: 55, category: 'personal', subs: [['mind_calm', '🌬️'], ['mind_screen', '📵'], ['mind_thanks', '🙏'], ['mind_conf', '🦋']] },
     { id: 'family', icon: '❤️', hue: 355, sat: 60, category: 'relationships', subs: [['family_time', '👨‍👩‍👧'], ['family_couple', '💑'], ['family_friends', '🤝']] },
     // 🤝 חברים וקרבה (לפי בקשה מפורשת, 2026-10-20: "להוסיף למצוא חברים או משהו יותר נעים ביעדים - שיהיה קטגוריה גם על זה ואיך /
     // שיהיה גם אפשר לקשר את זה לספר של כיצד לרכוש ידידים והשפעה לא להעתיק אפשר לקחת משם דבר או שניים"). מהספר רק שני רעיונות:
@@ -88,7 +88,7 @@ const GLIB_TEMPLATES = [
     { id: 'less_phone', sub: 'mind_screen', icon: '📵', track: 'steps', weeks: 4, stations: 3 },
     { id: 'gratitude', sub: 'mind_thanks', icon: '🙏', track: 'days', days: 30, tasks: 1 },
     { id: 'kindness', sub: 'mind_thanks', icon: '💝', track: 'days', days: 30, tasks: 1 },
-    { id: 'confidence', sub: 'mind_conf', icon: '✨', track: 'steps', weeks: 6, stations: 3 },
+    { id: 'confidence', sub: 'mind_conf', icon: '🦋', track: 'steps', weeks: 6, stations: 3 },
 
     { id: 'kid_time', sub: 'family_time', icon: '🤗', track: 'days', days: 30, tasks: 1, minutes: 15, kids: 'with', at: [17] },
     { id: 'talk_more', sub: 'family_couple', icon: '💬', track: 'days', days: 21, tasks: 1, minutes: 10 },

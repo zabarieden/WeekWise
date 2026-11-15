@@ -73,7 +73,7 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="NOT10.ai">
     <meta property="og:title" content="NOT10.ai">
-    <meta property="og:description" content="Plan your week, meals, goals and schedule – all in one place ✨">
+    <meta property="og:description" content="Plan your week, meals, goals and schedule – all in one place">
     <meta property="og:url" content="https://app.not10.ai/">
     <meta property="og:image" content="https://app.not10.ai/share-icon.png?v=3">
     <meta property="og:image:width" content="300">
@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=615">
+    <link rel="stylesheet" href="theme.css?v=616">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -2745,7 +2745,7 @@
                          "שהנצנצים האלה יהיו הראשונים שמשלמים על הפרימיום ואחריהם עוד 2 צבעים כאלה") - זהובים, ורודים, סגולים
                          וטורקיז. אחריהן החללית, צבעי המים והזוהר הצפוני (הסדר הקודם: "תעשה שזה יהיה הראשון במיוחדים הוא כלכך יפה";
                          "לזה תוסיף נצנצים מבצבצים ושזה יהיה השני"; "ושתהיה השלישית בתור") -->
-                    <div class="theme-special-divider"><span class="theme-special-sparkle">✨</span><span data-i18n="theme_special_section_label">Special Themes</span><span class="theme-special-sparkle">✨</span></div>
+                    <div class="theme-special-divider"><span class="theme-special-sparkle"><i class="ic-spark" aria-hidden="true"></i></span><span data-i18n="theme_special_section_label">Special Themes</span><span class="theme-special-sparkle"><i class="ic-spark" aria-hidden="true"></i></span></div>
                     <div class="theme-picker-grid">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="gold_sparkle" data-color-theme="gold_sparkle" onclick="selectColorTheme('gold_sparkle')" data-i18n-title="theme_name_gold_sparkle" data-i18n-aria-label="theme_name_gold_sparkle" title="Gold Sparkle" aria-label="Gold Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="pink_sparkle" data-color-theme="pink_sparkle" onclick="selectColorTheme('pink_sparkle')" data-i18n-title="theme_name_pink_sparkle" data-i18n-aria-label="theme_name_pink_sparkle" title="Pink Sparkle" aria-label="Pink Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -3392,7 +3392,7 @@
                     <input type="number" id="new-preset-calories" data-i18n-placeholder="preset_calories_placeholder" placeholder="Calorie amount">
                     <input type="number" id="new-preset-protein" data-i18n-placeholder="preset_protein_placeholder" placeholder="Protein (g)">
                     <input type="text" id="new-preset-description" data-i18n-placeholder="preset_description_placeholder" placeholder="Ingredients (optional)">
-                    <button type="button" id="btn-estimate-preset-calories" class="btn-secondary" onclick="estimatePresetCaloriesWithAI()" data-i18n="preset_estimate_ai_btn">✨ Estimate calories with AI</button>
+                    <button type="button" id="btn-estimate-preset-calories" class="btn-secondary" onclick="estimatePresetCaloriesWithAI()" data-i18n="preset_estimate_ai_btn">Estimate calories with AI</button>
                     <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('new-preset-category')"><span id="new-preset-category-display"></span></button>
                     <select id="new-preset-category" class="hidden">
                         <option value="morning" data-i18n="preset_cat_morning">🌅 Main meals - Breakfast</option><option value="noon" data-i18n="preset_cat_noon">☀️ Main meals - Lunch</option><option value="evening" data-i18n="preset_cat_evening">🌙 Main meals - Dinner</option><option value="soup" data-i18n="preset_cat_soup">🍲 Soups</option><option value="snack" data-i18n="preset_cat_snack">🥕 Low-calorie snacks</option><option value="sweet" data-i18n="preset_cat_sweet">🍬 Sweets</option><option value="dessert" data-i18n="preset_cat_dessert">🍰 Desserts</option><option value="drinks" data-i18n="preset_cat_drinks">🥤 Drinks</option><option value="custom" data-i18n="select_other_manual">✏️ Other</option>
@@ -3443,7 +3443,7 @@
         <div id="modal-ai-brain" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 class="ai-brain-modal-title" data-i18n="ai_brain_modal_title">✨ AI Assistant ✨</h3>
+                <h3 class="ai-brain-modal-title" data-i18n="ai_brain_modal_title">AI Assistant</h3>
                 <!-- "תאי מוח" - כל קטגוריה היא תא זוהר בסגנון נוירון, עם "סינפסות"
                      (קווי-חיבור מהבהבים) בין תא לתא - לפי בקשה מפורשת ("תעצב לי
                      מגניב... כמו תאי מוח"). לא כל תא פותח פאנל AI מלא בתוך המודל -
@@ -3710,12 +3710,12 @@
                     <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <!-- ➕ פותח בחירה: טאב ריק / שכפול הטאב הנוכחי / תבניות מוכנות (פרימיום) - לפי בקשה מפורשת -->
                     <!-- ✨ עוזר השגרה - גלוי בשורת הטאבים (לפי בקשה מפורשת, 2026-11-15), נפתח עם שם הטאב הנוכחי -->
-                    <button type="button" class="daily-board-tab-add" id="daily-board-ai-btn" onclick="openRoutineAiModal(routineActiveTabName())" data-i18n-title="routine_ai_title" title="Routine assistant">✨</button>
+                    <button type="button" class="daily-board-tab-add" id="daily-board-ai-btn" onclick="openRoutineAiModal(routineActiveTabName())" data-i18n-title="routine_ai_title" title="Routine assistant"><i class="ic-spark" aria-hidden="true"></i></button>
                     <button type="button" class="daily-board-tab-add" id="daily-board-add-btn" onclick="openRoutineAddChoice()" data-i18n-title="daily_board_add_tab_title" title="Add tab">➕</button>
                 </div>
                 <div id="daily-board-hours-panel" class="daily-board-hours-settings hidden">
                     <!-- ✨ לו"ז AI בהגדרות (לפי בקשה מפורשת): מתארים במילים, וה-AI מוסיף טאב חדש עם הכול -->
-                    <button type="button" class="routine-ai-settings-btn" onclick="openRoutineAiModal(routineActiveTabName())">✨ <span data-i18n="routine_ai_title">Routine assistant</span></button>
+                    <button type="button" class="routine-ai-settings-btn" onclick="openRoutineAiModal(routineActiveTabName())"><i class="ic-spark" aria-hidden="true"></i> <span data-i18n="routine_ai_title">Routine assistant</span></button>
                     <!-- לאילו ימים הטאב (לא חובה): ביום הזה "השגרה שלי" נפתחת ישר עליו, ושאלת "3 ימים בלי ✓"
                          סופרת רק את הימים שבהם הפריט באמת קיים - לפי בקשה מפורשת -->
                     <div class="daily-board-hours-settings-group">
@@ -3797,7 +3797,7 @@
                 <h3 data-i18n="daily_board_add_tab_title">Add tab</h3>
                 <div class="routine-add-options">
                     <!-- ✨ עוזר השגרה ראשון - למי שלא רוצה להוסיף ידנית (לפי בקשה מפורשת, 2026-11-15) -->
-                    <button type="button" class="routine-add-option is-ai" onclick="openRoutineAiModal()">✨ <span data-i18n="routine_ai_title">Routine assistant</span></button>
+                    <button type="button" class="routine-add-option is-ai" onclick="openRoutineAiModal()"><i class="ic-spark" aria-hidden="true"></i> <span data-i18n="routine_ai_title">Routine assistant</span></button>
                     <button type="button" class="routine-add-option" onclick="routineAddEmptyTab()">✏️ <span data-i18n="routine_add_empty">New empty tab</span></button>
                     <button type="button" class="routine-add-option" id="routine-add-duplicate-btn" onclick="routineStartDuplicateTab()">📄 <span id="routine-add-duplicate-label"></span></button>
                     <!-- 🌴 ימי חופש (לפי בקשה מפורשת, 2026-10-09) -->
@@ -3840,7 +3840,7 @@
         <div id="modal-routine-ai" class="apple-modal">
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3>✨ <span data-i18n="routine_ai_title">Routine assistant</span></h3>
+                <h3><i class="ic-spark" aria-hidden="true"></i> <span data-i18n="routine_ai_title">Routine assistant</span></h3>
                 <div id="routine-ai-step-name" class="routine-ai-step">
                     <p class="routine-ai-bubble" data-i18n="routine_ai_q_name">What's this routine called?</p>
                     <input type="text" id="routine-ai-name" class="routine-ai-name" maxlength="40" autocomplete="off" data-i18n-placeholder="routine_ai_name_ph" placeholder="e.g. Morning routine" data-i18n-aria-label="routine_ai_q_name" aria-label="What's this routine called?" onkeydown="if (event.key === 'Enter') { event.preventDefault(); routineAiNext(); }">
@@ -3873,7 +3873,7 @@
                 <div class="routine-item-time-row"><button type="button" class="nm-time-btn" id="routine-item-time-btn" data-time-id="routine-item" aria-expanded="false" data-i18n-aria-label="nm_time_hour" aria-label="Time" onclick="nmToggleTimePicker(this)"><bdi dir="ltr">--:--</bdi></button></div>
                 <input type="text" id="routine-item-title-input" autocomplete="off" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
                 <!-- ✨ במקום להקליד - עוזר השגרה, עם שם הטאב הנוכחי (לפי בקשה מפורשת, 2026-11-15: "שיהיה בתוך ההוספה") -->
-                <button type="button" class="routine-item-ai-link" onclick="openRoutineAiModal(routineActiveTabName())">✨ <span data-i18n="routine_ai_item_link">Or tell the routine assistant</span></button>
+                <button type="button" class="routine-item-ai-link" onclick="openRoutineAiModal(routineActiveTabName())"><i class="ic-spark" aria-hidden="true"></i> <span data-i18n="routine_ai_item_link">Or tell the routine assistant</span></button>
                 <!-- 📅 ימים לפריט הזה בלבד (routine_items.days_of_week) - אותם צ'יפים כמו "ימים לטאב"; רק הימים של הטאב
                      (אם נבחרו לו), ומוסתר בטאב של יום אחד (renderRoutineItemDaysChips ב-app.js) -->
                 <div class="routine-item-days" id="routine-item-days-row">
@@ -4328,13 +4328,13 @@
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 id="modal-add-recipe-title" data-i18n="recipe_modal_title">Add Recipe</h3>
                 <textarea id="recipe-ai-raw-input" rows="4" data-i18n-placeholder="recipe_ai_paste_placeholder" placeholder="Paste a recipe here (from a website, WhatsApp, or notes)..."></textarea>
-                <button type="button" id="btn-recipe-ai-parse" class="btn-secondary" onclick="parseRecipeWithAI()" data-i18n="recipe_ai_parse_btn">✨ Parse with AI</button>
+                <button type="button" id="btn-recipe-ai-parse" class="btn-secondary" onclick="parseRecipeWithAI()" data-i18n="recipe_ai_parse_btn">Parse with AI</button>
                 <div class="recipe-scan-divider" data-i18n="recipe_scan_or_divider">or</div>
                 <input type="file" id="recipe-image-input" accept="image/*,application/pdf" multiple class="hidden" onchange="handleRecipeImageSelected(event)">
                 <button type="button" id="btn-recipe-scan-image" class="btn-secondary" onclick="document.getElementById('recipe-image-input').click()" data-i18n="recipe_scan_image_btn">📷 Scan or upload a file</button>
                 <!-- כמה תמונות למתכון אחד: לכל תמונה הכל / מצרכים / הכנה, ואז סריקה אחת לכולן -->
                 <div id="recipe-scan-tray" class="recipe-scan-tray hidden"></div>
-                <button type="button" id="btn-recipe-scan-run" class="btn-primary recipe-scan-run hidden" onclick="runRecipeScanTray()" data-i18n="recipe_scan_run_btn">✨ Scan the recipe</button>
+                <button type="button" id="btn-recipe-scan-run" class="btn-primary recipe-scan-run hidden" onclick="runRecipeScanTray()" data-i18n="recipe_scan_run_btn">Scan the recipe</button>
                 <div class="recipe-scan-hint" id="recipe-scan-free-hint">5/5 free scans left this month</div>
                 <img id="recipe-image-preview" class="recipe-image-preview hidden" alt="">
                 <input type="hidden" id="recipe-image-url-input">
@@ -4414,18 +4414,18 @@
              ברגע-אחד בצבעי המותג, ואז הסבר קצר על מה שנפתח -->
         <div id="premium-unlock-ceremony" class="premium-unlock-ceremony">
             <div class="premium-sparkle-field">
-                <span class="premium-sparkle" style="top:8%; left:15%; animation-delay:0s;">✨</span>
-                <span class="premium-sparkle" style="top:20%; left:78%; animation-delay:0.15s;">✨</span>
-                <span class="premium-sparkle" style="top:35%; left:40%; animation-delay:0.3s;">✨</span>
-                <span class="premium-sparkle" style="top:12%; left:55%; animation-delay:0.45s;">✨</span>
-                <span class="premium-sparkle" style="top:60%; left:12%; animation-delay:0.1s;">✨</span>
-                <span class="premium-sparkle" style="top:70%; left:85%; animation-delay:0.35s;">✨</span>
-                <span class="premium-sparkle" style="top:45%; left:88%; animation-delay:0.55s;">✨</span>
-                <span class="premium-sparkle" style="top:80%; left:45%; animation-delay:0.25s;">✨</span>
-                <span class="premium-sparkle" style="top:25%; left:8%; animation-delay:0.5s;">✨</span>
-                <span class="premium-sparkle" style="top:55%; left:60%; animation-delay:0.05s;">✨</span>
-                <span class="premium-sparkle" style="top:90%; left:20%; animation-delay:0.4s;">✨</span>
-                <span class="premium-sparkle" style="top:5%; left:30%; animation-delay:0.6s;">✨</span>
+                <span class="premium-sparkle" style="top:8%; left:15%; animation-delay:0s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:20%; left:78%; animation-delay:0.15s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:35%; left:40%; animation-delay:0.3s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:12%; left:55%; animation-delay:0.45s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:60%; left:12%; animation-delay:0.1s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:70%; left:85%; animation-delay:0.35s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:45%; left:88%; animation-delay:0.55s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:80%; left:45%; animation-delay:0.25s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:25%; left:8%; animation-delay:0.5s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:55%; left:60%; animation-delay:0.05s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:90%; left:20%; animation-delay:0.4s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:5%; left:30%; animation-delay:0.6s;"><i class="ic-spark" aria-hidden="true"></i></span>
             </div>
             <div class="premium-unlock-content">
                 <div class="premium-unlock-icon">🏆</div>
@@ -4438,18 +4438,18 @@
              (לפי בקשה מפורשת: "שקונים את הNEW ME תעשה שגם יהיה זיקוקים וכאלה בדיוק כל מה שיש שהPREMUME נפתח") -->
         <div id="newme-unlock-ceremony" class="premium-unlock-ceremony newme-unlock-ceremony">
             <div class="premium-sparkle-field">
-                <span class="premium-sparkle" style="top:8%; left:15%; animation-delay:0s;">✨</span>
-                <span class="premium-sparkle" style="top:20%; left:78%; animation-delay:0.15s;">✨</span>
-                <span class="premium-sparkle" style="top:35%; left:40%; animation-delay:0.3s;">✨</span>
-                <span class="premium-sparkle" style="top:12%; left:55%; animation-delay:0.45s;">✨</span>
-                <span class="premium-sparkle" style="top:60%; left:12%; animation-delay:0.1s;">✨</span>
-                <span class="premium-sparkle" style="top:70%; left:85%; animation-delay:0.35s;">✨</span>
-                <span class="premium-sparkle" style="top:45%; left:88%; animation-delay:0.55s;">✨</span>
-                <span class="premium-sparkle" style="top:80%; left:45%; animation-delay:0.25s;">✨</span>
-                <span class="premium-sparkle" style="top:25%; left:8%; animation-delay:0.5s;">✨</span>
-                <span class="premium-sparkle" style="top:55%; left:60%; animation-delay:0.05s;">✨</span>
-                <span class="premium-sparkle" style="top:90%; left:20%; animation-delay:0.4s;">✨</span>
-                <span class="premium-sparkle" style="top:5%; left:30%; animation-delay:0.6s;">✨</span>
+                <span class="premium-sparkle" style="top:8%; left:15%; animation-delay:0s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:20%; left:78%; animation-delay:0.15s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:35%; left:40%; animation-delay:0.3s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:12%; left:55%; animation-delay:0.45s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:60%; left:12%; animation-delay:0.1s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:70%; left:85%; animation-delay:0.35s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:45%; left:88%; animation-delay:0.55s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:80%; left:45%; animation-delay:0.25s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:25%; left:8%; animation-delay:0.5s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:55%; left:60%; animation-delay:0.05s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:90%; left:20%; animation-delay:0.4s;"><i class="ic-spark" aria-hidden="true"></i></span>
+                <span class="premium-sparkle" style="top:5%; left:30%; animation-delay:0.6s;"><i class="ic-spark" aria-hidden="true"></i></span>
             </div>
             <div class="premium-unlock-content">
                 <div class="premium-unlock-icon newme-unlock-icon"><svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 4h12l3 5-9 11L3 9z"/><path d="M3 9h18M8.5 4 12 9l3.5-5M12 9v11"/></svg></div>
@@ -4505,20 +4505,20 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=522"></script>
+    <script src="i18n/core.js?v=523"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=644"></script>
+    <script src="app.js?v=645"></script>
     <script src="ai-chat.js?v=8"></script>
-    <script src="goals-library.js?v=5"></script>
+    <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=4"></script>
     <script src="workouts.js?v=10"></script>
     <script src="new-me-data.js?v=18"></script>
-    <script src="new-me.js?v=82"></script>
-    <script src="new-me-challenges.js?v=14"></script>
+    <script src="new-me.js?v=83"></script>
+    <script src="new-me-challenges.js?v=15"></script>
     <script src="secret-room.js?v=39"></script>
-    <script src="secret-places.js?v=32"></script>
-    <script src="new-me-game.js?v=17"></script>
+    <script src="secret-places.js?v=33"></script>
+    <script src="new-me-game.js?v=18"></script>
     <script src="world3d.js?v=15"></script>
     <script src="books.js?v=9"></script>
     <script src="home.js?v=33"></script>

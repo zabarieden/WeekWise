@@ -501,7 +501,7 @@ async function nmToggleSide(btn) {
             const it = nmSideInfo();
             await supabaseClient.from('calorie_tracker').insert({
                 username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: NEW_ME_SIDE_MEAL_TYPE,
-                food_description: `✨ ${it.name}`, calories: it.kcal, protein_grams: it.protein, source: 'new_me',
+                food_description: `${it.name}`, calories: it.kcal, protein_grams: it.protein, source: 'new_me',
             });
         }
     } finally {
@@ -877,7 +877,7 @@ function nmOpenMagicPicker(invite) {
         return `<button type="button" class="${nmEsc(String(s.className).replace(/\bselected\b/g, '').trim())}${cur === k ? ' selected' : ''}" data-theme="${nmEsc(k)}" title="${nmEsc(name)}" aria-label="${nmEsc(name)}" aria-pressed="${cur === k}"></button>`;
     }).join('');
     const ov = nmOpenSheet(`
-        <h4 class="nm-magic-title">✨ ${nmEsc(t('magic_picker_title'))}</h4>
+        <h4 class="nm-magic-title">${SPARK_ICON} ${nmEsc(t('magic_picker_title'))}</h4>
         <div class="nm-magic-grid">${tiles}</div>
         ${swatches ? `<div class="nm-colors-grid" role="group" aria-label="${nmEsc(t('nm_settings_colors'))}">${swatches}</div>` : ''}
         ${invite ? `<button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('magic_not_now'))}</button>` : ''}`, 'nm-magic-sheet', invite ? () => nmMarkMagicOffered() : null);
@@ -1083,7 +1083,7 @@ function nmRenderSales(root) {
 // לפי בקשה מפורשת (2026-10-20): "במסך הגדול למי שקונה שיראה את האיי איי ואת הארוחות הקבועות והתחליפים שאנשים יבינו
 // מה הם קונים". אותו חלון החלפה כמו בתוך New Me (אותן מחלקות), עם דוגמאות אמיתיות מהתפריט; מתחלף לבד בין 3 הלשוניות
 // (לא כשמבקשים פחות תנועה), ונגיעה בלשונית עוצרת ועוברת אליה
-const NM_DEMO_TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', '✨', 'nm_swap_tab_ai']];
+const NM_DEMO_TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', SPARK_ICON, 'nm_swap_tab_ai']];
 function nmSwapDemoPane(tab) {
     if (tab === 'menu') {
         return ['A', 'B', 'C'].map(o => {
@@ -1095,7 +1095,7 @@ function nmSwapDemoPane(tab) {
         return [['nm_demo_saved_1', 310, 18], ['nm_demo_saved_2', 260, 14]].map(([k, kcal, protein]) => `<div class="nm-option nm-demo-row"><span class="nm-option-top"><span class="nm-option-name">⭐ ${nmEsc(t(k))}</span></span><span class="nm-option-meta">${nmMeta({ kcal, protein })}</span></div>`).join('');
     }
     return `<div class="nm-ai-input nm-demo-typed">${nmEsc(t('nm_demo_ai_text'))}</div>
-        <div class="nm-swap-pick nm-ai-result nm-demo-result"><span class="nm-option-name">✨ ${nmEsc(t('nm_demo_ai_name'))}</span><span class="nm-option-meta">${nmMeta({ kcal: 320, protein: 12 })}</span></div>`;
+        <div class="nm-swap-pick nm-ai-result nm-demo-result"><span class="nm-option-name">${SPARK_ICON} ${nmEsc(t('nm_demo_ai_name'))}</span><span class="nm-option-meta">${nmMeta({ kcal: 320, protein: 12 })}</span></div>`;
 }
 function nmSwapDemoHtml() {
     return `<section class="nm-sales-card nm-demo" aria-label="${nmEsc(t('nm_demo_title'))}">
@@ -2469,7 +2469,7 @@ function nmMealCardHtml(slot) {
     return `
         <div class="nm-meal${done ? ' done' : ''}" data-slot="${slot}">
             ${head}
-            <div class="nm-option-name">${it.custom ? `<span class="nm-custom-tag" title="${nmEsc(t(it.source === 'ai' || it.source === 'ai_menu' ? 'nm_custom_from_ai' : 'nm_custom_from_saved'))}">${it.source === 'ai' || it.source === 'ai_menu' ? '✨' : '⭐'}</span> ` : ''}${nmEsc(nmItemShort(it))}</div>
+            <div class="nm-option-name">${it.custom ? `<span class="nm-custom-tag" title="${nmEsc(t(it.source === 'ai' || it.source === 'ai_menu' ? 'nm_custom_from_ai' : 'nm_custom_from_saved'))}">${it.source === 'ai' || it.source === 'ai_menu' ? SPARK_ICON : '⭐'}</span> ` : ''}${nmEsc(nmItemShort(it))}</div>
             <div class="nm-option-text">${nmEsc(nmItemFull(it))}</div>
             ${!done && !it.custom && nmOptPicks(it.plan, it.slot, it.opt).length ? nmPicksPanelHtml(nmOptPicks(it.plan, it.slot, it.opt), 'day', slot) : ''}
             ${nmAltRowHtml(slot)}
@@ -2697,7 +2697,7 @@ function nmOpenSwap(slot, startTab, opts) {
             <span class="nm-option-text">${nmEsc(nmItemFull(c))}</span>
             <span class="nm-option-meta">${nmMeta(c)}</span>
         </button>`;
-    const TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', '✨', 'nm_swap_tab_ai']];
+    const TABS = [['menu', '🍽️', 'nm_swap_tab_menu'], ['saved', '⭐', 'nm_swap_tab_saved'], ['ai', SPARK_ICON, 'nm_swap_tab_ai']];
     const headHtml = () => `
         <span class="nm-sheet-grip" aria-hidden="true"></span>
         <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmSlotName(slot)))}</h4>
@@ -2712,7 +2712,7 @@ function nmOpenSwap(slot, startTab, opts) {
     const personal = nmPersonalMenuKeys(slot).filter(k => k !== nmTodayKey(slot)).map(nmItemInfo).filter(Boolean);
     const renderList = () => {
         sheet.innerHTML = `${headHtml()}
-            ${personal.length ? `<div class="nm-sheet-label">✨ ${nmEsc(t('nm_ai_menu_title'))}</div>${personal.map(optHtml).join('')}` : ''}
+            ${personal.length ? `<div class="nm-sheet-label">${SPARK_ICON} ${nmEsc(t('nm_ai_menu_title'))}</div>${personal.map(optHtml).join('')}` : ''}
             ${god ? '' : `<div class="nm-sheet-label">${nmTpl('nm_swap_similar', { p: Math.round(NEW_ME_SWAP_RANGE * 100) })}</div>`}
             ${near.length ? near.map(optHtml).join('') : `<p class="nm-fine">${nmEsc(t('nm_swap_none_near'))}</p>`}
             ${far.length ? `<details class="nm-swap-more"><summary>${nmEsc(t('nm_swap_show_all').replace('{n}', far.length))}</summary><div class="nm-swap-more-list">${far.map(optHtml).join('')}</div></details>` : ''}
@@ -2760,7 +2760,7 @@ function nmOpenSwap(slot, startTab, opts) {
         const fits = fitsBudget(aiResult.kcal);
         return `
             <div class="nm-swap-pick nm-ai-result">
-                <span class="nm-option-name">✨ ${nmEsc(aiResult.name)}</span>
+                <span class="nm-option-name">${SPARK_ICON} ${nmEsc(aiResult.name)}</span>
                 ${aiResult.description ? `<span class="nm-option-text">${nmEsc(aiResult.description)}</span>` : ''}
                 <span class="nm-option-meta">${nmMeta({ kcal: aiResult.kcal, protein: Math.round(aiResult.protein) })}${aiResult.rough ? ` · ${nmEsc(t('nm_swap_ai_rough'))}` : ''}</span>
                 ${fits ? `<button type="button" class="nm-btn-primary" data-use>${nmEsc(t('nm_swap_ai_use'))}</button>` : `
@@ -2814,7 +2814,7 @@ function nmOpenSwap(slot, startTab, opts) {
             <span class="nm-sheet-grip" aria-hidden="true"></span>
             <h4>${nmEsc(t('nm_swap_title').replace('{slot}', nmSlotName(slot)))}</h4>
             <div class="nm-swap-pick">
-                <span class="nm-option-name">${it.custom ? (it.source === 'ai' || it.source === 'ai_menu' ? '✨ ' : '⭐ ') : ''}${nmEsc(nmItemShort(it))}</span>
+                <span class="nm-option-name">${it.custom ? (it.source === 'ai' || it.source === 'ai_menu' ? SPARK_ICON + ' ' : '⭐ ') : ''}${nmEsc(nmItemShort(it))}</span>
                 <span class="nm-option-text">${nmEsc(nmItemFull(it))}</span>
                 <span class="nm-option-meta">${nmMeta(it)}</span>
             </div>
@@ -3061,7 +3061,7 @@ async function nmCheck(slot) {
         kcal = it.kcal + extra;
         protein = Math.round((it.protein + (it.kcal ? it.protein * extra / it.kcal : 0)) * 10) / 10;
         plan = it.plan;
-        text = `✨ ${nmItemShort(it)}`;
+        text = nmItemShort(it);
         optionId = it.key;
     }
     const mealType = NEW_ME_TRACKER_SLOT[slot];
@@ -3719,7 +3719,7 @@ function nmOpenAddFood() {
             <textarea class="nm-ai-input" rows="3" maxlength="300" placeholder="${nmEsc(t('nm_add_food_ph'))}" aria-label="${nmEsc(t('nm_add_food'))}">${nmEsc(text)}</textarea>
             <button type="button" class="nm-btn-primary" data-estimate ${busy ? 'disabled' : ''}>${nmEsc(t(busy ? 'nm_swap_ai_busy' : 'nm_swap_ai_go'))}</button>
             ${res ? `<div class="nm-swap-pick nm-ai-result">
-                <span class="nm-option-name">✨ ${nmEsc(res.name)}</span>
+                <span class="nm-option-name">${SPARK_ICON} ${nmEsc(res.name)}</span>
                 <span class="nm-option-meta">${nmMeta({ kcal: res.kcal, protein: Math.round(res.protein) })}${res.rough ? ` · ${nmEsc(t('nm_swap_ai_rough'))}` : ''}</span>
                 <button type="button" class="nm-btn-primary" data-add>${nmEsc(t('nm_add_food_add'))}</button>
             </div>` : ''}
@@ -3745,7 +3745,7 @@ async function nmAddExtraFood(r) {
     if (!r || !(r.kcal > 0) || !supabaseClient || !currentUserId) return false;
     const { error } = await supabaseClient.from('calorie_tracker').insert({
         username: currentUsername, user_id: currentUserId, date: getLocalDateString(), meal_type: `nm_extra_${Date.now()}`,
-        food_description: `✨ ${String(r.name || '').slice(0, 120)}`, calories: Math.round(r.kcal), protein_grams: Math.round((Number(r.protein) || 0) * 10) / 10, source: 'new_me',
+        food_description: `${String(r.name || '').slice(0, 120)}`, calories: Math.round(r.kcal), protein_grams: Math.round((Number(r.protein) || 0) * 10) / 10, source: 'new_me',
     });
     if (error) { showAppToast(t('nm_save_error'), 'error'); return false; }
     await nmLoadToday();

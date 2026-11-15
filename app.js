@@ -2103,6 +2103,10 @@ const APP_TOUR_RESUME_KEY = 'weekwise_app_tour_resume';
 // ההתראות). כל שלב קצר; "לדלג על החלק הזה" ומסך הפתיחה עם החלקים שומרים על סיור ארוך נוח
 // שלבי הפוקוס בסיור - רק כשכפתור הפוקוס מוצג במסך הבית
 function appTourFocusAvailable() { const b = document.getElementById('btn-home-focus'); return !!(b && b.offsetParent !== null); }
+// ניצוץ סגול קטן מצויר במקום האימוג'י הנוצץ, שלא משתמשים בו באפליקציה בכלל (לפי בקשה מפורשת, 2026-11-15) -
+// SPARK_ICON ב-HTML (theme.css .ic-spark), SPARK_SVG כשצריך svg (אייקון בסיור)
+const SPARK_ICON = '<i class="ic-spark" aria-hidden="true"></i>';
+const SPARK_SVG = '<svg class="ic-spark-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11 2.5c.6 4.2 2.7 6.3 6.9 6.9-4.2.6-6.3 2.7-6.9 6.9-.6-4.2-2.7-6.3-6.9-6.9 4.2-.6 6.3-2.7 6.9-6.9z" fill="#a78bfa" stroke="#7c3aed" stroke-width=".9" stroke-linejoin="round"/><path d="M18.6 14.2c.3 1.9 1.2 2.8 3.1 3.1-1.9.3-2.8 1.2-3.1 3.1-.3-1.9-1.2-2.8-3.1-3.1 1.9-.3 2.8-1.2 3.1-3.1z" fill="#c4b5fd" stroke="#8b5cf6" stroke-width=".7" stroke-linejoin="round"/><circle cx="5.5" cy="19" r="1.3" fill="#ddd6fe" stroke="#a78bfa" stroke-width=".5"/></svg>';
 const APP_TOUR_STEPS = [
     // מסך הפתיחה: חלקי הסיור (כל אחד - נגיעה קופצת אליו), "להמשיך מאיפה שעצרתי" ו"לא עכשיו"
     { id: 'welcome', ch: 'home', ctx: 'home', titleKey: 'apptour_welcome_title', text: 'apptour_welcome_text', agenda: true },
@@ -2144,7 +2148,7 @@ const APP_TOUR_STEPS = [
     { id: 'r_tabs', ch: 'menu', ctx: 'routine', icon: '🗂️', target: '#daily-board-tabs-list', titleKey: 'apptour_r_tabs_title', text: 'apptour_r_tabs_text' },
     { id: 'r_hours', ch: 'menu', ctx: 'routine', icon: '⏰', target: '#daily-board-body', titleKey: 'apptour_r_hours_title', text: 'apptour_r_hours_text' },
     { id: 'r_add', ch: 'menu', ctx: 'routine', icon: '➕', target: '#daily-board-add-btn', titleKey: 'daily_board_add_tab_title', text: 'apptour_r_add_text' },
-    { id: 'r_ai', ch: 'menu', ctx: 'routine', icon: '✨', target: '#daily-board-ai-btn', titleKey: 'routine_ai_title', text: 'apptour_r_ai_text' },
+    { id: 'r_ai', ch: 'menu', ctx: 'routine', icon: SPARK_SVG, target: '#daily-board-ai-btn', titleKey: 'routine_ai_title', text: 'apptour_r_ai_text' },
     // 🎒 התיק שלי: הפריט בתפריט, ואז התיק עצמו (הכיסים)
     { id: 'm_study', ch: 'menu', ctx: 'menu', target: '[data-tour="m-study"]', text: 'apptour_m_study_text' },
     { id: 'nb_inside', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#bag-content', titleKey: 'apptour_nb_inside_title', text: 'apptour_nb_inside_text', link: 'apptour_m_study_link' },
@@ -2539,7 +2543,7 @@ function appTourRender(step) {
     skip.title = t('apptour_skip');
     // מסך הפתיחה מציג את האייקון של האפליקציה; שלב בלי אלמנט מודגש - אייקון גדול באריח
     const hero = layer.querySelector('.app-tour-hero');
-    hero.innerHTML = step.agenda ? '<img src="icon-192.png?v=7" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || '✨') : '');
+    hero.innerHTML = step.agenda ? '<img src="icon-192.png?v=7" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || SPARK_SVG) : '');
     hero.classList.toggle('is-brand', !!step.agenda);
     hero.classList.toggle('hidden', !isCenter || !!step.demo);
     const demoEl = layer.querySelector('.app-tour-demo');
@@ -9546,7 +9550,7 @@ function buildShareMessage(forWhatsapp) {
     const blocks = [pendingShare.text.trim()];
     // תמונה (אימון/מתכון) - הקישור הראשון בהודעה, אז וואטסאפ מציג אותה כתצוגה מקדימה
     if (pendingShare.photoUrl) blocks.push(`📸 ${pendingShare.photoUrl}`);
-    if (pendingShare.footer === 'full') blocks.push(`┈┈┈┈┈┈┈┈\n${shareItalic(t('share_footer_sent_from'))} ✨\n📲 ${link}`);
+    if (pendingShare.footer === 'full') blocks.push(`┈┈┈┈┈┈┈┈\n${shareItalic(t('share_footer_sent_from'))} 💜\n📲 ${link}`);
     else if (pendingShare.footer === 'link') blocks.push(`📲 ${link}`);
     let text = blocks.filter(Boolean).join('\n\n')
         // "NOT10.ai" בטקסט הופך בוואטסאפ לקישור ל-not10.ai (בלי app.), שמחזיר כרגע דף שגיאה -
@@ -9612,7 +9616,7 @@ function pickShareClosing(options) {
 
 function shareApp() {
     const text = [
-        `✨ ${shareBold('NOT10.ai')}`,
+        `💜 ${shareBold('NOT10.ai')}`,
         '',
         t('settings_share_app_text'),
         '',
@@ -11201,7 +11205,7 @@ function buildGoalShareText(goal) {
         if (days >= 2) lines.push(`📅 ${t('goal_share_days_taken').replace('{n}', days)}`);
     }
     if (goal.reward) lines.push(`🎁 ${t('goal_share_reward_line').replace('{reward}', goal.reward)}`);
-    lines.push('', pickShareClosing([['goal_share_closing_1', '💪'], ['goal_share_closing_2', '✨'], ['goal_share_closing_3', '🙌']]));
+    lines.push('', pickShareClosing([['goal_share_closing_1', '💪'], ['goal_share_closing_2', '💜'], ['goal_share_closing_3', '🙌']]));
     return lines.join('\n');
 }
 
@@ -13137,7 +13141,7 @@ async function shareSportSession(id) {
         lines.push(`🎯 ${t('sport_history_motivation_prefix')} ${t(motKey) === motKey ? row.motivation : t(motKey)}`);
     }
     if (row.notes) lines.push(`💬 ${row.notes}`);
-    lines.push('', pickShareClosing([['sport_share_closing_1', '💪'], ['sport_share_closing_2', '🙌'], ['sport_share_closing_3', '✨']]));
+    lines.push('', pickShareClosing([['sport_share_closing_1', '💪'], ['sport_share_closing_2', '🙌'], ['sport_share_closing_3', '💜']]));
     openSharePicker(lines.join('\n'), { photoUrl: row.photo_url || '', subject: sportTypeLabel(row) });
 }
 
@@ -18861,7 +18865,7 @@ function renderRoutineDaysOff() {
     const modes = document.getElementById('routine-daysoff-modes');
     if (modes) {
         const opt = (id, icon, key) => `<button type="button" class="routine-daysoff-mode${routineDaysOffMode === id ? ' on' : ''}" role="radio" aria-checked="${routineDaysOffMode === id}" onclick="setRoutineDaysOffMode('${id}')"><span class="routine-daysoff-mode-icon" aria-hidden="true">${icon}</span><span>${escapeHtmlForReport(t(key))}</span></button>`;
-        modes.innerHTML = opt('clean', '🌿', 'routine_daysoff_clean') + opt('own', '✏️', 'routine_daysoff_own') + opt('ai', '✨', 'routine_daysoff_ai');
+        modes.innerHTML = opt('clean', '🌿', 'routine_daysoff_clean') + opt('own', '✏️', 'routine_daysoff_own') + opt('ai', SPARK_ICON, 'routine_daysoff_ai');
     }
     const ta = document.getElementById('routine-daysoff-ai-text');
     if (ta) ta.classList.toggle('hidden', routineDaysOffMode !== 'ai');
@@ -19461,7 +19465,7 @@ let penColor = '#2b2b2b';
 let currentDrawTool = 'pen';
 let penWidth = 3;
 let notebookCanvasPointerBound = false;
-const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','✨','🎉','🎈','🎁','🏆','✅','✕','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
+const NOTEBOOK_EMOJI_PRESETS = ['😀','😂','🥰','😎','🤩','😭','😡','🥳','🤔','😴','👍','👎','👏','🙌','🤝','💪','🙏','✌️','🤞','👋','❤️','🧡','💛','💚','💙','💜','🖤','🤍','💯','🔥','⭐','🎉','🎈','🎁','🏆','✅','✕','❓','❗','📌','📍','📎','🔔','💡','📝','📚','🎯','🚀','🌈'];
 
 // אייקון וצבע לכל כיס (פרויקט) ב"התיק שלי" - כדי להבחין במבט חטוף בין כיסים (בית, משפחה, עבודה, טיולים...).
 // האמוג'י עצמו הוא גם המזהה וגם התצוגה (ר' renderProjectIconPicker); הצבעים - BAG_POCKET_COLORS ב-bag.js

@@ -136,7 +136,7 @@ function nmgWeekCardHtml() {
     const c = nmChActiveWeek();
     if (!c) {
         return `<button type="button" class="nmg-b nmg-week is-empty" onclick="nmOpenGrowthPicker()">
-            <span class="nmg-week-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}</span>
+            <span class="nmg-week-eyebrow">${SPARK_ICON} ${nmEsc(t('nm_week_ch_label'))}</span>
             <b class="nmg-week-title">${nmEsc(t('nm_week_pick_q'))}</b>
             <span class="nmg-week-cta">${nmEsc(t('nm_week_pick_btn'))}</span>
         </button>`;
@@ -153,7 +153,7 @@ function nmgWeekCardHtml() {
     const mark = st.marks[st.today];
     return `<div class="nmg-week${st.scheduled ? ' is-scheduled' : ''}">
         <button type="button" class="nmg-b nmg-week-main" onclick="nmOpenChallenge('${c.challenge_key}')">
-            <span class="nmg-week-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}${st.scheduled ? ` · ⏳ ${nmEsc(nmShortDate(c.start_date))}` : ''}</span>
+            <span class="nmg-week-eyebrow">${SPARK_ICON} ${nmEsc(t('nm_week_ch_label'))}${st.scheduled ? ` · ⏳ ${nmEsc(nmShortDate(c.start_date))}` : ''}</span>
             <b class="nmg-week-title"><span aria-hidden="true">${def.icon}</span> ${nmEsc(nmChTitle(c.challenge_key))}</b>
             <span class="nmg-week-dots" aria-label="${nmEsc(t('nm_ch_progress_line').replace('{done}', st.done).replace('{needed}', st.needed))}">${dots}</span>
         </button>

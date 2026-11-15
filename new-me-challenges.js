@@ -47,7 +47,7 @@ const NEW_ME_GROWTH = [
     ['others', 'g_oth_call', '📞'], ['others', 'g_oth_kind_act', '🤲'], ['others', 'g_oth_quality', '🫶'], ['others', 'g_oth_ask_help', '🙋'],
     ['mind', 'read_2_pages', '📖', 'read'], ['mind', 'g_mind_word', '🔤'], ['mind', 'g_mind_learn', '🎧'], ['mind', 'g_mind_question', '❓'],
     ['mind', 'g_mind_journal', '📓'], ['mind', 'g_mind_hobby', '🎨'], ['mind', 'g_mind_slow_morning', '🌅'], ['mind', 'g_mind_plan', '📝'],
-    ['calm', 'g_calm_breath', '🌬️'], ['calm', 'g_calm_walk', '🚶'], ['calm', 'g_calm_three_good', '✨'], ['calm', 'g_calm_sky', '☁️'],
+    ['calm', 'g_calm_breath', '🌬️'], ['calm', 'g_calm_walk', '🚶'], ['calm', 'g_calm_three_good', '🌼'], ['calm', 'g_calm_sky', '☁️'],
     ['calm', 'g_calm_screen_night', '🌙'], ['calm', 'g_calm_cup', '🍵'], ['calm', 'g_calm_song', '🎵'], ['calm', 'g_calm_tidy', '🧺'],
     ['brave', 'g_brave_new', '🌱'], ['brave', 'g_brave_start', '⏱️'], ['brave', 'g_brave_speak', '🗣️'], ['brave', 'g_brave_hello', '👋'],
     ['brave', 'g_brave_mistake', '🎯'], ['brave', 'g_brave_dream', '🌠'], ['brave', 'g_brave_alone', '☕'], ['brave', 'g_brave_ask', '💡'],
@@ -299,7 +299,7 @@ function nmCelebrateChallenge(c, opts = {}) {
     const sheet = ov.querySelector('.nm-sheet');
     ov.querySelector('[data-share]').addEventListener('click', () => {
         ov.remove();
-        openSharePicker(`${shareBold(t('nm_ch_share_text'))}\n\n${def.icon} ${nmChTitle(c.challenge_key)}${week ? '' : `\n✨ ${t('nm_ch_complete_desc').replace('{n}', n).replace('{total}', total)}`}`);
+        openSharePicker(`${shareBold(t('nm_ch_share_text'))}\n\n${def.icon} ${nmChTitle(c.challenge_key)}${week ? '' : `\n🏆 ${t('nm_ch_complete_desc').replace('{n}', n).replace('{total}', total)}`}`);
     });
     ov.querySelector('[data-ok]').addEventListener('click', () => { ov.remove(); if (all) nmGo('gift'); else afterClose(); });
     const keep = ov.querySelector('[data-keep]');
@@ -808,7 +808,7 @@ function nmOpenGrowthPicker(area) {
         const keepLeft = prevRow ? prevRow.scrollLeft : null;
         sheet.innerHTML = `
             <span class="nm-sheet-grip" aria-hidden="true"></span>
-            <div class="nm-growth-eyebrow">✨ ${nmEsc(t('nm_week_ch_label'))}</div>
+            <div class="nm-growth-eyebrow">${SPARK_ICON} ${nmEsc(t('nm_week_ch_label'))}</div>
             <h4>${nmEsc(t('nm_week_pick_q'))}</h4>
             ${nmGrowthTabsHtml(cur, 'data-pick-area')}
             <div class="nm-growth-list">${NEW_ME_GROWTH.filter(c => c.area === cur).map(c => `

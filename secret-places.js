@@ -396,7 +396,7 @@ function srpGenieTalk(layer, close, opts = {}) {
         ? `<textarea class="srp-genie-input" data-k="${k}" rows="3" maxlength="400" placeholder="${srEsc(t(ph))}">${srEsc(a[k] || '')}</textarea>`
         : `<input type="text" class="srp-genie-input" data-k="${k}" maxlength="160" placeholder="${srEsc(ph)}" value="${srEsc(a[k] || '')}">`;
     const summaryRows = () => [
-        ['✨', 'room_genie_sum_wish', val('wish')], ['🌈', 'room_genie_sum_feel', val('feel')], ['🪨', 'room_genie_sum_hard', val('hard')],
+        ['🌠', 'room_genie_sum_wish', val('wish')], ['🌈', 'room_genie_sum_feel', val('feel')], ['🪨', 'room_genie_sum_hard', val('hard')],
         ['💡', 'room_genie_sum_turn', val('turn')], ['⏳', 'room_genie_sum_time', a.time ? t('room_genie_time_' + a.time) : ''],
         ['🪜', 'room_genie_sum_steps', [val('step1'), val('step2'), val('step3')].filter(Boolean).map((x, j) => `${j + 1}. ${x}`).join('\n')],
         ['🛡️', 'room_genie_sum_plan', val('if') || val('then') ? `${t('room_genie_if_ph')} ${val('if')} – ${t('room_genie_then_ph')} ${val('then')}` : ''],
