@@ -19,15 +19,15 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LEMONSQUEEZY_API_KEY = Deno.env.get("LEMONSQUEEZY_API_KEY")!;
-const LEMONSQUEEZY_STORE_ID = Deno.env.get("LEMONSQUEEZY_STORE_ID")!;
-const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
-const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
+const LEMONSQUEEZY_API_KEY = (Deno.env.get("LEMONSQUEEZY_API_KEY") ?? "").trim();
+const LEMONSQUEEZY_STORE_ID = (Deno.env.get("LEMONSQUEEZY_STORE_ID") ?? "").trim();
+const LEMONSQUEEZY_VARIANT_ID_MONTHLY = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY") ?? "").trim();
+const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL") ?? "").trim();
 // Premium yearly ($29.99, since 2026-11-07). If no separate yearly variant is set, the old
 // semi-annual variant is used - it was edited in place in Lemon Squeezy to bill yearly
-const LEMONSQUEEZY_VARIANT_ID_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") || LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL;
-const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
-const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") || "";
+const LEMONSQUEEZY_VARIANT_ID_YEARLY = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") ?? "").trim() || LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL;
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") ?? "").trim();
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") ?? "").trim();
 const SITE_URL = Deno.env.get("SITE_URL")!;
 
 const CORS_HEADERS = {

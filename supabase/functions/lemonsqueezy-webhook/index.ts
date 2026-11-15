@@ -12,17 +12,19 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const LEMONSQUEEZY_WEBHOOK_SECRET = Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET")!;
-const LEMONSQUEEZY_VARIANT_ID_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY")!;
-const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL")!;
+// .trim() on every secret: a value pasted in the Supabase dashboard often carries a trailing newline,
+// which would break the signature check (and an Authorization header)
+const LEMONSQUEEZY_WEBHOOK_SECRET = (Deno.env.get("LEMONSQUEEZY_WEBHOOK_SECRET") ?? "").trim();
+const LEMONSQUEEZY_VARIANT_ID_MONTHLY = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_MONTHLY") ?? "").trim();
+const LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_SEMIANNUAL") ?? "").trim();
 // Premium yearly (since 2026-11-07). Without its own variant, the old semi-annual variant (edited in place
 // in Lemon Squeezy to bill yearly) counts as yearly
-const LEMONSQUEEZY_VARIANT_ID_YEARLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") || "";
-const LEMONSQUEEZY_VARIANT_ID_NEW_ME = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") || "";
+const LEMONSQUEEZY_VARIANT_ID_YEARLY = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_YEARLY") ?? "").trim();
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME") ?? "").trim();
 // New Me has two plans: lifetime (one-time order, LEMONSQUEEZY_VARIANT_ID_NEW_ME) and
 // monthly (a subscription, this variant). Neither ever touches is_premium/tier.
-const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") || "";
-const LEMONSQUEEZY_API_KEY = Deno.env.get("LEMONSQUEEZY_API_KEY") || "";
+const LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY = (Deno.env.get("LEMONSQUEEZY_VARIANT_ID_NEW_ME_MONTHLY") ?? "").trim();
+const LEMONSQUEEZY_API_KEY = (Deno.env.get("LEMONSQUEEZY_API_KEY") ?? "").trim();
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
