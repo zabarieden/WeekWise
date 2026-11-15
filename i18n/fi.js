@@ -3127,6 +3127,7 @@ translations.fi = {
     nm_badges_earned: "saavutusta ansaittu",
     nm_badges_new_many: "{n} uutta saavutusta!",
     nm_badge_new: "Uusi saavutus!",
+    badge_week_title: "Sinnikäs viikko", badge_week_desc: "✓ kuutena viimeisestä seitsemästä päivästä", badge_week_share: "Sinnikäs viikko NOT10.ai:ssa: ✓ kuutena päivänä seitsemästä", faq_q_badge_week: "Mikä on sinnikkyysmerkki?", faq_a_badge_week: "Premiumissa avautuu, kun ✓ on kuutena viimeisestä seitsemästä päivästä (Rutiinissani, tavoitteen pienessä askeleessa tai tavassa), lasikortti, jossa sataa kimalletta: ”Sinnikäs viikko”. Se tulee vain kerran, ja ”Jaa” lähettää sen kuvana.",
     nm_ing_bell_pepper: "Paprikat",
     nm_ing_tomato_sauce: "Tomaattikastike (annoksia)",
     nm_ing_lean_beef_tofu: "Vähärasvainen naudanjauheliha / tofu",

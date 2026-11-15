@@ -3127,6 +3127,7 @@ translations.id = {
     nm_badges_earned: "pencapaian diraih",
     nm_badges_new_many: "{n} pencapaian baru!",
     nm_badge_new: "Pencapaian baru!",
+    badge_week_title: "Seminggu penuh konsistensi", badge_week_desc: "✓ di 6 dari 7 hari terakhir", badge_week_share: "Seminggu penuh konsistensi di NOT10.ai: ✓ di 6 dari 7 hari", faq_q_badge_week: "Apa itu lencana konsistensi?", faq_a_badge_week: "Dengan Premium, setelah ✓ di 6 dari 7 hari terakhir (di Rutinitas Saya, di langkah kecil sebuah tujuan, atau di kebiasaan), terbuka kartu kaca dengan glitter yang berjatuhan: “Seminggu penuh konsistensi”. Kartu ini hanya muncul sekali, dan “Bagikan” mengirimnya sebagai gambar.",
     nm_ing_bell_pepper: "Paprika",
     nm_ing_tomato_sauce: "Saus tomat (porsi)",
     nm_ing_lean_beef_tofu: "Daging sapi giling tanpa lemak / tahu",

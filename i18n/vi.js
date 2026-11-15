@@ -3127,6 +3127,7 @@ translations.vi = {
     nm_badges_earned: "thành tích đã đạt",
     nm_badges_new_many: "{n} thành tích mới!",
     nm_badge_new: "Thành tích mới!",
+    badge_week_title: "Một tuần kiên trì", badge_week_desc: "Có ✓ trong 6 trên 7 ngày gần nhất", badge_week_share: "Một tuần kiên trì trên NOT10.ai: ✓ trong 6 trên 7 ngày", faq_q_badge_week: "Huy hiệu kiên trì là gì?", faq_a_badge_week: "Với Premium, sau khi có ✓ trong 6 trên 7 ngày gần nhất (ở Thói Quen Của Tôi, ở một bước nhỏ của mục tiêu hoặc ở một thói quen), một tấm thẻ kính với kim tuyến rơi sẽ mở ra: “Một tuần kiên trì”. Nó chỉ đến một lần, và “Chia sẻ” gửi nó dưới dạng ảnh.",
     nm_ing_bell_pepper: "Ớt chuông",
     nm_ing_tomato_sauce: "Sốt cà chua (phần)",
     nm_ing_lean_beef_tofu: "Thịt bò băm nạc / đậu hũ",

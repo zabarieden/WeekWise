@@ -3127,6 +3127,7 @@ translations.sv = {
     nm_badges_earned: "prestationer uppnådda",
     nm_badges_new_many: "{n} nya prestationer!",
     nm_badge_new: "Ny prestation!",
+    badge_week_title: "En vecka av uthållighet", badge_week_desc: "En ✓ på 6 av de senaste 7 dagarna", badge_week_share: "En vecka av uthållighet i NOT10.ai: en ✓ på 6 av 7 dagar", faq_q_badge_week: "Vad är uthållighetsmärket?", faq_a_badge_week: "Med Premium öppnas efter en ✓ på 6 av de senaste 7 dagarna (i Min Rutin, på ett litet steg mot ett mål eller på en vana) ett glaskort med fallande glitter: ”En vecka av uthållighet”. Det kommer bara en gång, och ”Dela” skickar det som bild.",
     nm_ing_bell_pepper: "Paprikor",
     nm_ing_tomato_sauce: "Tomatsås (portioner)",
     nm_ing_lean_beef_tofu: "Mager nötfärs / tofu",

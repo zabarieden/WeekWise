@@ -3127,6 +3127,7 @@ translations.de = {
     nm_badges_earned: "Erfolge erreicht",
     nm_badges_new_many: "{n} neue Erfolge!",
     nm_badge_new: "Neuer Erfolg!",
+    badge_week_title: "Eine Woche Ausdauer", badge_week_desc: "Ein ✓ an 6 der letzten 7 Tage", badge_week_share: "Eine Woche Ausdauer bei NOT10.ai: ein ✓ an 6 von 7 Tagen", faq_q_badge_week: "Was ist das Ausdauer-Abzeichen?", faq_a_badge_week: "Mit Premium öffnet sich nach einem ✓ an 6 der letzten 7 Tage (in Meine Routine, bei einem kleinen Schritt eines Ziels oder bei einer Gewohnheit) eine Glaskarte mit fallendem Glitzer: „Eine Woche Ausdauer“. Sie kommt nur einmal, und „Teilen“ schickt sie als Bild.",
     nm_ing_bell_pepper: "Paprika",
     nm_ing_tomato_sauce: "Tomatensauce (Portionen)",
     nm_ing_lean_beef_tofu: "Mageres Rinderhack / Tofu",

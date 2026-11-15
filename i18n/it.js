@@ -3127,6 +3127,7 @@ translations.it = {
     nm_badges_earned: "conquiste ottenute",
     nm_badges_new_many: "{n} nuove conquiste!",
     nm_badge_new: "Nuova conquista!",
+    badge_week_title: "Una settimana di costanza", badge_week_desc: "Un ✓ in 6 degli ultimi 7 giorni", badge_week_share: "Una settimana di costanza su NOT10.ai: un ✓ in 6 giorni su 7", faq_q_badge_week: "Cos'è il badge della costanza?", faq_a_badge_week: "Con Premium, dopo un ✓ in 6 degli ultimi 7 giorni (in La Mia Routine, su un piccolo passo di un obiettivo o su un'abitudine), si apre una carta di vetro con brillantini che cadono: “Una settimana di costanza”. Arriva una volta sola, e “Condividi” la invia come immagine.",
     nm_ing_bell_pepper: "Peperoni",
     nm_ing_tomato_sauce: "Salsa di pomodoro (porzioni)",
     nm_ing_lean_beef_tofu: "Macinato magro di manzo / tofu",

@@ -3127,6 +3127,7 @@ translations.ca = {
     nm_badges_earned: "assoliments aconseguits",
     nm_badges_new_many: "{n} assoliments nous!",
     nm_badge_new: "Nou assoliment!",
+    badge_week_title: "Una setmana de constància", badge_week_desc: "✓ en 6 dels últims 7 dies", badge_week_share: "Una setmana de constància a NOT10.ai: ✓ en 6 de 7 dies", faq_q_badge_week: "Què és la insígnia de constància?", faq_a_badge_week: "Amb Premium, després d'un ✓ en 6 dels últims 7 dies (a La Meva Rutina, en un petit pas d'un objectiu o en un hàbit), s'obre una targeta de vidre amb purpurina que cau: «Una setmana de constància». Arriba un sol cop, i «Comparteix» l'envia com a imatge.",
     nm_ing_bell_pepper: "Pebrots",
     nm_ing_tomato_sauce: "Salsa de tomàquet (racions)",
     nm_ing_lean_beef_tofu: "Carn picada magra de vedella / tofu",

@@ -6288,8 +6288,43 @@ function toggleRecurringOptionsVisibility() {
 // loadTodayTasks) - לא נשמר בשום מקום, מתאפס ל-null בכל רענון-דף בכוונה
 let lastKnownAllDoneState = null;
 
+// 🏅 תג ההתמדה הראשון של הפרימיום (לפי בקשה מפורשת, 2026-11-15: "אחרי שבוע של שימוש - מין תג התמדה כזה אבל רק אם
+// עושים וי... נגיד 6 מתוך 7"): ✓ ב-6 מתוך 7 הימים האחרונים - שגרה, צעד קטן ביעד או הרגל (הטבלאות שיש להן תאריך).
+// פעם אחת לחשבון (user_badges), בחלון הזכוכית עם הנצנצים. נבדק כש"היום שלי" נטען, לכל היותר פעם ב-10 דקות
+const PREMIUM_WEEK_BADGE = 'premium_week';
+let premiumWeekBadgeCheckedAt = 0;
+let premiumWeekBadgeDone = false;
+async function checkPremiumWeekBadge() {
+    if (premiumWeekBadgeDone || !supabaseClient || !currentUserId || !isRealPremiumUser) return;
+    if (Date.now() - premiumWeekBadgeCheckedAt < 10 * 60 * 1000) return;
+    premiumWeekBadgeCheckedAt = Date.now();
+    const doneKey = `weekwise_badge_${PREMIUM_WEEK_BADGE}_${currentUserId}`;
+    try { if (localStorage.getItem(doneKey)) { premiumWeekBadgeDone = true; return; } } catch {}
+    try {
+        const { data: had } = await supabaseClient.from('user_badges').select('badge').eq('user_id', currentUserId).eq('badge', PREMIUM_WEEK_BADGE).maybeSingle();
+        if (had) { premiumWeekBadgeDone = true; try { localStorage.setItem(doneKey, '1'); } catch {} return; }
+        const from = new Date(); from.setDate(from.getDate() - 6);
+        const fromStr = getLocalDateString(from), toStr = getLocalDateString();
+        const tables = ['routine_item_checkins', 'vision_goal_checkins', 'habit_checkins'];
+        const results = await Promise.all(tables.map(tb => supabaseClient.from(tb).select('checkin_date').eq('user_id', currentUserId).gte('checkin_date', fromStr).lte('checkin_date', toStr)));
+        const days = new Set();
+        results.forEach(r => (r && r.data || []).forEach(row => { if (row.checkin_date) days.add(String(row.checkin_date).slice(0, 10)); }));
+        if (days.size < 6) return;
+        const { error } = await supabaseClient.from('user_badges').insert({ user_id: currentUserId, badge: PREMIUM_WEEK_BADGE });
+        if (error && error.code !== '23505') return;
+        premiumWeekBadgeDone = true;
+        try { localStorage.setItem(doneKey, '1'); } catch {}
+        if (error) return;
+        openGlassAchievement({
+            eyebrow: t('nm_badge_new'), icon: '🔥', title: t('badge_week_title'), desc: t('badge_week_desc'),
+            shareText: `🏅 ${t('badge_week_share')}`, file: 'not10-week-badge.png', shareLabel: t('nm_share'), okLabel: t('nm_celebrate_ok'),
+        });
+    } catch (e) { console.warn('premium week badge', e); }
+}
+
 async function loadTodayTasks() {
     if (!supabaseClient || !currentUserId) return;
+    checkPremiumWeekBadge();
     // נקראת מכאן (לא מכל call site שנוגע ב-calendar_events בנפרד) כדי
     // ש"השבוע שלי" תמיד יישאר מסונכרן בלי לצוד כל מקום כזה ידנית - ר' ההערה
     // על loadWeekOneTimeEvents עצמה. לפני ה-return המוקדם למטה (שתלוי בקיום
@@ -10078,7 +10113,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
     { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
-    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes'] },
+    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
     { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
     { tab: 'new_me', head: 'faq_cat_nm_plan', ids: ['new_me_what', 'new_me_preview', 'new_me_plans', 'new_me_tour', 'nm_me1_guide', 'new_me_home_btn', 'new_me_no_ai', 'new_me_weight_optional', 'new_me_magic_themes'] },

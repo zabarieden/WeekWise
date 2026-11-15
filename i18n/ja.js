@@ -3127,6 +3127,7 @@ translations.ja = {
     nm_badges_earned: "バッジ獲得",
     nm_badges_new_many: "新しいバッジが{n}個！",
     nm_badge_new: "新しいバッジ！",
+    badge_week_title: "続けた1週間", badge_week_desc: "直近7日のうち6日に ✓", badge_week_share: "NOT10.aiで続けた1週間：7日のうち6日に ✓", faq_q_badge_week: "継続バッジとは？", faq_a_badge_week: "プレミアムでは、直近7日のうち6日に ✓（マイルーティン、目標の小さな一歩、または習慣）を付けると、きらめきが降るガラスのカード「続けた1週間」が開きます。1回だけ届き、「シェア」で画像として送れます。",
     nm_ing_bell_pepper: "パプリカ",
     nm_ing_tomato_sauce: "トマトソース（人前）",
     nm_ing_lean_beef_tofu: "赤身の牛ひき肉 / 豆腐",

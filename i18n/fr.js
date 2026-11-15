@@ -3127,6 +3127,7 @@ translations.fr = {
     nm_badges_earned: "réussites obtenues",
     nm_badges_new_many: "{n} nouvelles réussites !",
     nm_badge_new: "Nouvelle réussite !",
+    badge_week_title: "Une semaine de constance", badge_week_desc: "Un ✓ sur 6 des 7 derniers jours", badge_week_share: "Une semaine de constance sur NOT10.ai : un ✓ sur 6 jours sur 7", faq_q_badge_week: "C'est quoi, le badge de constance ?", faq_a_badge_week: "Avec Premium, après un ✓ sur 6 des 7 derniers jours (dans Ma Routine, sur un petit pas d'un objectif ou sur une habitude), une carte de verre avec des paillettes qui tombent s'ouvre : « Une semaine de constance ». Elle n'arrive qu'une fois, et « Partager » l'envoie en image.",
     nm_ing_bell_pepper: "Poivrons",
     nm_ing_tomato_sauce: "Sauce tomate (portions)",
     nm_ing_lean_beef_tofu: "Bœuf haché maigre / tofu",

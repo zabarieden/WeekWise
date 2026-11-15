@@ -3127,6 +3127,7 @@ translations.yo = {
     nm_badges_earned: "àṣeyọrí tí a ti gbà",
     nm_badges_new_many: "Àṣeyọrí tuntun {n}!",
     nm_badge_new: "Àṣeyọrí tuntun!",
+    badge_week_title: "Ọ̀sẹ̀ ìforítì kan", badge_week_desc: "✓ ní ọjọ́ 6 nínú ọjọ́ 7 tó kọjá", badge_week_share: "Ọ̀sẹ̀ ìforítì kan lórí NOT10.ai: ✓ ní ọjọ́ 6 nínú 7", faq_q_badge_week: "Kí ni àmì ìforítì?", faq_a_badge_week: "Pẹ̀lú Premium, lẹ́yìn ✓ ní ọjọ́ 6 nínú ọjọ́ 7 tó kọjá (nínú Ìlànà Mi, lórí ìgbésẹ̀ kékeré ti àfojúsùn tàbí lórí àṣà), káàdì dígí kan tí àwọn ohun dídán ń jábọ́ sínú rẹ̀ yóò ṣí: “Ọ̀sẹ̀ ìforítì kan”. Ẹ̀ẹ̀kan péré ni ó máa ń wá, “Pín” sì máa ń fi ránṣẹ́ bí àwòrán.",
     nm_ing_bell_pepper: "Ata aládùn",
     nm_ing_tomato_sauce: "Ọbẹ̀ tòmátì (ìpín)",
     nm_ing_lean_beef_tofu: "Ẹran màlúù lílọ̀ tí kò lọ́ràá / tofu",

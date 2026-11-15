@@ -3127,6 +3127,7 @@ translations.nb = {
     nm_badges_earned: "prestasjoner oppnådd",
     nm_badges_new_many: "{n} nye prestasjoner!",
     nm_badge_new: "Ny prestasjon!",
+    badge_week_title: "En uke med utholdenhet", badge_week_desc: "En ✓ på 6 av de siste 7 dagene", badge_week_share: "En uke med utholdenhet i NOT10.ai: en ✓ på 6 av 7 dager", faq_q_badge_week: "Hva er utholdenhetsmerket?", faq_a_badge_week: "Med Premium åpnes det etter en ✓ på 6 av de siste 7 dagene (i Min Rutine, på et lite steg mot et mål eller på en vane) et glasskort med fallende glitter: «En uke med utholdenhet». Det kommer bare én gang, og «Del» sender det som bilde.",
     nm_ing_bell_pepper: "Paprikaer",
     nm_ing_tomato_sauce: "Tomatsaus (porsjoner)",
     nm_ing_lean_beef_tofu: "Mager storfekjøttdeig / tofu",

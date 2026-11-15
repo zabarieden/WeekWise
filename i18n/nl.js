@@ -3127,6 +3127,7 @@ translations.nl = {
     nm_badges_earned: "prestaties behaald",
     nm_badges_new_many: "{n} nieuwe prestaties!",
     nm_badge_new: "Nieuwe prestatie!",
+    badge_week_title: "Een week volhouden", badge_week_desc: "Een ✓ op 6 van de laatste 7 dagen", badge_week_share: "Een week volhouden in NOT10.ai: een ✓ op 6 van de 7 dagen", faq_q_badge_week: "Wat is de volhoudbadge?", faq_a_badge_week: "Met Premium opent na een ✓ op 6 van de laatste 7 dagen (in Mijn Routine, bij een kleine stap van een doel of bij een gewoonte) een glazen kaart met vallende glitters: ‘Een week volhouden’. Die komt één keer, en ‘Delen’ stuurt hem als afbeelding.",
     nm_ing_bell_pepper: "Paprika's",
     nm_ing_tomato_sauce: "Tomatensaus (porties)",
     nm_ing_lean_beef_tofu: "Mager rundergehakt / tofu",

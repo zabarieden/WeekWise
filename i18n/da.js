@@ -3127,6 +3127,7 @@ translations.da = {
     nm_badges_earned: "præstationer opnået",
     nm_badges_new_many: "{n} nye præstationer!",
     nm_badge_new: "Ny præstation!",
+    badge_week_title: "En uge med vedholdenhed", badge_week_desc: "Et ✓ på 6 af de seneste 7 dage", badge_week_share: "En uge med vedholdenhed i NOT10.ai: et ✓ på 6 af 7 dage", faq_q_badge_week: "Hvad er vedholdenhedsmærket?", faq_a_badge_week: "Med Premium åbnes der efter et ✓ på 6 af de seneste 7 dage (i Min Rutine, på et lille skridt mod et mål eller på en vane) et glaskort med faldende glimmer: »En uge med vedholdenhed«. Det kommer kun én gang, og »Del« sender det som billede.",
     nm_ing_bell_pepper: "Peberfrugter",
     nm_ing_tomato_sauce: "Tomatsovs (portioner)",
     nm_ing_lean_beef_tofu: "Magert hakket oksekød / tofu",

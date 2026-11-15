@@ -3127,6 +3127,7 @@ translations.en = {
     nm_badges_earned: "achievements earned",
     nm_badges_new_many: "{n} new achievements!",
     nm_badge_new: "New achievement!",
+    badge_week_title: "A week of persistence", badge_week_desc: "A ✓ on 6 of the last 7 days", badge_week_share: "A week of persistence on NOT10.ai: a ✓ on 6 of 7 days", faq_q_badge_week: "What is the persistence badge?", faq_a_badge_week: "With Premium, after a ✓ on 6 of the last 7 days (in My Routine, on a goal's small step or on a habit), a glass card with falling glitter opens: 'A week of persistence'. It comes once, and 'Share' sends it as an image.",
     nm_ing_bell_pepper: "Bell peppers",
     nm_ing_tomato_sauce: "Tomato sauce (portions)",
     nm_ing_lean_beef_tofu: "Lean ground beef / tofu",

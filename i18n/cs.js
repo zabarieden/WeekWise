@@ -3131,6 +3131,7 @@ translations.cs = {
     nm_badges_earned: "získaných úspěchů",
     nm_badges_new_many: "Nové úspěchy: {n}!",
     nm_badge_new: "Nový úspěch!",
+    badge_week_title: "Týden vytrvalosti", badge_week_desc: "✓ v 6 z posledních 7 dní", badge_week_share: "Týden vytrvalosti v NOT10.ai: ✓ v 6 ze 7 dní", faq_q_badge_week: "Co je odznak vytrvalosti?", faq_a_badge_week: "S Premium se po ✓ v 6 z posledních 7 dní (v Mé Rutině, u malého kroku cíle nebo u návyku) otevře skleněná karta s padajícími třpytkami: „Týden vytrvalosti“. Přijde jen jednou a „Sdílet“ ji pošle jako obrázek.",
     nm_ing_bell_pepper: "Papriky",
     nm_ing_tomato_sauce: "Rajčatová omáčka (porce)",
     nm_ing_lean_beef_tofu: "Libové mleté hovězí / tofu",

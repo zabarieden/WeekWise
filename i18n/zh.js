@@ -3127,6 +3127,7 @@ translations.zh = {
     nm_badges_earned: "成就已获得",
     nm_badges_new_many: "{n} 个新成就！",
     nm_badge_new: "新成就！",
+    badge_week_title: "坚持的一周", badge_week_desc: "最近 7 天中有 6 天打了 ✓", badge_week_share: "在 NOT10.ai 坚持了一周：7 天中有 6 天打 ✓", faq_q_badge_week: "什么是坚持徽章？", faq_a_badge_week: "使用高级版时，最近 7 天中有 6 天打了 ✓（在“我的日常”、目标的小小一步或习惯上），就会打开一张飘落亮片的玻璃卡片：“坚持的一周”。它只出现一次，点“分享”可以作为图片发送。",
     nm_ing_bell_pepper: "彩椒",
     nm_ing_tomato_sauce: "番茄酱汁（份）",
     nm_ing_lean_beef_tofu: "瘦牛肉末 / 豆腐",

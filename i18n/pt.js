@@ -3127,6 +3127,7 @@ translations.pt = {
     nm_badges_earned: "conquistas obtidas",
     nm_badges_new_many: "{n} novas conquistas!",
     nm_badge_new: "Nova conquista!",
+    badge_week_title: "Uma semana de constância", badge_week_desc: "✓ em 6 dos últimos 7 dias", badge_week_share: "Uma semana de constância no NOT10.ai: ✓ em 6 de 7 dias", faq_q_badge_week: "O que é o selo de constância?", faq_a_badge_week: "Com o Premium, depois de um ✓ em 6 dos últimos 7 dias (na Minha Rotina, num pequeno passo de uma meta ou num hábito), abre um cartão de vidro com purpurina caindo: “Uma semana de constância”. Ele vem uma vez só, e “Compartilhar” envia como imagem.",
     nm_ing_bell_pepper: "Pimentões",
     nm_ing_tomato_sauce: "Molho de tomate (porções)",
     nm_ing_lean_beef_tofu: "Carne moída magra / tofu",

@@ -3127,6 +3127,7 @@ translations.hu = {
     nm_badges_earned: "kitüntetés megszerezve",
     nm_badges_new_many: "{n} új kitüntetés!",
     nm_badge_new: "Új kitüntetés!",
+    badge_week_title: "Egy hét kitartás", badge_week_desc: "✓ az utolsó 7 napból 6-on", badge_week_share: "Egy hét kitartás a NOT10.ai-ban: ✓ 7 napból 6-on", faq_q_badge_week: "Mi a kitartás jelvény?", faq_a_badge_week: "Prémiummal, ha az utolsó 7 napból 6-on van ✓ (a Rutinomban, egy cél kis lépésénél vagy egy szokásnál), kinyílik egy üvegkártya hulló csillámmal: „Egy hét kitartás”. Csak egyszer jön, és a „Megosztás” képként küldi el.",
     nm_ing_bell_pepper: "Kaliforniai paprika",
     nm_ing_tomato_sauce: "Paradicsomszósz (adag)",
     nm_ing_lean_beef_tofu: "Sovány darált marhahús / tofu",

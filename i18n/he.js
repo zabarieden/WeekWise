@@ -3127,6 +3127,7 @@ translations.he = {
     nm_badges_earned: "הישגים הושגו",
     nm_badges_new_many: "{n} הישגים חדשים!",
     nm_badge_new: "הישג חדש!",
+    badge_week_title: "שבוע של התמדה", badge_week_desc: "✓ ב-6 מתוך 7 הימים האחרונים", badge_week_share: "שבוע של התמדה ב-NOT10.ai: ✓ ב-6 מתוך 7 ימים", faq_q_badge_week: "מה זה תג ההתמדה?", faq_a_badge_week: "בפרימיום, אחרי ✓ ב-6 מתוך 7 הימים האחרונים (ב\"השגרה שלי\", בצעד קטן של יעד או בהרגל), נפתח כרטיס זכוכית עם נצנצים: \"שבוע של התמדה\". הוא מגיע פעם אחת, ו\"שיתוף\" שולח אותו כתמונה.",
     nm_ing_bell_pepper: "פלפלים (גמבה)",
     nm_ing_tomato_sauce: "רוטב עגבניות (מנות)",
     nm_ing_lean_beef_tofu: "בשר בקר טחון רזה / טופו",

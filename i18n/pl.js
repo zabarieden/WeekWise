@@ -3133,6 +3133,7 @@ translations.pl = {
     nm_badges_earned: "zdobytych osiągnięć",
     nm_badges_new_many: "Nowe osiągnięcia: {n}!",
     nm_badge_new: "Nowe osiągnięcie!",
+    badge_week_title: "Tydzień wytrwałości", badge_week_desc: "✓ w 6 z ostatnich 7 dni", badge_week_share: "Tydzień wytrwałości w NOT10.ai: ✓ w 6 z 7 dni", faq_q_badge_week: "Czym jest odznaka wytrwałości?", faq_a_badge_week: "W Premium, po ✓ w 6 z ostatnich 7 dni (w Mojej Rutynie, przy małym kroku celu albo przy nawyku), otwiera się szklana karta ze spadającym brokatem: „Tydzień wytrwałości”. Pojawia się tylko raz, a „Udostępnij” wysyła ją jako obraz.",
     nm_ing_bell_pepper: "Papryka",
     nm_ing_tomato_sauce: "Sos pomidorowy (porcje)",
     nm_ing_lean_beef_tofu: "Chuda mielona wołowina / tofu",

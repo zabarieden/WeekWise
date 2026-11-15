@@ -3127,6 +3127,7 @@ translations.ko = {
     nm_badges_earned: "업적 달성",
     nm_badges_new_many: "새 업적 {n}개!",
     nm_badge_new: "새 업적!",
+    badge_week_title: "꾸준했던 한 주", badge_week_desc: "최근 7일 중 6일에 ✓", badge_week_share: "NOT10.ai에서 꾸준했던 한 주: 7일 중 6일에 ✓", faq_q_badge_week: "꾸준함 배지가 뭐예요?", faq_a_badge_week: "프리미엄에서 최근 7일 중 6일에 ✓(내 루틴, 목표의 작은 한 걸음, 습관)를 하면 반짝이가 떨어지는 유리 카드 '꾸준했던 한 주'가 열려요. 한 번만 나오고, '공유'를 누르면 이미지로 보낼 수 있어요.",
     nm_ing_bell_pepper: "파프리카",
     nm_ing_tomato_sauce: "토마토 소스 (인분)",
     nm_ing_lean_beef_tofu: "저지방 소고기 다짐육 / 두부",

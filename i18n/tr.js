@@ -3127,6 +3127,7 @@ translations.tr = {
     nm_badges_earned: "başarı kazanıldı",
     nm_badges_new_many: "{n} yeni başarı!",
     nm_badge_new: "Yeni başarı!",
+    badge_week_title: "Kararlılık dolu bir hafta", badge_week_desc: "Son 7 günün 6'sında ✓", badge_week_share: "NOT10.ai'de kararlılık dolu bir hafta: 7 günün 6'sında ✓", faq_q_badge_week: "Kararlılık rozeti nedir?", faq_a_badge_week: "Premium'da son 7 günün 6'sında ✓ (Rutinim'de, bir hedefin küçük adımında ya da bir alışkanlıkta) olunca, içinde simler dökülen cam bir kart açılır: “Kararlılık dolu bir hafta”. Yalnızca bir kez gelir ve “Paylaş” onu görsel olarak gönderir.",
     nm_ing_bell_pepper: "Dolmalık biber",
     nm_ing_tomato_sauce: "Domates sosu (porsiyon)",
     nm_ing_lean_beef_tofu: "Az yağlı dana kıyma / tofu",
