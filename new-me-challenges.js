@@ -1159,7 +1159,7 @@ async function nmDrawCertificate(name) {
     ctx.font = `600 28px ${sans}`;
     if ('letterSpacing' in ctx) ctx.letterSpacing = '10px';
     ctx.fillStyle = '#f2d48a';
-    ctx.fillText('✦  NEW ME  ✦', cx, 178);
+    ctx.fillText('✦  NOT10 NOURISH+  ✦', cx, 178);
     if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
     ctx.direction = rtl ? 'rtl' : 'ltr';
     const title = t('nm_cert_title');
