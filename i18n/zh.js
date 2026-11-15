@@ -3128,6 +3128,7 @@ translations.zh = {
     nm_badges_earned: "成就已获得",
     nm_badges_new_many: "{n} 个新成就！",
     nm_badge_new: "新成就！",
+    ach_title: "我的成就", ach_level_1: "火花", ach_level_2: "种子", ach_level_3: "嫩芽", ach_level_4: "一步", ach_level_5: "小路", ach_level_6: "桥", ach_level_7: "山顶", ach_level_8: "星星", ach_level_n: "第 {n} 级", ach_points: "{n} 分", ach_next: "离“{name}”还差 {n} 分", ach_max: "这是最高等级", ach_badges: "徽章", ach_level_up: "升级啦！", ach_level_share: "我在 NOT10.ai 升到了第 {n} 级：{name}", apptour_m_achievements_text: "所有成就都在一个地方：你的等级、一直到“星星”的阶梯和每个徽章——点徽章就能分享。", faq_q_achievements: "在哪里看成就和等级？", faq_a_achievements: "在菜单的“🏅 我的成就”（或“我的目标”顶部的等级标签）。目标的小小一步每打一个 ✓ 得 1 分，完成一站得 5 分，达成目标得 20 分——分数永远不会减少。共有 8 个等级：火花、种子、嫩芽、一步、小路、桥、山顶和星星，每次升级都会打开一张可以分享的玻璃卡片。阶梯下面是你的所有徽章：坚持徽章，以及使用 NOT10 Nourish+ 时它的成就。点徽章可以再次打开并分享。",
     nm_review_title: "这周的餐怎么样？", nm_review_too_much: "太多", nm_review_ok: "刚好", nm_review_too_little: "太少", nm_review_save: "调整菜单", nm_review_later: "以后再说", nm_review_saved: "菜单已调整——全天总量不变", faq_q_new_me_meal_review: "关于餐食的每周问题是什么？", faq_a_new_me_meal_review: "每周一次，在餐食页面会弹出一个小问题：每一餐是太多、刚好还是太少。它只在第一周之后出现，而且只有在最近 7 天里至少 5 天给餐食打了 ✓ 时才会出现。“太多”会从这一餐拿走 50 千卡，“太少”会加 50（最多 150），其他餐会自动平衡，所以全天总量仍然正好等于计划。",
     badge_week_title: "坚持的一周", badge_week_desc: "最近 7 天中有 6 天打了 ✓", badge_week_share: "在 NOT10.ai 坚持了一周：7 天中有 6 天打 ✓", faq_q_badge_week: "什么是坚持徽章？", faq_a_badge_week: "使用高级版时，最近 7 天中有 6 天打了 ✓（在“我的日常”、目标的小小一步或习惯上），就会打开一张飘落亮片的玻璃卡片：“坚持的一周”。它只出现一次，点“分享”可以作为图片发送。",
     nm_ing_bell_pepper: "彩椒",

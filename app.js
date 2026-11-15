@@ -2141,6 +2141,8 @@ const APP_TOUR_STEPS = [
     { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .gv-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
     // 📚 ספריית היעדים עצמה - נפתחת בסיור ומראה את הנושאים (לפי בקשה מפורשת, 2026-10-20)
     { id: 'g_lib', ch: 'goals', ctx: 'goals', glib: true, icon: '📚', target: '#goals-library .glib-grid .glib-tile', titleKey: 'glib_title', text: 'apptour_g_lib_text' },
+    // 🏅 ההישגים שלי - פריט חדש בתפריט, מיד אחרי היעדים (2026-11-15)
+    { id: 'm_achievements', ch: 'menu', ctx: 'menu', target: '[data-tour="m-achievements"]', text: 'apptour_m_achievements_text' },
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
     // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
     { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
@@ -6322,6 +6324,118 @@ async function checkPremiumWeekBadge() {
     } catch (e) { console.warn('premium week badge', e); }
 }
 
+// ---------- 🏅 רמות + "ההישגים שלי" (לפי בקשה מפורשת, 2026-11-15: "#13 רמות... תפתח עוד אהבתי" ו"איפה אני רואה
+// הישגים בכללי של האפליקציה?"). נקודות: ✓ על צעד קטן של יעד = 1, תחנה שהושלמה = 5, יעד שהושג = 20 - לא יורדות לעולם.
+// 8 רמות; עלייה ברמה = כרטיס הזכוכית. שבב קטן בראש "היעדים שלי" ופריט בתפריט פותחים את הסולם ואת כל התגים ----------
+const ACH_LEVELS = [
+    { at: 0, icon: '🕯️' }, { at: 10, icon: '🌰' }, { at: 30, icon: '🌱' }, { at: 60, icon: '👣' },
+    { at: 100, icon: '🛤️' }, { at: 160, icon: '🌉' }, { at: 240, icon: '🏔️' }, { at: 350, icon: '🌟' },
+];
+let achPoints = null;
+let achLevelCheckedAt = 0;
+function achLevelIndex(p) { let i = 0; ACH_LEVELS.forEach((l, j) => { if (p >= l.at) i = j; }); return i; }
+function achLevelName(i) { return t(`ach_level_${i + 1}`); }
+function achLevelLabel(i) { return `${t('ach_level_n').replace('{n}', i + 1)} · ${achLevelName(i)}`; }
+async function loadAchPoints() {
+    if (!supabaseClient || !currentUserId) return 0;
+    const head = { count: 'exact', head: true };
+    const [a, b, c] = await Promise.all([
+        supabaseClient.from('vision_goal_checkins').select('user_id', head).eq('user_id', currentUserId),
+        supabaseClient.from('vision_goal_milestones').select('user_id', head).eq('user_id', currentUserId).eq('is_done', true),
+        supabaseClient.from('vision_goals').select('user_id', head).eq('user_id', currentUserId).eq('is_achieved', true),
+    ]);
+    achPoints = ((a && a.count) || 0) + ((b && b.count) || 0) * 5 + ((c && c.count) || 0) * 20;
+    return achPoints;
+}
+function renderAchChip() {
+    const chip = document.getElementById('gv-level-chip');
+    if (!chip || achPoints == null) return;
+    const i = achLevelIndex(achPoints);
+    chip.textContent = `${ACH_LEVELS[i].icon} ${achLevelLabel(i)}`;
+    chip.classList.remove('hidden');
+}
+// עלייה ברמה: הרמה הידועה נשמרת ב-user_badges (level_N) - בפעם הראשונה נקבעת בשקט, בלי חגיגה על מה שכבר היה
+async function checkLevelUp(force) {
+    if (!supabaseClient || !currentUserId) return;
+    if (!force && Date.now() - achLevelCheckedAt < 15000) { renderAchChip(); return; }
+    achLevelCheckedAt = Date.now();
+    try {
+        const p = await loadAchPoints();
+        const lvl = achLevelIndex(p) + 1;
+        const key = `weekwise_level_${currentUserId}`;
+        let known = 0;
+        try { known = Number(localStorage.getItem(key)) || 0; } catch {}
+        if (!known) {
+            const { data } = await supabaseClient.from('user_badges').select('badge').eq('user_id', currentUserId).like('badge', 'level_%');
+            known = Math.max(0, ...(data || []).map(r => Number(String(r.badge).slice(6)) || 0));
+            if (!known) {
+                await supabaseClient.from('user_badges').insert({ user_id: currentUserId, badge: `level_${lvl}` });
+                known = lvl;
+            }
+            try { localStorage.setItem(key, String(known)); } catch {}
+        }
+        renderAchChip();
+        if (lvl <= known) return;
+        const { error } = await supabaseClient.from('user_badges').insert({ user_id: currentUserId, badge: `level_${lvl}` });
+        try { localStorage.setItem(key, String(lvl)); } catch {}
+        if (error && error.code !== '23505') return;
+        if (error) return;
+        const i = lvl - 1;
+        openGlassAchievement({
+            eyebrow: t('ach_level_up'), icon: ACH_LEVELS[i].icon, title: achLevelLabel(i), desc: t('ach_points').replace('{n}', p),
+            shareText: `🏅 ${t('ach_level_share').replace('{n}', lvl).replace('{name}', achLevelName(i))}`, file: 'not10-level.png',
+            shareLabel: t('nm_share'), okLabel: t('nm_celebrate_ok'),
+        });
+    } catch (e) { console.warn('level check', e); }
+}
+async function openAchievements() {
+    if (!supabaseClient || !currentUserId) return;
+    document.querySelectorAll('.ach-overlay').forEach(x => x.remove());
+    const ov = document.createElement('div');
+    ov.className = 'ach-overlay';
+    ov.innerHTML = `<div class="ach-sheet" role="dialog" aria-modal="true" aria-label="${glassAchEsc(t('ach_title'))}"><div class="ach-head"><h2>🏅 ${glassAchEsc(t('ach_title'))}</h2><button type="button" class="ach-x" aria-label="${glassAchEsc(t('close_btn'))}">✕</button></div><div class="ach-body"><div class="ach-loading" aria-hidden="true"></div></div></div>`;
+    const close = () => ov.remove();
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.ach-x')) close(); });
+    ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
+    const body = ov.querySelector('.ach-body');
+    const [p, { data: mine }, { data: nm }] = await Promise.all([
+        loadAchPoints(),
+        supabaseClient.from('user_badges').select('badge, earned_at').eq('user_id', currentUserId),
+        supabaseClient.from('new_me_achievements').select('badge, earned_at').eq('user_id', currentUserId),
+    ]);
+    if (!ov.isConnected) return;
+    renderAchChip();
+    const i = achLevelIndex(p), next = ACH_LEVELS[i + 1];
+    const pct = next ? Math.round(((p - ACH_LEVELS[i].at) / (next.at - ACH_LEVELS[i].at)) * 100) : 100;
+    const earned = new Set((mine || []).map(r => r.badge));
+    const tiles = [];
+    // תגים כלליים (פרימיום)
+    tiles.push({ on: earned.has(PREMIUM_WEEK_BADGE), icon: '🔥', title: t('badge_week_title'), desc: t('badge_week_desc'), share: `🏅 ${t('badge_week_share')}` });
+    // תגי NOT10 Nourish+ (רק מה שהושג)
+    if (typeof NEW_ME_BADGES !== 'undefined' && (nm || []).length) {
+        const got = new Set(nm.map(r => r.badge));
+        NEW_ME_BADGES.filter(b => got.has(b.key)).forEach(b => {
+            const title = typeof nmBadgeTitle === 'function' ? nmBadgeTitle(b) : b.key;
+            tiles.push({ on: true, icon: b.icon, title, desc: typeof nmBadgeDesc === 'function' ? nmBadgeDesc(b) : '', share: `🏅 ${t('nm_share_badge_text')}\n\n${b.icon} ${title}` });
+        });
+    }
+    body.innerHTML = `
+        <div class="ach-level">
+            <span class="ach-level-icon" aria-hidden="true">${ACH_LEVELS[i].icon}</span>
+            <div class="ach-level-text"><b>${glassAchEsc(achLevelLabel(i))}</b><span>${glassAchEsc(t('ach_points').replace('{n}', p))}</span></div>
+        </div>
+        <div class="ach-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>
+        <p class="ach-next">${glassAchEsc(next ? t('ach_next').replace('{n}', next.at - p).replace('{name}', achLevelName(i + 1)) : t('ach_max'))}</p>
+        <ol class="ach-ladder">${ACH_LEVELS.map((l, j) => `<li class="${j < i ? 'is-done' : j === i ? 'is-now' : ''}"><span aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small></li>`).join('')}</ol>
+        <h3 class="ach-sub">${glassAchEsc(t('ach_badges'))}</h3>
+        <div class="ach-tiles">${tiles.map((b, k) => `<button type="button" class="ach-tile${b.on ? '' : ' is-locked'}" data-k="${k}"${b.on ? '' : ' disabled'}><span class="ach-tile-icon" aria-hidden="true">${b.on ? b.icon : '🔒'}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${b.on ? '' : `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>`}</button>`).join('')}</div>`;
+    body.querySelectorAll('.ach-tile:not(.is-locked)').forEach(btn => btn.addEventListener('click', () => {
+        const b = tiles[Number(btn.dataset.k)];
+        openGlassAchievement({ icon: b.icon, title: b.title, desc: b.desc, shareText: b.share, file: 'not10-achievement.png', shareLabel: t('nm_share'), okLabel: t('close_btn') });
+    }));
+}
+
 async function loadTodayTasks() {
     if (!supabaseClient || !currentUserId) return;
     checkPremiumWeekBadge();
@@ -10113,7 +10227,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
     { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
-    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week'] },
+    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week', 'achievements'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
     { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_money', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
     { tab: 'new_me', head: 'faq_cat_nm_plan', ids: ['new_me_what', 'new_me_preview', 'new_me_plans', 'new_me_tour', 'nm_me1_guide', 'new_me_home_btn', 'new_me_no_ai', 'new_me_weight_optional', 'new_me_magic_themes'] },
@@ -19431,6 +19545,7 @@ function openGoalsVisionDrawer(goalId) {
     visionAnimatePath = true;
     const dateEl = document.getElementById('gv-date');
     if (dateEl) dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
+    checkLevelUp(true);
     const scroll = document.getElementById('goals-view-scroll');
     if (scroll) scroll.scrollTop = 0;
     // מהמטמון מיד, ואחרי הטעינה שוב (בפעם הראשונה - השביל מצטייר אחרי הטעינה)
@@ -22065,6 +22180,7 @@ function renderGoalsTodayStrip(activeGoals) {
         flame.style.setProperty('--p', p.toFixed(2));
         flame.classList.toggle('is-full', p >= 1);
     }
+    checkLevelUp();
     items.forEach(item => list.appendChild(buildGoalsTodayCard(item)));
 }
 const GV_FLAME_SVG = '<svg viewBox="0 0 24 32" width="18" height="24"><path class="gv-flame-out" d="M12 1c2 6 8 9 8 18a8 8 0 0 1-16 0c0-5 3-7 4-11 1 3 2 4 3 4 0-4 0-7 1-11z"/><path class="gv-flame-in" d="M12 14c1 3 4 5 4 9a4 4 0 0 1-8 0c0-3 2-4 2-6 1 1 1 2 2 2 0-2 0-3 0-5z"/></svg>';
