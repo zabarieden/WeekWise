@@ -18,7 +18,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
-import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
+import { anthropicKey, noteAiCrash, noteAiProviderError, redactKey } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -152,6 +152,7 @@ Deno.serve(async (req) => {
 
         return jsonResponse({ ok: true });
     } catch (err: any) {
-        return jsonResponse({ error: err?.message || "unknown_error" }, 500);
+        await noteAiCrash(supabase, "send-feedback", err);
+        return jsonResponse({ error: redactKey(err?.message || "unknown_error") }, 500);
     }
 });

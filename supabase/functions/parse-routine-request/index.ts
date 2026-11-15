@@ -12,7 +12,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { aiRateOk } from "../_shared/rate-limit.ts";
-import { anthropicKey, noteAiProviderError } from "../_shared/ai-alert.ts";
+import { anthropicKey, noteAiCrash, noteAiProviderError, redactKey } from "../_shared/ai-alert.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -205,6 +205,7 @@ Deno.serve(async (req) => {
         if (!tabs.length) return jsonResponse({ error: "no_items" }, 422);
         return jsonResponse({ ok: true, tabs });
     } catch (err) {
-        return jsonResponse({ error: "server_error", detail: String(err) }, 500);
+        await noteAiCrash(supabase, "parse-routine-request", err);
+        return jsonResponse({ error: "server_error", detail: redactKey(String(err)) }, 500);
     }
 });
