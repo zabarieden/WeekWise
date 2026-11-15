@@ -10111,7 +10111,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
-    { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
+    { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
     { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
     { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
@@ -11783,7 +11783,70 @@ async function navigateFinanceMonth(delta) {
     await Promise.all([renderFinanceSummary(), renderFinanceHistory()]);
 }
 
+// ---------- 💧 תקציב לכל קטגוריה (הבחירה שלה, 2026-11-15: "כסף בלי מעטפות" 2 + 4 + 8) ----------
+// מבחנת זכוכית לכל קטגוריה שהנוזל בה יורד כשמוציאים, נקודה (ירוק = בסדר, זהב = לשים לב, סגול = עברנו - אף פעם
+// לא אדום) ו"אפשר היום": מה שנשאר חלקי הימים שנשארו בתקופה (רק בתקופה הנוכחית). אותו סכום כל חודש עד שמשנים
+let cachedFinanceCatTargets = {};
+async function renderFinanceCategoryBudgets() {
+    const box = document.getElementById('finance-cat-list');
+    if (!box || !supabaseClient || !currentUserId) return;
+    const monthKey = financeSummaryMonthKey || currentFinancePeriodKey();
+    const { start, end } = getFinancePeriodRange(monthKey);
+    const [{ data: targets }, { data: rows }] = await Promise.all([
+        supabaseClient.from('budget_category_targets').select('category, amount').eq('user_id', currentUserId),
+        supabaseClient.from('budget_tracker').select('category, amount').eq('user_id', currentUserId).eq('entry_type', 'expense').gte('entry_date', start).lte('entry_date', end),
+    ]);
+    cachedFinanceCatTargets = {};
+    (targets || []).forEach(r => { cachedFinanceCatTargets[r.category] = Number(r.amount) || 0; });
+    const spent = {};
+    (rows || []).forEach(r => { const c = r.category || 'other'; spent[c] = (spent[c] || 0) + (Number(r.amount) || 0); });
+    const all = FINANCE_CATEGORIES.expense.map(([v]) => v).concat(getCustomFinanceCategoriesForType('expense').map(c => `custom_${c.id}`));
+    const shown = all.filter(c => c in cachedFinanceCatTargets || spent[c] > 0);
+    const isCurrent = monthKey === currentFinancePeriodKey();
+    const today = getLocalDateString();
+    const daysLeft = isCurrent ? Math.max(1, Math.round((new Date(`${end}T12:00:00`) - new Date(`${today}T12:00:00`)) / 86400000) + 1) : 0;
+    const fmt = n => Math.round(n).toLocaleString();
+    const rowsHtml = shown.map(cat => {
+        const target = cachedFinanceCatTargets[cat] || 0, used = spent[cat] || 0, left = target - used;
+        const label = financeCategoryLabel('expense', cat);
+        const state = !target ? 'none' : used > target ? 'over' : used >= target * 0.8 ? 'near' : 'ok';
+        const fill = target > 0 ? Math.max(0, Math.min(1, left / target)) : 0;
+        let line = '';
+        if (target > 0) {
+            if (left < 0) line = t('finance_cat_over').replace('{n}', fmt(-left));
+            else if (isCurrent) line = t('finance_cat_today').replace('{n}', fmt(left / daysLeft));
+            else line = t('finance_cat_left').replace('{n}', fmt(left));
+        }
+        return `<div class="fin-cat-row is-${state}">
+            <span class="fin-cat-tube" style="--fill:${fill.toFixed(3)}" aria-hidden="true"></span>
+            <div class="fin-cat-main">
+                <div class="fin-cat-name">${escapeHtmlForReport(label)}</div>
+                <div class="fin-cat-sub"><span class="fin-cat-used">${fmt(used)}</span><span aria-hidden="true">/</span><input type="number" inputmode="decimal" min="0" class="fin-cat-input" value="${target || ''}" placeholder="0" aria-label="${escapeHtmlForReport(t('finance_cat_budget_aria').replace('{cat}', label))}" onchange="saveFinanceCategoryTarget('${cat}', this.value)"></div>
+            </div>
+            ${line ? `<div class="fin-cat-side"><span class="fin-cat-dot" aria-hidden="true"></span><span class="fin-cat-line">${escapeHtmlForReport(line)}</span></div>` : ''}
+        </div>`;
+    }).join('');
+    const others = all.filter(c => !shown.includes(c));
+    const addHtml = others.length ? `<select class="fin-cat-add" aria-label="${escapeHtmlForReport(t('finance_cat_add'))}" onchange="addFinanceCategoryTarget(this.value)"><option value="">${escapeHtmlForReport(t('finance_cat_add'))}</option>${others.map(c => `<option value="${c}">${escapeHtmlForReport(financeCategoryLabel('expense', c))}</option>`).join('')}</select>` : '';
+    box.innerHTML = rowsHtml + addHtml;
+}
+async function saveFinanceCategoryTarget(cat, value) {
+    if (!supabaseClient || !currentUserId) return;
+    const amount = Math.max(0, Number(value) || 0);
+    const { error } = await supabaseClient.from('budget_category_targets').upsert({ user_id: currentUserId, category: cat, amount, updated_at: new Date().toISOString() }, { onConflict: 'user_id,category' });
+    if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    await renderFinanceCategoryBudgets();
+}
+async function addFinanceCategoryTarget(cat) {
+    if (!cat) return;
+    await saveFinanceCategoryTarget(cat, 0);
+    const rows = document.querySelectorAll('#finance-cat-list .fin-cat-input');
+    const input = [...rows].find(i => (i.getAttribute('onchange') || '').includes(`'${cat}'`));
+    if (input) input.focus();
+}
+
 async function renderFinanceSummary() {
+    renderFinanceCategoryBudgets();
     const labelEl = document.getElementById('finance-summary-month-label');
     const incomeEl = document.getElementById('finance-total-income');
     const expenseEl = document.getElementById('finance-total-expense');

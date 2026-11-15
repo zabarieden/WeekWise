@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=622">
+    <link rel="stylesheet" href="theme.css?v=623">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -915,6 +915,15 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- 💧 תקציב לכל קטגוריה: מבחנת זכוכית, נקודה ו"אפשר היום" (הבחירה שלה, 2026-11-15: 2 + 4 + 8) -->
+                    <div class="card expanded">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="finance_cat_budget_title">Category budgets</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body"><div id="finance-cat-list" class="fin-cat-list"></div></div>
                     </div>
 
                     <!-- שתי טבלאות נפרדות לגמרי - "תשלומים" (פריסות עם מספר תשלומים ידוע,
@@ -4503,9 +4512,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=531"></script>
+    <script src="i18n/core.js?v=532"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=651"></script>
+    <script src="app.js?v=652"></script>
     <script src="ai-chat.js?v=8"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
