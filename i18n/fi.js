@@ -3127,6 +3127,7 @@ translations.fi = {
     nm_badges_earned: "saavutusta ansaittu",
     nm_badges_new_many: "{n} uutta saavutusta!",
     nm_badge_new: "Uusi saavutus!",
+    nm_review_title: "Millaisia ateriat olivat tällä viikolla?", nm_review_too_much: "Liikaa", nm_review_ok: "Sopivasti", nm_review_too_little: "Liian vähän", nm_review_save: "Päivitä ruokalista", nm_review_later: "Ei nyt", nm_review_saved: "Ruokalista päivitetty – päivän kokonaismäärä pysyy samana", faq_q_new_me_meal_review: "Mikä on viikoittainen kysymys aterioista?", faq_a_new_me_meal_review: "Kerran viikossa ateriat-näkymään ilmestyy lyhyt kysymys: millainen kukin ateria oli – liikaa, sopivasti vai liian vähän. Se tulee vasta ensimmäisen viikon jälkeen ja vain, jos aterioihin on merkitty ✓ vähintään viitenä viimeisestä seitsemästä päivästä. ”Liikaa” siirtää aterialta pois 50 kaloria ja ”Liian vähän” lisää 50 (enintään 150), ja muut ateriat tasaavat, joten päivä vastaa yhä tarkalleen suunnitelmaasi.",
     badge_week_title: "Sinnikäs viikko", badge_week_desc: "✓ kuutena viimeisestä seitsemästä päivästä", badge_week_share: "Sinnikäs viikko NOT10.ai:ssa: ✓ kuutena päivänä seitsemästä", faq_q_badge_week: "Mikä on sinnikkyysmerkki?", faq_a_badge_week: "Premiumissa avautuu, kun ✓ on kuutena viimeisestä seitsemästä päivästä (Rutiinissani, tavoitteen pienessä askeleessa tai tavassa), lasikortti, jossa sataa kimalletta: ”Sinnikäs viikko”. Se tulee vain kerran, ja ”Jaa” lähettää sen kuvana.",
     nm_ing_bell_pepper: "Paprikat",
     nm_ing_tomato_sauce: "Tomaattikastike (annoksia)",

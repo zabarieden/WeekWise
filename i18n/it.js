@@ -3127,6 +3127,7 @@ translations.it = {
     nm_badges_earned: "conquiste ottenute",
     nm_badges_new_many: "{n} nuove conquiste!",
     nm_badge_new: "Nuova conquista!",
+    nm_review_title: "Com'erano i pasti questa settimana?", nm_review_too_much: "Troppo", nm_review_ok: "Giusto", nm_review_too_little: "Poco", nm_review_save: "Aggiorna il menu", nm_review_later: "Non ora", nm_review_saved: "Menu aggiornato – il totale del giorno resta uguale", faq_q_new_me_meal_review: "Cos'è la domanda settimanale sui pasti?", faq_a_new_me_meal_review: "Una volta alla settimana, nella schermata dei pasti, compare una breve domanda: com'era ogni pasto – troppo, giusto o poco. Arriva solo dopo la prima settimana, e solo se hai segnato ✓ sui pasti almeno 5 degli ultimi 7 giorni. «Troppo» toglie 50 calorie a quel pasto e «Poco» ne aggiunge 50 (fino a 150), e gli altri pasti compensano, così la giornata torna sempre esattamente al tuo piano.",
     badge_week_title: "Una settimana di costanza", badge_week_desc: "Un ✓ in 6 degli ultimi 7 giorni", badge_week_share: "Una settimana di costanza su NOT10.ai: un ✓ in 6 giorni su 7", faq_q_badge_week: "Cos'è il badge della costanza?", faq_a_badge_week: "Con Premium, dopo un ✓ in 6 degli ultimi 7 giorni (in La Mia Routine, su un piccolo passo di un obiettivo o su un'abitudine), si apre una carta di vetro con brillantini che cadono: “Una settimana di costanza”. Arriva una volta sola, e “Condividi” la invia come immagine.",
     nm_ing_bell_pepper: "Peperoni",
     nm_ing_tomato_sauce: "Salsa di pomodoro (porzioni)",

@@ -3130,6 +3130,7 @@ translations.ro = {
     nm_badges_earned: "realizări obținute",
     nm_badges_new_many: "{n} realizări noi!",
     nm_badge_new: "Realizare nouă!",
+    nm_review_title: "Cum au fost mesele săptămâna asta?", nm_review_too_much: "Prea mult", nm_review_ok: "Exact cât trebuie", nm_review_too_little: "Prea puțin", nm_review_save: "Actualizează meniul", nm_review_later: "Nu acum", nm_review_saved: "Meniul s-a actualizat – totalul zilei rămâne la fel", faq_q_new_me_meal_review: "Ce este întrebarea săptămânală despre mese?", faq_a_new_me_meal_review: "O dată pe săptămână, pe ecranul meselor, apare o întrebare scurtă: cum a fost fiecare masă – prea mult, exact cât trebuie sau prea puțin. Vine doar după prima săptămână și doar dacă ai bifat ✓ mesele în cel puțin 5 din ultimele 7 zile. „Prea mult” ia 50 de calorii din masa respectivă și „Prea puțin” adaugă 50 (până la 150), iar celelalte mese echilibrează, așa că ziua iese în continuare exact cât planul tău.",
     badge_week_title: "O săptămână de perseverență", badge_week_desc: "✓ în 6 din ultimele 7 zile", badge_week_share: "O săptămână de perseverență în NOT10.ai: ✓ în 6 din 7 zile", faq_q_badge_week: "Ce este insigna de perseverență?", faq_a_badge_week: "Cu Premium, după un ✓ în 6 din ultimele 7 zile (în Rutina Mea, la un pas mic al unui obiectiv sau la un obicei), se deschide un card de sticlă cu sclipici care cade: „O săptămână de perseverență”. Vine o singură dată, iar „Distribuie” îl trimite ca imagine.",
     nm_ing_bell_pepper: "Ardei grași",
     nm_ing_tomato_sauce: "Sos de roșii (porții)",

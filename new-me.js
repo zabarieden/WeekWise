@@ -1856,7 +1856,26 @@ function nmSmallGap(slot) {
 // ארוחה חופשית (היעד שלה שמור לה, ומה שמעבר - מותר באותו יום) וארוחה שכבר סומנה (נספר מה שנרשם). אף ארוחה לא יורדת
 // ביותר מ-40% - מה שלא נכנס נשאר מעל התוכנית, והאזהרה הרגילה מופיעה.
 // slots: [{ slot, kcal, small, free, fixed }] - הארוחות שבתפריט (בלי אלה שירדו). מחזיר { slot: ±קלוריות }
+// + מה שנבחר בשאלה השבועית ("יותר מדי" / "פחות מדי" - nmProfile.meal_adjust): הארוחה מקבלת / נותנת את הקלוריות,
+// ושאר הארוחות מאזנות בדיוק, כך שסך היום לא משתנה
 function nmBalance(plan, slots, late) {
+    const out = nmBalanceBase(plan, slots, late);
+    const adj = (nmProfile && nmProfile.meal_adjust) || {};
+    const kc = s => Number(s.kcal) || 0;
+    const movable = slots.filter(s => !s.free && !s.small && !s.fixed && kc(s) >= 50);
+    const tuned = movable.filter(s => Number(adj[s.slot]));
+    const others = movable.filter(s => !Number(adj[s.slot]));
+    if (!tuned.length || !others.length) return out;
+    let moved = 0;
+    tuned.forEach(s => { const d = Math.round(Number(adj[s.slot]) / 5) * 5; out[s.slot] = (out[s.slot] || 0) + d; moved += d; });
+    const w = others.reduce((a, s) => a + kc(s), 0) || 1;
+    let given = 0;
+    others.forEach(s => { const d = -Math.round((moved * kc(s) / w) / 5) * 5; out[s.slot] = (out[s.slot] || 0) + d; given += d; });
+    const rest = -moved - given;
+    if (rest) { const big = others.reduce((m, s) => (kc(s) > kc(m) ? s : m)); out[big.slot] += rest; }
+    return out;
+}
+function nmBalanceBase(plan, slots, late) {
     const P = NEW_ME_PLANS[plan] || NEW_ME_PLANS[1300];
     const kc = s => Number(s.kcal) || 0;
     const out = {};
@@ -1891,6 +1910,68 @@ function nmBalance(plan, slots, late) {
     if (rest) { const big = pool.reduce((m, s) => (kc(s) > kc(m) ? s : m)); out[big.slot] += rest; }
     return out;
 }
+// ---------- 🍽️ השאלה השבועית על הארוחות (לפי בקשה מפורשת, 2026-11-15: "אחרי שבוע... איך הארוחות שלכם? יותר מידי
+// פחות מידי?... ולפי זה לשנות... שיקפוץ... רק אם המשתמש... סימן וי על ארוחות... לפחות 5 ימים מתוך 7") ----------
+// קופצת במסך הארוחות, פעם בשבוע, אחרי שבוע במסע, ורק כשהיו ✓ על ארוחות ב-5 מתוך 7 הימים האחרונים. "יותר מדי" מוריד
+// 50 קלוריות מהארוחה ו"פחות מדי" מוסיף 50 (עד ±150), ושאר הארוחות מאזנות (nmBalance) - סך היום נשאר כמו בתוכנית
+const NM_REVIEW_STEP = 50, NM_REVIEW_MAX = 150;
+function nmMealReviewDue() {
+    if (!nmProfile || !nmJourneyLoaded || nmView !== 'day' || document.querySelector('.nm-review-sheet')) return false;
+    if (nmJourneyDay() < 8) return false;
+    const last = nmProfile.meal_review_at ? new Date(nmProfile.meal_review_at).getTime() : 0;
+    if (last && Date.now() - last < 7 * 86400000) return false;
+    const today = getLocalDateString();
+    const from = new Date(); from.setDate(from.getDate() - 7);
+    const fromStr = getLocalDateString(from);
+    const days = nmStats.filter(r => r.day >= fromStr && r.day < today && (Number(r.checks) || 0) > 0).length;
+    return days >= 5;
+}
+function nmMaybeMealReview() {
+    if (!nmMealReviewDue()) return;
+    const slots = nmActiveOrder().filter(s => !nmIsFree(s));
+    if (!slots.length) return;
+    const choice = {};
+    const opts = [['less', 'nm_review_too_much'], ['ok', 'nm_review_ok'], ['more', 'nm_review_too_little']];
+    const ov = nmOpenSheet(`
+        <h3 class="nm-review-title">${nmEsc(t('nm_review_title'))}</h3>
+        <div class="nm-review-list">${slots.map(slot => `<div class="nm-review-row" data-slot="${slot}">
+            <span class="nm-review-name">${nmEsc(nmSlotName(slot))}</span>
+            <div class="nm-review-picks" role="radiogroup" aria-label="${nmEsc(nmSlotName(slot))}">${opts.map(([v, k]) => `<button type="button" role="radio" aria-checked="false" class="nm-review-pick" data-v="${v}">${nmEsc(t(k))}</button>`).join('')}</div>
+        </div>`).join('')}</div>
+        <div class="nm-review-actions">
+            <button type="button" class="nm-btn-ghost" data-later>${nmEsc(t('nm_review_later'))}</button>
+            <button type="button" class="nm-btn-primary" data-save>${nmEsc(t('nm_review_save'))}</button>
+        </div>`, 'nm-review-sheet', () => nmSaveMealReview(null));
+    ov.querySelectorAll('.nm-review-row').forEach(row => {
+        row.addEventListener('click', e => {
+            const b = e.target.closest('.nm-review-pick');
+            if (!b) return;
+            choice[row.dataset.slot] = b.dataset.v;
+            row.querySelectorAll('.nm-review-pick').forEach(x => { const on = x === b; x.classList.toggle('selected', on); x.setAttribute('aria-checked', String(on)); });
+        });
+    });
+    ov.querySelector('[data-later]').addEventListener('click', () => { ov.remove(); nmSaveMealReview(null); });
+    ov.querySelector('[data-save]').addEventListener('click', () => { ov.remove(); nmSaveMealReview(choice); });
+}
+async function nmSaveMealReview(choice) {
+    if (!nmProfile) return;
+    const adj = { ...(nmProfile.meal_adjust || {}) };
+    let changed = false;
+    Object.entries(choice || {}).forEach(([slot, v]) => {
+        if (v === 'ok') return;
+        const cur = Number(adj[slot]) || 0;
+        const next = Math.max(-NM_REVIEW_MAX, Math.min(NM_REVIEW_MAX, cur + (v === 'less' ? -NM_REVIEW_STEP : NM_REVIEW_STEP)));
+        if (next !== cur) { adj[slot] = next; changed = true; }
+    });
+    const fields = { meal_review_at: new Date().toISOString() };
+    if (changed) fields.meal_adjust = adj;
+    const prev = { meal_adjust: nmProfile.meal_adjust, meal_review_at: nmProfile.meal_review_at };
+    Object.assign(nmProfile, fields);
+    const { error } = await supabaseClient.from('new_me_profile').update({ ...fields, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
+    if (error) { Object.assign(nmProfile, prev); showAppToast(t('nm_save_error'), 'error'); return; }
+    if (changed) { showAppToast(t('nm_review_saved')); nmRenderView(nmRoot()); nmAfterTrackerChange(); }
+}
+
 // הארוחות של היום לאיזון. overrides: { slot: key } - "מה אם" (למשל לפני החלפה)
 function nmBalanceSlots(overrides) {
     const slots = nmActiveOrder().map(slot => {
@@ -2143,6 +2224,7 @@ function nmRenderView(root) {
     const renderers = { day: nmRenderDay, challenges: nmRenderChallenges, gift: nmRenderGift, stats: nmRenderStats, journey: nmRenderJourney, shop: nmRenderShop, badges: nmRenderBadges, chjournal: nmRenderChJournal, measure: nmRenderMeasure, photos: nmRenderPhotos, month: nmRenderMonth, table: nmRenderTable, reminders: nmRenderReminders, settings: nmRenderSettings };
     renderers[nmView](body);
     if (nmView === 'day') nmRestoreDrinkDrafts();
+    if (nmView === 'day') setTimeout(nmMaybeMealReview, 700);
     devKeys();
     hud();
 }

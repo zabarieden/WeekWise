@@ -3127,6 +3127,7 @@ translations.sv = {
     nm_badges_earned: "prestationer uppnådda",
     nm_badges_new_many: "{n} nya prestationer!",
     nm_badge_new: "Ny prestation!",
+    nm_review_title: "Hur var måltiderna den här veckan?", nm_review_too_much: "För mycket", nm_review_ok: "Lagom", nm_review_too_little: "För lite", nm_review_save: "Uppdatera menyn", nm_review_later: "Inte nu", nm_review_saved: "Menyn är uppdaterad – dagens total är densamma", faq_q_new_me_meal_review: "Vad är veckans fråga om måltiderna?", faq_a_new_me_meal_review: "En gång i veckan dyker en kort fråga upp på måltidsskärmen: hur var varje måltid – för mycket, lagom eller för lite. Den kommer först efter första veckan, och bara om måltider bockats av ✓ minst 5 av de senaste 7 dagarna. ”För mycket” flyttar 50 kalorier från måltiden och ”För lite” lägger till 50 (upp till 150), och de andra måltiderna jämnar ut, så dagen landar fortfarande exakt på din plan.",
     badge_week_title: "En vecka av uthållighet", badge_week_desc: "En ✓ på 6 av de senaste 7 dagarna", badge_week_share: "En vecka av uthållighet i NOT10.ai: en ✓ på 6 av 7 dagar", faq_q_badge_week: "Vad är uthållighetsmärket?", faq_a_badge_week: "Med Premium öppnas efter en ✓ på 6 av de senaste 7 dagarna (i Min Rutin, på ett litet steg mot ett mål eller på en vana) ett glaskort med fallande glitter: ”En vecka av uthållighet”. Det kommer bara en gång, och ”Dela” skickar det som bild.",
     nm_ing_bell_pepper: "Paprikor",
     nm_ing_tomato_sauce: "Tomatsås (portioner)",

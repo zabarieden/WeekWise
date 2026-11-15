@@ -3127,6 +3127,7 @@ translations.ca = {
     nm_badges_earned: "assoliments aconseguits",
     nm_badges_new_many: "{n} assoliments nous!",
     nm_badge_new: "Nou assoliment!",
+    nm_review_title: "Com han anat els àpats aquesta setmana?", nm_review_too_much: "Massa", nm_review_ok: "Just", nm_review_too_little: "Poc", nm_review_save: "Actualitzar el menú", nm_review_later: "Ara no", nm_review_saved: "Menú actualitzat: el total del dia no canvia", faq_q_new_me_meal_review: "Què és la pregunta setmanal sobre els àpats?", faq_a_new_me_meal_review: "Un cop per setmana, a la pantalla dels àpats, apareix una pregunta curta: com ha estat cada àpat – massa, just o poc. Només arriba després de la primera setmana, i només si has marcat ✓ als àpats almenys 5 dels últims 7 dies. «Massa» treu 50 calories d'aquell àpat i «Poc» n'hi afegeix 50 (fins a 150), i la resta d'àpats ho equilibren, de manera que el dia continua sumant exactament el teu pla.",
     badge_week_title: "Una setmana de constància", badge_week_desc: "✓ en 6 dels últims 7 dies", badge_week_share: "Una setmana de constància a NOT10.ai: ✓ en 6 de 7 dies", faq_q_badge_week: "Què és la insígnia de constància?", faq_a_badge_week: "Amb Premium, després d'un ✓ en 6 dels últims 7 dies (a La Meva Rutina, en un petit pas d'un objectiu o en un hàbit), s'obre una targeta de vidre amb purpurina que cau: «Una setmana de constància». Arriba un sol cop, i «Comparteix» l'envia com a imatge.",
     nm_ing_bell_pepper: "Pebrots",
     nm_ing_tomato_sauce: "Salsa de tomàquet (racions)",

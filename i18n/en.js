@@ -3127,6 +3127,7 @@ translations.en = {
     nm_badges_earned: "achievements earned",
     nm_badges_new_many: "{n} new achievements!",
     nm_badge_new: "New achievement!",
+    nm_review_title: "How were the meals this week?", nm_review_too_much: "Too much", nm_review_ok: "Just right", nm_review_too_little: "Too little", nm_review_save: "Update the menu", nm_review_later: "Not now", nm_review_saved: "The menu is updated – the day total stays the same", faq_q_new_me_meal_review: "What is the weekly question about the meals?", faq_a_new_me_meal_review: "Once a week, on the meals screen, a short question pops up: how was each meal – too much, just right or too little. It comes only after the first week, and only if meals were ticked ✓ on at least 5 of the last 7 days. 'Too much' moves 50 calories out of that meal and 'Too little' adds 50 (up to 150), and the other meals balance it, so the day still adds up exactly to the plan.",
     badge_week_title: "A week of persistence", badge_week_desc: "A ✓ on 6 of the last 7 days", badge_week_share: "A week of persistence on NOT10.ai: a ✓ on 6 of 7 days", faq_q_badge_week: "What is the persistence badge?", faq_a_badge_week: "With Premium, after a ✓ on 6 of the last 7 days (in My Routine, on a goal's small step or on a habit), a glass card with falling glitter opens: 'A week of persistence'. It comes once, and 'Share' sends it as an image.",
     nm_ing_bell_pepper: "Bell peppers",
     nm_ing_tomato_sauce: "Tomato sauce (portions)",

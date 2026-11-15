@@ -3127,6 +3127,7 @@ translations.es = {
     nm_badges_earned: "logros conseguidos",
     nm_badges_new_many: "¡{n} logros nuevos!",
     nm_badge_new: "¡Nuevo logro!",
+    nm_review_title: "¿Qué tal las comidas esta semana?", nm_review_too_much: "Demasiado", nm_review_ok: "Justo", nm_review_too_little: "Poco", nm_review_save: "Actualizar el menú", nm_review_later: "Ahora no", nm_review_saved: "Menú actualizado: el total del día no cambia", faq_q_new_me_meal_review: "¿Qué es la pregunta semanal sobre las comidas?", faq_a_new_me_meal_review: "Una vez por semana, en la pantalla de comidas, aparece una pregunta corta: cómo fue cada comida – demasiado, justo o poco. Solo llega después de la primera semana, y solo si marcaste ✓ en las comidas al menos 5 de los últimos 7 días. «Demasiado» quita 50 calorías de esa comida y «Poco» le suma 50 (hasta 150), y las demás comidas lo equilibran, así que el día sigue sumando exactamente tu plan.",
     badge_week_title: "Una semana de constancia", badge_week_desc: "✓ en 6 de los últimos 7 días", badge_week_share: "Una semana de constancia en NOT10.ai: ✓ en 6 de 7 días", faq_q_badge_week: "¿Qué es la insignia de constancia?", faq_a_badge_week: "Con Premium, tras un ✓ en 6 de los últimos 7 días (en Mi Rutina, en un pequeño paso de una meta o en un hábito), se abre una tarjeta de cristal con purpurina que cae: «Una semana de constancia». Llega una sola vez, y «Compartir» la envía como imagen.",
     nm_ing_bell_pepper: "Pimientos",
     nm_ing_tomato_sauce: "Salsa de tomate (porciones)",

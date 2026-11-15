@@ -3127,6 +3127,7 @@ translations.nl = {
     nm_badges_earned: "prestaties behaald",
     nm_badges_new_many: "{n} nieuwe prestaties!",
     nm_badge_new: "Nieuwe prestatie!",
+    nm_review_title: "Hoe waren de maaltijden deze week?", nm_review_too_much: "Te veel", nm_review_ok: "Precies goed", nm_review_too_little: "Te weinig", nm_review_save: "Menu bijwerken", nm_review_later: "Niet nu", nm_review_saved: "Menu bijgewerkt – het dagtotaal blijft gelijk", faq_q_new_me_meal_review: "Wat is de wekelijkse vraag over de maaltijden?", faq_a_new_me_meal_review: "Eén keer per week verschijnt op het maaltijdenscherm een korte vraag: hoe was elke maaltijd – te veel, precies goed of te weinig. Hij komt pas na de eerste week, en alleen als je maaltijden op minstens 5 van de laatste 7 dagen hebt afgevinkt ✓. ‘Te veel’ haalt 50 calorieën uit die maaltijd en ‘Te weinig’ voegt er 50 toe (tot 150), en de andere maaltijden vangen het op, zodat de dag nog steeds precies op je plan uitkomt.",
     badge_week_title: "Een week volhouden", badge_week_desc: "Een ✓ op 6 van de laatste 7 dagen", badge_week_share: "Een week volhouden in NOT10.ai: een ✓ op 6 van de 7 dagen", faq_q_badge_week: "Wat is de volhoudbadge?", faq_a_badge_week: "Met Premium opent na een ✓ op 6 van de laatste 7 dagen (in Mijn Routine, bij een kleine stap van een doel of bij een gewoonte) een glazen kaart met vallende glitters: ‘Een week volhouden’. Die komt één keer, en ‘Delen’ stuurt hem als afbeelding.",
     nm_ing_bell_pepper: "Paprika's",
     nm_ing_tomato_sauce: "Tomatensaus (porties)",

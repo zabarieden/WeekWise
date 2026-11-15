@@ -3127,6 +3127,7 @@ translations.nb = {
     nm_badges_earned: "prestasjoner oppnådd",
     nm_badges_new_many: "{n} nye prestasjoner!",
     nm_badge_new: "Ny prestasjon!",
+    nm_review_title: "Hvordan var måltidene denne uken?", nm_review_too_much: "For mye", nm_review_ok: "Akkurat passe", nm_review_too_little: "For lite", nm_review_save: "Oppdater menyen", nm_review_later: "Ikke nå", nm_review_saved: "Menyen er oppdatert – dagens total er den samme", faq_q_new_me_meal_review: "Hva er det ukentlige spørsmålet om måltidene?", faq_a_new_me_meal_review: "Én gang i uken dukker et kort spørsmål opp på måltidsskjermen: hvordan var hvert måltid – for mye, akkurat passe eller for lite. Det kommer først etter den første uken, og bare hvis måltider er krysset av ✓ minst 5 av de siste 7 dagene. «For mye» flytter 50 kalorier ut av måltidet og «For lite» legger til 50 (opptil 150), og de andre måltidene jevner ut, så dagen fortsatt blir nøyaktig planen din.",
     badge_week_title: "En uke med utholdenhet", badge_week_desc: "En ✓ på 6 av de siste 7 dagene", badge_week_share: "En uke med utholdenhet i NOT10.ai: en ✓ på 6 av 7 dager", faq_q_badge_week: "Hva er utholdenhetsmerket?", faq_a_badge_week: "Med Premium åpnes det etter en ✓ på 6 av de siste 7 dagene (i Min Rutine, på et lite steg mot et mål eller på en vane) et glasskort med fallende glitter: «En uke med utholdenhet». Det kommer bare én gang, og «Del» sender det som bilde.",
     nm_ing_bell_pepper: "Paprikaer",
     nm_ing_tomato_sauce: "Tomatsaus (porsjoner)",

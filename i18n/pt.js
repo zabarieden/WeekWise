@@ -3127,6 +3127,7 @@ translations.pt = {
     nm_badges_earned: "conquistas obtidas",
     nm_badges_new_many: "{n} novas conquistas!",
     nm_badge_new: "Nova conquista!",
+    nm_review_title: "Como foram as refeições esta semana?", nm_review_too_much: "Demais", nm_review_ok: "Na medida", nm_review_too_little: "Pouco", nm_review_save: "Atualizar o cardápio", nm_review_later: "Agora não", nm_review_saved: "Cardápio atualizado – o total do dia continua igual", faq_q_new_me_meal_review: "O que é a pergunta semanal sobre as refeições?", faq_a_new_me_meal_review: "Uma vez por semana, na tela das refeições, aparece uma pergunta curta: como foi cada refeição – demais, na medida ou pouco. Ela só vem depois da primeira semana, e só se você marcou ✓ nas refeições em pelo menos 5 dos últimos 7 dias. “Demais” tira 50 calorias daquela refeição e “Pouco” acrescenta 50 (até 150), e as outras refeições equilibram, então o dia continua somando exatamente o seu plano.",
     badge_week_title: "Uma semana de constância", badge_week_desc: "✓ em 6 dos últimos 7 dias", badge_week_share: "Uma semana de constância no NOT10.ai: ✓ em 6 de 7 dias", faq_q_badge_week: "O que é o selo de constância?", faq_a_badge_week: "Com o Premium, depois de um ✓ em 6 dos últimos 7 dias (na Minha Rotina, num pequeno passo de uma meta ou num hábito), abre um cartão de vidro com purpurina caindo: “Uma semana de constância”. Ele vem uma vez só, e “Compartilhar” envia como imagem.",
     nm_ing_bell_pepper: "Pimentões",
     nm_ing_tomato_sauce: "Molho de tomate (porções)",

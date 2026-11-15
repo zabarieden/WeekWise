@@ -3127,6 +3127,7 @@ translations.ko = {
     nm_badges_earned: "업적 달성",
     nm_badges_new_many: "새 업적 {n}개!",
     nm_badge_new: "새 업적!",
+    nm_review_title: "이번 주 식사는 어땠어요?", nm_review_too_much: "너무 많았어요", nm_review_ok: "딱 좋았어요", nm_review_too_little: "너무 적었어요", nm_review_save: "메뉴 조정하기", nm_review_later: "나중에", nm_review_saved: "메뉴를 조정했어요 – 하루 총량은 그대로예요", faq_q_new_me_meal_review: "식사에 대한 주간 질문은 뭐예요?", faq_a_new_me_meal_review: "일주일에 한 번, 식사 화면에서 짧은 질문이 떠요: 각 식사가 너무 많았는지, 딱 좋았는지, 너무 적었는지. 첫 주가 지난 뒤에만, 그리고 최근 7일 중 5일 이상 식사에 ✓를 했을 때만 나와요. '너무 많았어요'는 그 식사에서 50kcal를 빼고 '너무 적었어요'는 50kcal를 더하며(최대 150), 다른 식사가 균형을 맞춰서 하루 총량은 여전히 계획과 정확히 같아요.",
     badge_week_title: "꾸준했던 한 주", badge_week_desc: "최근 7일 중 6일에 ✓", badge_week_share: "NOT10.ai에서 꾸준했던 한 주: 7일 중 6일에 ✓", faq_q_badge_week: "꾸준함 배지가 뭐예요?", faq_a_badge_week: "프리미엄에서 최근 7일 중 6일에 ✓(내 루틴, 목표의 작은 한 걸음, 습관)를 하면 반짝이가 떨어지는 유리 카드 '꾸준했던 한 주'가 열려요. 한 번만 나오고, '공유'를 누르면 이미지로 보낼 수 있어요.",
     nm_ing_bell_pepper: "파프리카",
     nm_ing_tomato_sauce: "토마토 소스 (인분)",

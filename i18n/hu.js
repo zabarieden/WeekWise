@@ -3127,6 +3127,7 @@ translations.hu = {
     nm_badges_earned: "kitüntetés megszerezve",
     nm_badges_new_many: "{n} új kitüntetés!",
     nm_badge_new: "Új kitüntetés!",
+    nm_review_title: "Milyenek voltak az étkezések ezen a héten?", nm_review_too_much: "Túl sok", nm_review_ok: "Pont jó", nm_review_too_little: "Túl kevés", nm_review_save: "Étrend frissítése", nm_review_later: "Most nem", nm_review_saved: "Az étrend frissült – a napi összeg ugyanaz marad", faq_q_new_me_meal_review: "Mi a heti kérdés az étkezésekről?", faq_a_new_me_meal_review: "Hetente egyszer az étkezések képernyőjén megjelenik egy rövid kérdés: milyen volt az egyes étkezés – túl sok, pont jó vagy túl kevés. Csak az első hét után jön, és csak akkor, ha az utolsó 7 napból legalább 5-ön ✓ került az étkezésekre. A „Túl sok” 50 kalóriát vesz el abból az étkezésből, a „Túl kevés” 50-et ad hozzá (legfeljebb 150-ig), a többi étkezés pedig kiegyenlít, így a nap továbbra is pontosan a terved szerint jön ki.",
     badge_week_title: "Egy hét kitartás", badge_week_desc: "✓ az utolsó 7 napból 6-on", badge_week_share: "Egy hét kitartás a NOT10.ai-ban: ✓ 7 napból 6-on", faq_q_badge_week: "Mi a kitartás jelvény?", faq_a_badge_week: "Prémiummal, ha az utolsó 7 napból 6-on van ✓ (a Rutinomban, egy cél kis lépésénél vagy egy szokásnál), kinyílik egy üvegkártya hulló csillámmal: „Egy hét kitartás”. Csak egyszer jön, és a „Megosztás” képként küldi el.",
     nm_ing_bell_pepper: "Kaliforniai paprika",
     nm_ing_tomato_sauce: "Paradicsomszósz (adag)",

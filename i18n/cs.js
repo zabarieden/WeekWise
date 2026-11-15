@@ -3131,6 +3131,7 @@ translations.cs = {
     nm_badges_earned: "získaných úspěchů",
     nm_badges_new_many: "Nové úspěchy: {n}!",
     nm_badge_new: "Nový úspěch!",
+    nm_review_title: "Jaká byla jídla tento týden?", nm_review_too_much: "Moc", nm_review_ok: "Akorát", nm_review_too_little: "Málo", nm_review_save: "Upravit jídelníček", nm_review_later: "Teď ne", nm_review_saved: "Jídelníček je upravený – součet dne zůstává stejný", faq_q_new_me_meal_review: "Co je týdenní otázka na jídla?", faq_a_new_me_meal_review: "Jednou týdně se na obrazovce jídel objeví krátká otázka: jaké bylo každé jídlo – moc, akorát, nebo málo. Přijde až po prvním týdnu a jen tehdy, když jídla měla ✓ alespoň 5 z posledních 7 dní. „Moc“ ubere z daného jídla 50 kalorií a „Málo“ 50 přidá (až 150), ostatní jídla to vyrovnají, takže den dál přesně odpovídá plánu.",
     badge_week_title: "Týden vytrvalosti", badge_week_desc: "✓ v 6 z posledních 7 dní", badge_week_share: "Týden vytrvalosti v NOT10.ai: ✓ v 6 ze 7 dní", faq_q_badge_week: "Co je odznak vytrvalosti?", faq_a_badge_week: "S Premium se po ✓ v 6 z posledních 7 dní (v Mé Rutině, u malého kroku cíle nebo u návyku) otevře skleněná karta s padajícími třpytkami: „Týden vytrvalosti“. Přijde jen jednou a „Sdílet“ ji pošle jako obrázek.",
     nm_ing_bell_pepper: "Papriky",
     nm_ing_tomato_sauce: "Rajčatová omáčka (porce)",

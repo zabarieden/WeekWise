@@ -3127,6 +3127,7 @@ translations.vi = {
     nm_badges_earned: "thành tích đã đạt",
     nm_badges_new_many: "{n} thành tích mới!",
     nm_badge_new: "Thành tích mới!",
+    nm_review_title: "Các bữa ăn tuần này thế nào?", nm_review_too_much: "Quá nhiều", nm_review_ok: "Vừa đủ", nm_review_too_little: "Quá ít", nm_review_save: "Cập nhật thực đơn", nm_review_later: "Để sau", nm_review_saved: "Đã cập nhật thực đơn – tổng của ngày vẫn như cũ", faq_q_new_me_meal_review: "Câu hỏi hằng tuần về các bữa ăn là gì?", faq_a_new_me_meal_review: "Mỗi tuần một lần, trên màn hình bữa ăn, sẽ hiện một câu hỏi ngắn: mỗi bữa là quá nhiều, vừa đủ hay quá ít. Câu hỏi chỉ đến sau tuần đầu tiên, và chỉ khi bạn đã ✓ các bữa ăn ít nhất 5 trong 7 ngày gần nhất. “Quá nhiều” chuyển 50 calo ra khỏi bữa đó và “Quá ít” thêm 50 (tối đa 150), các bữa khác cân bằng lại, nên cả ngày vẫn đúng bằng kế hoạch.",
     badge_week_title: "Một tuần kiên trì", badge_week_desc: "Có ✓ trong 6 trên 7 ngày gần nhất", badge_week_share: "Một tuần kiên trì trên NOT10.ai: ✓ trong 6 trên 7 ngày", faq_q_badge_week: "Huy hiệu kiên trì là gì?", faq_a_badge_week: "Với Premium, sau khi có ✓ trong 6 trên 7 ngày gần nhất (ở Thói Quen Của Tôi, ở một bước nhỏ của mục tiêu hoặc ở một thói quen), một tấm thẻ kính với kim tuyến rơi sẽ mở ra: “Một tuần kiên trì”. Nó chỉ đến một lần, và “Chia sẻ” gửi nó dưới dạng ảnh.",
     nm_ing_bell_pepper: "Ớt chuông",
     nm_ing_tomato_sauce: "Sốt cà chua (phần)",

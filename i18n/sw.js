@@ -3127,6 +3127,7 @@ translations.sw = {
     nm_badges_earned: "mafanikio yamepatikana",
     nm_badges_new_many: "Mafanikio mapya {n}!",
     nm_badge_new: "Fanikio jipya!",
+    nm_review_title: "Milo ilikuwaje wiki hii?", nm_review_too_much: "Nyingi mno", nm_review_ok: "Sawa kabisa", nm_review_too_little: "Kidogo mno", nm_review_save: "Sasisha menyu", nm_review_later: "Si sasa", nm_review_saved: "Menyu imesasishwa – jumla ya siku inabaki ileile", faq_q_new_me_meal_review: "Swali la kila wiki kuhusu milo ni nini?", faq_a_new_me_meal_review: "Mara moja kwa wiki, kwenye skrini ya milo, swali fupi hujitokeza: kila mlo ulikuwaje – mwingi mno, sawa kabisa au mdogo mno. Huja tu baada ya wiki ya kwanza, na tu kama milo iliwekewa ✓ angalau siku 5 kati ya 7 zilizopita. “Nyingi mno” huondoa kalori 50 kwenye mlo huo na “Kidogo mno” huongeza 50 (hadi 150), na milo mingine husawazisha, kwa hiyo siku bado inafikia mpango wako kamili.",
     badge_week_title: "Wiki ya kudumu", badge_week_desc: "✓ katika siku 6 kati ya 7 zilizopita", badge_week_share: "Wiki ya kudumu kwenye NOT10.ai: ✓ katika siku 6 kati ya 7", faq_q_badge_week: "Beji ya kudumu ni nini?", faq_a_badge_week: "Ukiwa na Premium, baada ya ✓ katika siku 6 kati ya 7 zilizopita (kwenye Ratiba Yangu, kwenye hatua ndogo ya lengo au kwenye tabia), kadi ya kioo yenye vimetameta vinavyoanguka hufunguka: “Wiki ya kudumu”. Huja mara moja tu, na “Shiriki” huituma kama picha.",
     nm_ing_bell_pepper: "Pilipili hoho",
     nm_ing_tomato_sauce: "Mchuzi wa nyanya (sehemu)",

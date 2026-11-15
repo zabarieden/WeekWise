@@ -3127,6 +3127,7 @@ translations.tr = {
     nm_badges_earned: "başarı kazanıldı",
     nm_badges_new_many: "{n} yeni başarı!",
     nm_badge_new: "Yeni başarı!",
+    nm_review_title: "Bu hafta öğünler nasıldı?", nm_review_too_much: "Fazla", nm_review_ok: "Tam kararında", nm_review_too_little: "Az", nm_review_save: "Menüyü güncelle", nm_review_later: "Şimdi değil", nm_review_saved: "Menü güncellendi – günün toplamı aynı kalıyor", faq_q_new_me_meal_review: "Öğünlerle ilgili haftalık soru nedir?", faq_a_new_me_meal_review: "Haftada bir, öğünler ekranında kısa bir soru açılır: her öğün nasıldı – fazla, tam kararında ya da az. Yalnızca ilk haftadan sonra ve son 7 günün en az 5'inde öğünlere ✓ konduysa gelir. “Fazla” o öğünden 50 kalori alır, “Az” 50 ekler (150'ye kadar), diğer öğünler de dengeler; böylece gün yine tam planın kadar olur.",
     badge_week_title: "Kararlılık dolu bir hafta", badge_week_desc: "Son 7 günün 6'sında ✓", badge_week_share: "NOT10.ai'de kararlılık dolu bir hafta: 7 günün 6'sında ✓", faq_q_badge_week: "Kararlılık rozeti nedir?", faq_a_badge_week: "Premium'da son 7 günün 6'sında ✓ (Rutinim'de, bir hedefin küçük adımında ya da bir alışkanlıkta) olunca, içinde simler dökülen cam bir kart açılır: “Kararlılık dolu bir hafta”. Yalnızca bir kez gelir ve “Paylaş” onu görsel olarak gönderir.",
     nm_ing_bell_pepper: "Dolmalık biber",
     nm_ing_tomato_sauce: "Domates sosu (porsiyon)",

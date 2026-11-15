@@ -3127,6 +3127,7 @@ translations.yo = {
     nm_badges_earned: "àṣeyọrí tí a ti gbà",
     nm_badges_new_many: "Àṣeyọrí tuntun {n}!",
     nm_badge_new: "Àṣeyọrí tuntun!",
+    nm_review_title: "Báwo ni oúnjẹ ṣe rí lọ́sẹ̀ yìí?", nm_review_too_much: "Ó pọ̀ jù", nm_review_ok: "Ó dọ́gba", nm_review_too_little: "Ó kéré jù", nm_review_save: "Ṣe àtúnṣe àkójọ oúnjẹ", nm_review_later: "Kì í ṣe báyìí", nm_review_saved: "A ti ṣe àtúnṣe àkójọ oúnjẹ – àpapọ̀ ọjọ́ kò yí padà", faq_q_new_me_meal_review: "Kí ni ìbéèrè ọ̀sẹ̀ kọ̀ọ̀kan nípa oúnjẹ?", faq_a_new_me_meal_review: "Ẹ̀ẹ̀kan lọ́sẹ̀, lójú ìwé oúnjẹ, ìbéèrè kúkúrú kan máa ń jáde: báwo ni oúnjẹ kọ̀ọ̀kan ṣe rí – ó pọ̀ jù, ó dọ́gba tàbí ó kéré jù. Lẹ́yìn ọ̀sẹ̀ àkọ́kọ́ nìkan ni ó máa ń wá, àti pé tí a bá ti fi ✓ sí oúnjẹ ní ó kéré tán ọjọ́ 5 nínú ọjọ́ 7 tó kọjá. “Ó pọ̀ jù” máa ń mú kalori 50 kúrò nínú oúnjẹ náà, “Ó kéré jù” sì máa ń fi 50 kún un (títí dé 150), àwọn oúnjẹ yòókù yóò sì dọ́gba rẹ̀, kí ọjọ́ náà ṣì lè bá ètò rẹ mu gẹ́lẹ́.",
     badge_week_title: "Ọ̀sẹ̀ ìforítì kan", badge_week_desc: "✓ ní ọjọ́ 6 nínú ọjọ́ 7 tó kọjá", badge_week_share: "Ọ̀sẹ̀ ìforítì kan lórí NOT10.ai: ✓ ní ọjọ́ 6 nínú 7", faq_q_badge_week: "Kí ni àmì ìforítì?", faq_a_badge_week: "Pẹ̀lú Premium, lẹ́yìn ✓ ní ọjọ́ 6 nínú ọjọ́ 7 tó kọjá (nínú Ìlànà Mi, lórí ìgbésẹ̀ kékeré ti àfojúsùn tàbí lórí àṣà), káàdì dígí kan tí àwọn ohun dídán ń jábọ́ sínú rẹ̀ yóò ṣí: “Ọ̀sẹ̀ ìforítì kan”. Ẹ̀ẹ̀kan péré ni ó máa ń wá, “Pín” sì máa ń fi ránṣẹ́ bí àwòrán.",
     nm_ing_bell_pepper: "Ata aládùn",
     nm_ing_tomato_sauce: "Ọbẹ̀ tòmátì (ìpín)",

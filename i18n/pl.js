@@ -3133,6 +3133,7 @@ translations.pl = {
     nm_badges_earned: "zdobytych osiągnięć",
     nm_badges_new_many: "Nowe osiągnięcia: {n}!",
     nm_badge_new: "Nowe osiągnięcie!",
+    nm_review_title: "Jak były posiłki w tym tygodniu?", nm_review_too_much: "Za dużo", nm_review_ok: "W sam raz", nm_review_too_little: "Za mało", nm_review_save: "Zaktualizuj menu", nm_review_later: "Nie teraz", nm_review_saved: "Menu zaktualizowane – suma dnia się nie zmienia", faq_q_new_me_meal_review: "Czym jest cotygodniowe pytanie o posiłki?", faq_a_new_me_meal_review: "Raz w tygodniu na ekranie posiłków pojawia się krótkie pytanie: jaki był każdy posiłek – za dużo, w sam raz czy za mało. Pojawia się dopiero po pierwszym tygodniu i tylko wtedy, gdy posiłki były odhaczone ✓ w co najmniej 5 z ostatnich 7 dni. „Za dużo” zabiera z tego posiłku 50 kalorii, a „Za mało” dodaje 50 (do 150), a pozostałe posiłki to wyrównują, więc dzień nadal sumuje się dokładnie do planu.",
     badge_week_title: "Tydzień wytrwałości", badge_week_desc: "✓ w 6 z ostatnich 7 dni", badge_week_share: "Tydzień wytrwałości w NOT10.ai: ✓ w 6 z 7 dni", faq_q_badge_week: "Czym jest odznaka wytrwałości?", faq_a_badge_week: "W Premium, po ✓ w 6 z ostatnich 7 dni (w Mojej Rutynie, przy małym kroku celu albo przy nawyku), otwiera się szklana karta ze spadającym brokatem: „Tydzień wytrwałości”. Pojawia się tylko raz, a „Udostępnij” wysyła ją jako obraz.",
     nm_ing_bell_pepper: "Papryka",
     nm_ing_tomato_sauce: "Sos pomidorowy (porcje)",
