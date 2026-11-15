@@ -2517,7 +2517,7 @@ translations.nb = {
     glib_weight_note: "Velg en målvekt som føles riktig – stien fylles for hver veiing.",
     premium_benefit_goal_library: "Hele målbiblioteket – alle ferdige planer",
     vision_goal_delete_routine_note: "Punktene i Min Rutine slettes også.",
-    faq_a_goal_small_steps: "Hvert mål i Mine Mål er en sti: milepælene som allerede ligger bak deg, dagens lysende stein og pokalen ved enden. Gi et mål et lite steg – hver dag, eller hver uke på en dag du velger – noe som går selv en tung dag, som '10 minutter rolig løping'. Alle dagens små steg vises øverst i Mine Mål og i Min Dag, hvert med en rask ✓, og '✓ Gjort i dag' under et måls sti fyller inn prikkene for de siste 7 dagene. Øverst ser du dagens dato, og på hver sti viser en lysende prikk med 'Her' hvor du er nå.",
+    faq_a_goal_small_steps: "Hvert mål i Mine Mål er en sti: milepælene som allerede ligger bak deg, dagens lysende stein og pokalen ved enden. Gi et mål et lite steg – hver dag, eller hver uke på en dag du velger – noe som går selv en tung dag, som '10 minutter rolig løping'. Alle dagens små steg vises øverst i Mine Mål og i Min Dag, hvert med en rask ✓, og '✓ Gjort i dag' under et måls sti fyller inn prikkene for de siste 7 dagene. Øverst ser du dagens dato, og på hver sti viser et varmt lys, som ildfluer leder til, hvor du er nå.",
     faq_q_goal_small_steps: "Hva er små steg, og hva betyr 'Ikke 10'?",
     apptour_demo_goal_small_step: "10 minutter rolig løping",
     apptour_g_today_text: "Dagens små steg for alle målene dine, hvert med en rask ✓. De vises også i Min Dag.",

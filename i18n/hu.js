@@ -2517,7 +2517,7 @@ translations.hu = {
     glib_weight_note: "Válassz egy jónak érzett célsúlyt – az ösvény minden méréssel telik.",
     premium_benefit_goal_library: "A teljes célkönyvtár – minden kész terv",
     vision_goal_delete_routine_note: "A Rutinomban lévő elemei is törlődnek.",
-    faq_a_goal_small_steps: "A Céljaim oldalon minden cél egy ösvény: a mérföldkövek, amelyek már mögötted vannak, a mai ragyogó kő és a kupa a végén. Adj egy célnak egy kis lépést – minden napra, vagy hetente egy általad választott napra – valamit, ami egy nehéz napon is megy, például „10 perc könnyű futás”. Az összes mai kis lépés megjelenik a Céljaim tetején és a Napom panelen, mindegyik gyors ✓-val, a cél ösvénye alatti „✓ Ma megcsináltam” pedig kitölti az utolsó 7 nap pöttyeit. Legfelül a mai dátum látható, és minden ösvényen egy „Itt” feliratú világító pötty mutatja, hol tartasz most.",
+    faq_a_goal_small_steps: "A Céljaim oldalon minden cél egy ösvény: a mérföldkövek, amelyek már mögötted vannak, a mai ragyogó kő és a kupa a végén. Adj egy célnak egy kis lépést – minden napra, vagy hetente egy általad választott napra – valamit, ami egy nehéz napon is megy, például „10 perc könnyű futás”. Az összes mai kis lépés megjelenik a Céljaim tetején és a Napom panelen, mindegyik gyors ✓-val, a cél ösvénye alatti „✓ Ma megcsináltam” pedig kitölti az utolsó 7 nap pöttyeit. Legfelül a mai dátum látható, és minden ösvényen egy meleg fény, amelyhez szentjánosbogarak vezetnek, mutatja, hol tartasz most.",
     faq_q_goal_small_steps: "Mik a kis lépések, és mit jelent a „Nem kell 10”?",
     apptour_demo_goal_small_step: "10 perc könnyű futás",
     apptour_g_today_text: "Az összes célod mai kis lépései, mindegyik gyors ✓-val. A Napom panelen is megjelennek.",

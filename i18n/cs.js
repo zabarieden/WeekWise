@@ -2521,7 +2521,7 @@ translations.cs = {
     glib_weight_note: "Zvolte cílovou hmotnost, která vám sedí – cesta se plní s každým vážením.",
     premium_benefit_goal_library: "Celá knihovna cílů – všechny hotové plány",
     vision_goal_delete_routine_note: "Jeho položky v Mé Rutině se také smažou.",
-    faq_a_goal_small_steps: "Každý cíl v sekci Moje Cíle je cesta: etapy, které už jsou za vámi, dnešní zářící kámen a pohár na konci. Dejte cíli malý krok – na každý den nebo každý týden ve zvolený den – něco, co jde i v těžký den, třeba „10 minut volného běhu“. Všechny dnešní malé kroky se zobrazují nahoře v sekci Moje Cíle a v sekci Můj Den, každý s rychlým ✓, a „✓ Dnes hotovo“ pod cestou cíle vyplní jeho tečky za posledních 7 dní. Nahoře je vidět dnešní datum a na každé cestě svítící tečka s nápisem „Tady“ ukazuje, kde právě jste.",
+    faq_a_goal_small_steps: "Každý cíl v sekci Moje Cíle je cesta: etapy, které už jsou za vámi, dnešní zářící kámen a pohár na konci. Dejte cíli malý krok – na každý den nebo každý týden ve zvolený den – něco, co jde i v těžký den, třeba „10 minut volného běhu“. Všechny dnešní malé kroky se zobrazují nahoře v sekci Moje Cíle a v sekci Můj Den, každý s rychlým ✓, a „✓ Dnes hotovo“ pod cestou cíle vyplní jeho tečky za posledních 7 dní. Nahoře je vidět dnešní datum a na každé cestě teplé světýlko, ke kterému vedou světlušky, ukazuje, kde právě jste.",
     faq_q_goal_small_steps: "Co jsou malé kroky a co znamená „Ne na 10“?",
     apptour_demo_goal_small_step: "10 minut volného běhu",
     apptour_g_today_text: "Dnešní malé kroky všech vašich cílů, každý s rychlým ✓. Zobrazují se i v sekci Můj Den.",

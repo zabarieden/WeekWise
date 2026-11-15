@@ -22173,6 +22173,29 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
     };
     const radius = { done: 21, future: 19, current: 16, start: 16, flag: 27 };
     const lastIdx = Math.max(1, nodes.length - 1);
+    // 🌟 גחליליות שמובילות בשביל עד התחנה של היום (הבחירה שלה, 2026-11-15: f4 "גחליליות"): על העקומה עצמה,
+    // בין התחנה הקודמת לתחנה של היום (או מתחתית השביל, כשעוד אין תחנה מאחור)
+    const curIdx = nodes.findIndex(n => n.kind === 'current' || n.kind === 'start');
+    if (curIdx !== -1 && !goal.is_achieved) {
+        const bez = (a, b, c, d, tt) => { const u = 1 - tt; return u * u * u * a + 3 * u * u * tt * b + 3 * u * tt * tt * c + tt * tt * tt * d; };
+        let P0, C1, C2, P3;
+        if (curIdx > 0) {
+            const s = curIdx - 1, q0 = pts[s - 1] || pts[s], q1 = pts[s], q2 = pts[s + 1], q3 = pts[s + 2] || pts[s + 1];
+            P0 = q1; P3 = q2;
+            C1 = { x: q1.x + (q2.x - q0.x) / 6, y: q1.y + (q2.y - q0.y) / 6 };
+            C2 = { x: q2.x - (q3.x - q1.x) / 6, y: q2.y - (q3.y - q1.y) / 6 };
+        } else {
+            P0 = { x: pts[0].x, y: H - 8 }; C1 = P0; C2 = pts[0]; P3 = pts[0];
+        }
+        (curIdx > 0 ? [0.4, 0.56, 0.72] : [0.15, 0.55]).forEach((tt, j) => {
+            const fly = document.createElement('span');
+            fly.className = 'gv-fly';
+            fly.style.left = `${f(bez(P0.x, C1.x, C2.x, P3.x, tt))}%`;
+            fly.style.top = `${f(bez(P0.y, C1.y, C2.y, P3.y, tt))}px`;
+            fly.style.setProperty('--d', j);
+            wrap.appendChild(fly);
+        });
+    }
     nodes.forEach((n, i) => {
         const p = pts[i];
         const node = document.createElement('span');
@@ -22193,8 +22216,8 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
         } else if (n.kind === 'sum-future') {
             node.innerHTML = `<span class="gv-stone is-sum is-future">${visionLtr('+' + n.n)}</span>`;
         } else if (n.kind === 'current' || n.kind === 'start') {
-            // where you are now: a glowing dot marked "Here" (her pick, option 9, 2026-11-15 - instead of the goal's emoji)
-            node.innerHTML = `<span class="gv-here"><span class="gv-here-dot"></span><span class="gv-here-tag">${visionEsc(t('gv_here'))}</span></span>`;
+            // where you are now: a warm light at the end of the fireflies (her pick f4, 2026-11-15 - instead of the goal's emoji)
+            node.innerHTML = `<span class="gv-here-light" role="img" aria-label="${visionEsc(t('gv_here'))}"></span>`;
         } else {
             node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">🏆</span>`;
             label = model.flag;

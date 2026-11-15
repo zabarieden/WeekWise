@@ -2517,7 +2517,7 @@ translations.en = {
     glib_weight_note: "Pick a target weight that feels right – the path fills in with every weigh-in.",
     premium_benefit_goal_library: "The whole goal library – every ready plan",
     vision_goal_delete_routine_note: "Its items in My Routine will be deleted too.",
-    faq_a_goal_small_steps: "Every goal in My Goals is a path: the stations already behind you, today's glowing stone and the trophy at the end. Give a goal a small step – every day, or every week on a day you choose – something doable even on a hard day, like '10 minutes of easy running'. All of today's small steps show up at the top of My Goals and in My Day, each with a quick ✓, and '✓ I did it today' under a goal's path fills in its last-7-days dots. At the top you'll see today's date, and on each path a glowing dot marked 'Here' shows where you are.",
+    faq_a_goal_small_steps: "Every goal in My Goals is a path: the stations already behind you, today's glowing stone and the trophy at the end. Give a goal a small step – every day, or every week on a day you choose – something doable even on a hard day, like '10 minutes of easy running'. All of today's small steps show up at the top of My Goals and in My Day, each with a quick ✓, and '✓ I did it today' under a goal's path fills in its last-7-days dots. At the top you'll see today's date, and on each path a warm light, with fireflies leading to it, shows where you are.",
     faq_q_goal_small_steps: "What are small steps, and what does 'Not 10' mean?",
     apptour_demo_goal_small_step: "10 minutes of easy running",
     apptour_g_today_text: "The small steps of all your goals for today, each with a quick ✓. They show up in My Day too.",
