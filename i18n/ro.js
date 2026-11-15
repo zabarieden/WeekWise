@@ -1366,7 +1366,7 @@ translations.ro = {
     routine_hour_remove_text: "Ce e scris la ora aceasta va fi șters din rutină: {title}",
     routine_hour_remove_title: "Elimini ora {time}?",
     faq_a_routine_ai: "În Rutina mea atinge scânteia mov de lângă file (este și în ➕, în ⚙️ și în fereastra de adăugare a unui element). Mai întâi întreabă cum se numește rutina: numele unei file existente adaugă în acea filă, un nume nou deschide o filă nouă. Apoi scrie cu cuvinte simple ce conține – de exemplu \"trezire la 7, sală la 18:00 duminică și marți, citit la 22\" – iar el adaugă totul la orele exacte, cu zilele acolo unde sunt scrise. Fără Premium ai 5 încercări gratuite (comune cu AI-ul pentru calendar). După aceea totul se poate edita ca de obicei.",
-    faq_a_routine_daysoff: "În Rutina Mea, atinge ➕ și apoi „Zile libere”: alege zilele (de exemplu sâmbătă și duminică) și rutina din ele – fără program (rămâne liber), rutina ta, sau spune-i AI-ului ce faci ca s-o construiască. Zilele libere primesc o filă proprie, iar în zilele acelea Rutina Mea și Ziua Mea arată doar fila aceasta.",
+    faq_a_routine_daysoff: "În Rutina Mea, atinge ➕ și apoi „Zile libere”: alege zilele (de exemplu sâmbătă și duminică) și rutina din ele – fără program (rămâne liber), rutina ta, sau spune-i AI-ului ce faci ca s-o construiască. Zilele libere primesc o filă proprie, iar în zilele acelea Rutina Mea și Ziua Mea arată doar fila aceasta. Ce ai stabilit cu 📅 într-o altă filă exact pentru ziua aceea (de exemplu o treabă de vineri) apare totuși în Ziua Mea în ziua liberă, cu numele filei sale.",
     faq_q_routine_ai: "Cum funcționează asistentul rutinei?",
     faq_q_routine_daysoff: "Cum setez zile libere în Rutina Mea?",
     routine_add_ai: "O rutină nouă cu AI",

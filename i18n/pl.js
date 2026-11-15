@@ -1366,7 +1366,7 @@ translations.pl = {
     routine_hour_remove_text: "To, co jest zapisane o tej godzinie, zostanie usunięte z rutyny: {title}",
     routine_hour_remove_title: "Usunąć {time}?",
     faq_a_routine_ai: "W Mojej rutynie dotknij fioletowej iskierki obok kart (jest też w ➕, w ⚙️ i w oknie dodawania pozycji). Najpierw pyta, jak nazywa się rutyna: nazwa istniejącej karty dodaje do tej karty, nowa nazwa otwiera nową kartę. Potem napisz prostymi słowami, co w niej jest – na przykład \"pobudka o 7, siłownia o 18:00 w niedzielę i wtorek, czytanie o 22\" – a doda wszystko o dokładnych godzinach, z dniami tam, gdzie są wpisane. Bez Premium jest 5 darmowych prób (wspólnych z AI kalendarza). Potem wszystko można edytować jak zwykle.",
-    faq_a_routine_daysoff: "W Mojej Rutynie dotknij ➕, a potem \"Dni wolne\": wybierz dni (na przykład sobotę i niedzielę) i rutynę w te dni – bez planu (zostaje pusto), własną rutynę albo opowiedz AI, co robisz, a ono ją ułoży. Dni wolne dostają własną kartę i w te dni Moja Rutyna i Mój Dzień pokazują tylko ją.",
+    faq_a_routine_daysoff: "W Mojej Rutynie dotknij ➕, a potem \"Dni wolne\": wybierz dni (na przykład sobotę i niedzielę) i rutynę w te dni – bez planu (zostaje pusto), własną rutynę albo opowiedz AI, co robisz, a ono ją ułoży. Dni wolne dostają własną kartę i w te dni Moja Rutyna i Mój Dzień pokazują tylko ją. To, co ustawiono za pomocą 📅 w innej karcie dokładnie na ten dzień (na przykład zadanie na piątek), i tak pojawi się w Moim Dniu w dzień wolny, z nazwą swojej karty.",
     faq_q_routine_ai: "Jak działa asystent rutyny?",
     faq_q_routine_daysoff: "Jak ustawić dni wolne w Mojej Rutynie?",
     routine_add_ai: "Nowa rutyna z AI",

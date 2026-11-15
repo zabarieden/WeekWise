@@ -1366,7 +1366,7 @@ translations.da = {
     routine_hour_remove_text: "Det, der står på dette tidspunkt, slettes fra rutinen: {title}",
     routine_hour_remove_title: "Fjern {time}?",
     faq_a_routine_ai: "Tryk på den lilla gnist ved fanerne i Min rutine (den findes også i ➕, i ⚙️ og i vinduet til at tilføje et punkt). Først spørger den, hvad rutinen hedder: navnet på en eksisterende fane tilføjer til den fane, et nyt navn åbner en ny fane. Skriv så med enkle ord, hvad der er i den – for eksempel \"stå op kl. 7, fitness kl. 18:00 søndag og tirsdag, læse kl. 22\" – og den tilføjer alt på de præcise tidspunkter, med dagene hvor de står. Uden Premium er der 5 gratis forsøg (delt med AI'en til kalenderen). Alt kan redigeres bagefter som sædvanligt.",
-    faq_a_routine_daysoff: "I Min Rutine trykker du på ➕ og derefter \"Fridage\": vælg dagene (for eksempel lørdag og søndag) og hvad rutinen er de dage – ingen plan (det forbliver tomt), din egen rutine, eller fortæl AI'en, hvad du laver, så bygger den rutinen. Fridage får deres egen fane, og de dage viser Min Rutine og Min Dag kun den fane.",
+    faq_a_routine_daysoff: "I Min Rutine trykker du på ➕ og derefter \"Fridage\": vælg dagene (for eksempel lørdag og søndag) og hvad rutinen er de dage – ingen plan (det forbliver tomt), din egen rutine, eller fortæl AI'en, hvad du laver, så bygger den rutinen. Fridage får deres egen fane, og de dage viser Min Rutine og Min Dag kun den fane. Det, du har sat til netop den ugedag med 📅 i en anden fane (for eksempel en fredagsopgave), vises alligevel i Min Dag på fridagen, med fanens navn.",
     faq_q_routine_ai: "Hvordan virker rutineassistenten?",
     faq_q_routine_daysoff: "Hvordan indstiller jeg fridage i Min Rutine?",
     routine_add_ai: "En ny rutine med AI",

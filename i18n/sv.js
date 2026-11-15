@@ -1366,7 +1366,7 @@ translations.sv = {
     routine_hour_remove_text: "Det som står vid den här tiden tas bort från rutinen: {title}",
     routine_hour_remove_title: "Ta bort {time}?",
     faq_a_routine_ai: "Tryck på den lila gnistan bredvid flikarna i Min rutin (den finns också i ➕, i ⚙️ och i fönstret för att lägga till en punkt). Först frågar den vad rutinen heter: namnet på en befintlig flik lägger till i den fliken, ett nytt namn öppnar en ny flik. Skriv sedan med enkla ord vad som ingår – till exempel \"vakna kl. 7, gym kl. 18:00 söndag och tisdag, läsa kl. 22\" – så lägger den till allt på exakta tider, med dagarna där de står. Utan Premium finns 5 gratisförsök (delade med AI:n för kalendern). Allt kan redigeras efteråt som vanligt.",
-    faq_a_routine_daysoff: "I Min Rutin trycker du på ➕ och sedan \"Lediga dagar\": välj dagarna (till exempel lördag och söndag) och vad rutinen är då – inget schema (det får vara tomt), din egen rutin, eller berätta för AI:n vad du gör så bygger den rutinen. Lediga dagar får en egen flik, och de dagarna visar Min Rutin och Min Dag bara den fliken.",
+    faq_a_routine_daysoff: "I Min Rutin trycker du på ➕ och sedan \"Lediga dagar\": välj dagarna (till exempel lördag och söndag) och vad rutinen är då – inget schema (det får vara tomt), din egen rutin, eller berätta för AI:n vad du gör så bygger den rutinen. Lediga dagar får en egen flik, och de dagarna visar Min Rutin och Min Dag bara den fliken. Det du har lagt på just den veckodagen med 📅 i en annan flik (till exempel en fredagsuppgift) visas ändå i Min Dag på den lediga dagen, med flikens namn.",
     faq_q_routine_ai: "Hur fungerar rutinassistenten?",
     faq_q_routine_daysoff: "Hur ställer jag in lediga dagar i Min Rutin?",
     routine_add_ai: "En ny rutin med AI",

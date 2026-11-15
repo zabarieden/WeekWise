@@ -1366,7 +1366,7 @@ translations.en = {
     routine_hour_remove_text: "What's written at this time will be deleted from the routine: {title}",
     routine_hour_remove_title: "Remove {time}?",
     faq_a_routine_ai: "In My Routine tap the purple sparkle next to the tabs (it's also in ➕, in ⚙️ and in the window for adding an item). First it asks what the routine is called: the name of an existing tab adds to that tab, a new name opens a new tab. Then write in plain words what's in it – for example \"wake up at 7, gym at 18:00 on Sunday and Tuesday, read at 22\" – and it adds everything at the exact times, with the days where they're written. Without Premium there are 5 free tries (shared with the AI for the calendar). Everything can be edited afterwards as usual.",
-    faq_a_routine_daysoff: "In My Routine, tap ➕ and then \"Days off\": pick the days (for example Saturday and Sunday) and what the routine is on them – no schedule (it stays clean), your own routine, or tell the AI what you do and it builds it. Days off get a tab of their own, and on those days My Routine and My Day show only that tab.",
+    faq_a_routine_daysoff: "In My Routine, tap ➕ and then \"Days off\": pick the days (for example Saturday and Sunday) and what the routine is on them – no schedule (it stays clean), your own routine, or tell the AI what you do and it builds it. Days off get a tab of their own, and on those days My Routine and My Day show only that tab. Something you set for that exact weekday with 📅 in another tab (say, a Friday task) still shows up in My Day on the day off, with its tab's name.",
     faq_q_routine_ai: "How does the routine assistant work?",
     faq_q_routine_daysoff: "How do I set days off in My Routine?",
     routine_add_ai: "A new routine with AI",

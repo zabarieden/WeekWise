@@ -1366,7 +1366,7 @@ translations.cs = {
     routine_hour_remove_text: "Co je zapsané v tento čas, se z rutiny smaže: {title}",
     routine_hour_remove_title: "Odebrat {time}?",
     faq_a_routine_ai: "V Mé rutině klepněte na fialovou jiskru vedle karet (je také v ➕, v ⚙️ a v okně pro přidání položky). Nejdřív se zeptá, jak se rutina jmenuje: název existující karty přidá do této karty, nový název otevře novou kartu. Pak jednoduchými slovy napište, co do ní patří – například \"vstávání v 7, posilovna v 18:00 v neděli a v úterý, čtení ve 22\" – a přidá všechno v přesných časech, se dny tam, kde jsou uvedené. Bez Premium máte 5 bezplatných pokusů (společných s AI pro kalendář). Vše jde potom upravit jako obvykle.",
-    faq_a_routine_daysoff: "V Moje Rutina klepněte na ➕ a pak na „Volné dny“: vyberte dny (například sobotu a neděli) a jaká je v nich rutina – bez plánu (zůstane volno), vlastní rutina, nebo řekněte AI, co děláte, a ona ji sestaví. Volné dny dostanou vlastní kartu a v těchto dnech Moje Rutina a Můj Den ukazují jen ji.",
+    faq_a_routine_daysoff: "V Moje Rutina klepněte na ➕ a pak na „Volné dny“: vyberte dny (například sobotu a neděli) a jaká je v nich rutina – bez plánu (zůstane volno), vlastní rutina, nebo řekněte AI, co děláte, a ona ji sestaví. Volné dny dostanou vlastní kartu a v těchto dnech Moje Rutina a Můj Den ukazují jen ji. To, co je v jiné kartě přes 📅 nastavené přesně na ten den (třeba úkol na pátek), se ve volný den stejně ukáže v Mém Dni, s názvem své karty.",
     faq_q_routine_ai: "Jak funguje asistent rutiny?",
     faq_q_routine_daysoff: "Jak nastavím volné dny v Moje Rutina?",
     routine_add_ai: "Nová rutina s AI",

@@ -1366,7 +1366,7 @@ translations.vi = {
     routine_hour_remove_text: "Những gì ghi ở giờ này sẽ bị xóa khỏi thói quen: {title}",
     routine_hour_remove_title: "Bỏ {time}?",
     faq_a_routine_ai: "Trong Thói quen của tôi chạm vào tia lấp lánh màu tím cạnh các tab (cũng có trong ➕, trong ⚙️ và trong cửa sổ thêm mục). Trước tiên nó hỏi tên thói quen: tên của tab có sẵn sẽ thêm vào tab đó, tên mới sẽ mở tab mới. Rồi viết bằng lời đơn giản trong đó có gì – ví dụ \"dậy lúc 7, tập gym lúc 18:00 Chủ nhật và thứ Ba, đọc sách lúc 22\" – và nó thêm tất cả đúng giờ, kèm ngày nếu có ghi. Không có Premium thì có 5 lượt miễn phí (dùng chung với AI của lịch). Sau đó có thể sửa mọi thứ như thường.",
-    faq_a_routine_daysoff: "Trong Thói Quen Của Tôi, chạm ➕ rồi chọn \"Ngày nghỉ\": chọn các ngày (ví dụ thứ Bảy và Chủ nhật) và thói quen trong những ngày đó – không lịch (để trống), thói quen của riêng bạn, hoặc kể cho AI bạn làm gì để AI xây dựng. Ngày nghỉ có tab riêng, và vào những ngày đó Thói Quen Của Tôi và Ngày Của Tôi chỉ hiện tab này.",
+    faq_a_routine_daysoff: "Trong Thói Quen Của Tôi, chạm ➕ rồi chọn \"Ngày nghỉ\": chọn các ngày (ví dụ thứ Bảy và Chủ nhật) và thói quen trong những ngày đó – không lịch (để trống), thói quen của riêng bạn, hoặc kể cho AI bạn làm gì để AI xây dựng. Ngày nghỉ có tab riêng, và vào những ngày đó Thói Quen Của Tôi và Ngày Của Tôi chỉ hiện tab này. Việc bạn đã đặt riêng cho đúng ngày đó bằng 📅 ở một tab khác (ví dụ việc của thứ Sáu) vẫn hiện trong Ngày Của Tôi vào ngày nghỉ, kèm tên tab của nó.",
     faq_q_routine_ai: "Trợ lý thói quen hoạt động thế nào?",
     faq_q_routine_daysoff: "Làm sao đặt ngày nghỉ trong Thói Quen Của Tôi?",
     routine_add_ai: "Thói quen mới với AI",

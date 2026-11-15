@@ -1366,7 +1366,7 @@ translations.tr = {
     routine_hour_remove_text: "Bu saatte yazılı olan şey rutinden silinecek: {title}",
     routine_hour_remove_title: "{time} kaldırılsın mı?",
     faq_a_routine_ai: "Rutinim'de sekmelerin yanındaki mor ışıltıya dokun (➕'da, ⚙️'da ve öğe ekleme penceresinde de var). Önce rutinin adını sorar: var olan bir sekmenin adı o sekmeye ekler, yeni bir ad yeni sekme açar. Sonra içinde ne olduğunu sade kelimelerle yaz – örneğin \"7'de kalk, pazar ve salı 18:00'de spor salonu, 22'de kitap\" – o da her şeyi tam saatlerine, yazılan günlerle birlikte ekler. Premium olmadan 5 ücretsiz deneme var (takvim yapay zekâsıyla ortak). Her şey sonra her zamanki gibi düzenlenebilir.",
-    faq_a_routine_daysoff: "Rutinim'de ➕'ya, sonra \"Tatil günleri\"ne dokun: günleri seç (örneğin cumartesi ve pazar) ve o günlerdeki rutini – program yok (boş kalır), kendi rutinin ya da yapay zekâya ne yaptığını anlat, o kursun. Tatil günlerinin kendine ait bir sekmesi olur ve o günlerde Rutinim ile Günüm yalnızca bu sekmeyi gösterir.",
+    faq_a_routine_daysoff: "Rutinim'de ➕'ya, sonra \"Tatil günleri\"ne dokun: günleri seç (örneğin cumartesi ve pazar) ve o günlerdeki rutini – program yok (boş kalır), kendi rutinin ya da yapay zekâya ne yaptığını anlat, o kursun. Tatil günlerinin kendine ait bir sekmesi olur ve o günlerde Rutinim ile Günüm yalnızca bu sekmeyi gösterir. Başka bir sekmede 📅 ile tam o gün için belirlediğin şey (örneğin cuma günü bir iş) tatil gününde de sekmesinin adıyla Günüm'de görünür.",
     faq_q_routine_ai: "Rutin asistanı nasıl çalışır?",
     faq_q_routine_daysoff: "Rutinim'de tatil günlerini nasıl belirlerim?",
     routine_add_ai: "Yapay zekâyla yeni rutin",

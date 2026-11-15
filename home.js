@@ -31,8 +31,18 @@ async function loadMyDayRoutine(todayStr) {
         // זה"): טאב עם ימים - בימים שלו, טאב בלי ימים - כל יום (וכל פריט לפי הימים שלו). ביום חופש - רק טאב ימי החופש
         const dayOff = tabs.find(tb => tb.day_off && routineTabWeekdays(tb).includes(todayIdx));
         const todayTabs = dayOff ? [dayOff] : tabs.filter(tb => !tb.day_off && (!routineTabWeekdays(tb).length || routineTabWeekdays(tb).includes(todayIdx)));
-        if (!todayTabs.length) return empty;
-        const { data: rows } = await supabaseClient.from('routine_items').select('*').in('tab_id', todayTabs.map(tb => tb.id)).eq('user_id', currentUserId).eq('kind', 'scheduled');
+        // ביום חופש הכל חופש - חוץ ממה שנקבע במפורש ליום הזה (📅 ימים לפריט שכוללים את היום, בכל טאב אחר).
+        // לפי בקשה מפורשת, 2026-11-15: "שיהיה הכל חופש חוץ מהדבר היחיד הזה שכן קבעתי שיהיה באותו היום"
+        const pinnedTabs = dayOff ? tabs.filter(tb => !tb.day_off) : [];
+        const pinnedToday = it => {
+            if (String(it.days_of_week || '').trim() === '' || typeof routineItemDays !== 'function') return false;
+            const d = routineItemDays(it);
+            return d.length < 7 && d.includes(todayIdx);
+        };
+        const queryTabs = todayTabs.concat(pinnedTabs);
+        if (!queryTabs.length) return empty;
+        const { data: rawRows } = await supabaseClient.from('routine_items').select('*').in('tab_id', queryTabs.map(tb => tb.id)).eq('user_id', currentUserId).eq('kind', 'scheduled');
+        const rows = dayOff ? (rawRows || []).filter(it => it.tab_id === dayOff.id || pinnedToday(it)) : rawRows;
         // אימון מטבלת האימונים שנמצא גם בשגרה - כבר בצ'יפ ליד המים, לא פעמיים
         if (typeof workoutPlanLoaded !== 'undefined' && !workoutPlanLoaded && typeof loadWorkoutPlan === 'function') await loadWorkoutPlan();
         // כל פריט עם כותרת - גם בשעה מדויקת (16:10), בדיוק כמו בלוח של "השגרה שלי" (שם פריט לא נעלם לעולם).
@@ -52,8 +62,10 @@ async function loadMyDayRoutine(todayStr) {
         }
         // שם הטאב בקטן - לכל טאב חוץ מהראשי (הראשון), כשיותר מטאב אחד מופיע היום
         const mainId = tabs[0] ? tabs[0].id : null;
-        const names = new Map(todayTabs.map(tb => [tb.id, tb.name]));
-        const tabOf = it => (todayTabs.length > 1 && it.tab_id !== mainId ? names.get(it.tab_id) || null : null);
+        const names = new Map(queryTabs.map(tb => [tb.id, tb.name]));
+        // ביום חופש - הדבר שנקבע ליום הזה מטאב אחר מראה את שם הטאב שלו
+        const tabOf = it => (dayOff ? (it.tab_id !== dayOff.id ? names.get(it.tab_id) || null : null)
+            : (todayTabs.length > 1 && it.tab_id !== mainId ? names.get(it.tab_id) || null : null));
         return { items, doneIds, checksOn, tab: todayTabs[0], tabOf };
     } catch (e) {
         console.error('my day routine failed', e);
