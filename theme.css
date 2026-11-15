@@ -7493,7 +7493,7 @@ html[dir="rtl"] .gv-back-icon { transform: scaleX(-1); }
 /* where you are now: a glowing dot marked "Here" */
 .gv-here { display: flex; flex-direction: column; align-items: center; gap: 4px; transform: translateY(12px); }
 .gv-here-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-pink); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-pink) 22%, transparent), 0 0 22px color-mix(in srgb, var(--accent-pink) 55%, transparent); animation: gvHerePing 2.2s ease-out infinite; }
-.gv-here-tag { padding: 2px 9px; border-radius: 999px; background: var(--text-primary); color: var(--bg-main); font-size: .72rem; font-weight: 800; line-height: 1.35; white-space: nowrap; }
+.gv-here-tag { padding: 2px 9px; border-radius: 999px; background: var(--accent-purple); color: #fff; font-size: .72rem; font-weight: 800; line-height: 1.35; white-space: nowrap; }
 @keyframes gvHerePing { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-pink) 50%, transparent), 0 0 22px color-mix(in srgb, var(--accent-pink) 55%, transparent); } 100% { box-shadow: 0 0 0 16px transparent, 0 0 22px color-mix(in srgb, var(--accent-pink) 55%, transparent); } }
 .gv-path.is-compact .gv-here-dot { width: 22px; height: 22px; }
 .gv-stone.is-sum { width: auto; min-width: 46px; height: 32px; padding: 0 10px; border-radius: 999px; font-size: .78rem; white-space: nowrap; }
