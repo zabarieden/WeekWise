@@ -3423,6 +3423,7 @@ translations.it = {
     vision_step_schedule_btn_title: "Programma nel calendario",
     nm_goal_reminder: "Ricorda il tuo obiettivo",
     faq_a_share_whatsapp: "Trovi l'opzione di condivisione in diversi punti: “Condividi questo traguardo” nella celebrazione quando raggiungi un obiettivo, 📤 su una ricetta, 📤 accanto a un allenamento in Sport e “✨ Condividi l'App” nelle Impostazioni. Scegli WhatsApp, email o copia. Il messaggio esce ben impaginato con i dettagli – per un obiettivo: i progressi, quanto tempo ci è voluto e il tuo premio; per una ricetta: gli ingredienti e il procedimento; per un allenamento: tempo, distanza e la foto. In fondo c'è sempre un piccolo link all'app, così chi vuole può entrare direttamente. Puoi comunque modificare il testo su WhatsApp prima di inviarlo.",
+    faq_q_app_icon: "L'icona dell'app sul mio telefono è ancora quella vecchia: come la aggiorno?", faq_a_app_icon: "NOT10.ai ha una nuova icona. Su Android di solito si aggiorna da sola in un giorno o due (a volte il telefono chiede di approvare la nuova icona). Su iPhone l'icona nella schermata Home cambia solo quando l'app viene aggiunta di nuovo: rimuovi l'icona dalla schermata Home, apri app.not10.ai in Safari e tocca Condividi › Aggiungi alla schermata Home. Non si perde nulla: è tutto salvato nell'account (potrebbe essere necessario accedere di nuovo).",
     faq_q_share_whatsapp: "Come condivido un obiettivo, una ricetta o un allenamento su WhatsApp?",
     sport_share_closing_3: "Sempre in movimento",
     sport_share_closing_2: "Il mio corpo ringrazia",

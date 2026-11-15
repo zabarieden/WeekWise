@@ -3423,6 +3423,7 @@ translations.tr = {
     vision_step_schedule_btn_title: "Takvimde planla",
     nm_goal_reminder: "Hedefini unutma",
     faq_a_share_whatsapp: "Paylaşma seçeneğini birkaç yerde bulabilirsiniz: bir hedefe ulaştığınızda kutlama ekranındaki 'Bu başarıyı paylaş', tarifteki 📤, Spor bölümünde antrenmanın yanındaki 📤 ve Ayarlar'daki '✨ Uygulamayı Paylaş'. WhatsApp, e-posta veya kopyalama seçeneğini seçin. Mesaj, ayrıntılarla birlikte düzenli ve şık bir şekilde hazırlanır – hedef için: ilerleme, ne kadar sürdüğü ve ödülünüz; tarif için: malzemeler ve adımlar; antrenman için: süre, mesafe ve fotoğraf. En altta her zaman uygulamaya küçük bir bağlantı bulunur, böylece isteyen herkes doğrudan girebilir. Göndermeden önce metni WhatsApp'ta yine de düzenleyebilirsiniz.",
+    faq_q_app_icon: "Telefonumdaki uygulama simgesi hâlâ eski – nasıl güncellerim?", faq_a_app_icon: "NOT10.ai'nin yeni bir simgesi var. Android'de genellikle bir iki gün içinde kendiliğinden güncellenir (bazen telefon yeni simgeyi onaylamanı ister). iPhone'da ana ekran simgesi yalnızca uygulama yeniden eklendiğinde değişir: simgeyi ana ekrandan kaldır, Safari'de app.not10.ai'yi aç ve Paylaş › Ana Ekrana Ekle'ye dokun. Hiçbir şey kaybolmaz – her şey hesapta kayıtlı (yeniden giriş yapman gerekebilir).",
     faq_q_share_whatsapp: "Bir hedefi, tarifi veya antrenmanı WhatsApp üzerinden nasıl paylaşırım?",
     sport_share_closing_3: "Hareket etmeye devam",
     sport_share_closing_2: "Vücudum teşekkür ediyor",

@@ -3423,6 +3423,7 @@ translations.en = {
     vision_step_schedule_btn_title: "Schedule in the calendar",
     nm_goal_reminder: "Remember your goal",
     faq_a_share_whatsapp: "You'll find a share option in a few places: 'Share this achievement' in the celebration when you reach a goal, 📤 on a recipe, 📤 next to a workout in Sport, and '✨ Share the App' in Settings. Choose WhatsApp, email or copy. The message comes out neatly laid out with the details – for a goal: the progress, how long it took and your reward; for a recipe: the ingredients and the steps; for a workout: time, distance and the photo. At the bottom there's always a small link to the app, so anyone who wants can go straight in. You can still edit the text in WhatsApp before sending.",
+    faq_q_app_icon: "The app icon on my phone is still the old one – how do I update it?", faq_a_app_icon: "NOT10.ai has a new icon. On Android it usually updates by itself within a day or two (sometimes the phone asks to approve the new icon). On iPhone the home screen icon only changes when the app is added again: remove the icon from the home screen, open app.not10.ai in Safari and tap Share › Add to Home Screen. Nothing is lost – everything is saved in the account (you may need to sign in again).",
     faq_q_share_whatsapp: "How do I share a goal, recipe or workout on WhatsApp?",
     sport_share_closing_3: "Keep on moving",
     sport_share_closing_2: "My body says thank you",

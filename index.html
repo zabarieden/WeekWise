@@ -58,8 +58,8 @@
 
     <!-- PWA: הפיכת האתר לאפליקציה שניתן להתקין ממסך הבית -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=6">
-    <link rel="icon" type="image/png" href="favicon.png?v=6">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=7">
+    <link rel="icon" type="image/png" href="favicon.png?v=7">
     <meta name="theme-color" content="#07060a">
     <!-- iOS מתעלם מה-manifest לצורך מצב מסך מלא, וצריך את התגיות הבאות בנפרד -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -75,7 +75,7 @@
     <meta property="og:title" content="NOT10.ai">
     <meta property="og:description" content="Plan your week, meals, goals and schedule – all in one place ✨">
     <meta property="og:url" content="https://app.not10.ai/">
-    <meta property="og:image" content="https://app.not10.ai/share-icon.png?v=2">
+    <meta property="og:image" content="https://app.not10.ai/share-icon.png?v=3">
     <meta property="og:image:width" content="300">
     <meta property="og:image:height" content="300">
     <meta name="twitter:card" content="summary">
@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=613">
+    <link rel="stylesheet" href="theme.css?v=614">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -4486,10 +4486,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=520"></script>
+    <script src="i18n/core.js?v=521"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=642"></script>
-    <script src="ai-chat.js?v=7"></script>
+    <script src="app.js?v=643"></script>
+    <script src="ai-chat.js?v=8"></script>
     <script src="goals-library.js?v=5"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=4"></script>

@@ -2528,7 +2528,7 @@ function appTourRender(step) {
     skip.title = t('apptour_skip');
     // מסך הפתיחה מציג את האייקון של האפליקציה; שלב בלי אלמנט מודגש - אייקון גדול באריח
     const hero = layer.querySelector('.app-tour-hero');
-    hero.innerHTML = step.agenda ? '<img src="icon-192.png?v=6" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || '✨') : '');
+    hero.innerHTML = step.agenda ? '<img src="icon-192.png?v=7" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || '✨') : '');
     hero.classList.toggle('is-brand', !!step.agenda);
     hero.classList.toggle('hidden', !isCenter || !!step.demo);
     const demoEl = layer.querySelector('.app-tour-demo');
@@ -9924,7 +9924,7 @@ const HELP_FAQ_TABS = ['general', 'premium', 'new_me', 'settings'];
 // היא שם הלשונית, והיא מופיעה רק בחיפוש, כשתוצאות מכל הלשוניות מוצגות יחד).
 // בלשונית ההגדרות הכותרות הן שמות הקבוצות של מסך ההגדרות עצמו
 const HELP_FAQ_GROUPS = [
-    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp'] },
+    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
     { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
     { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'habits_streaks', 'routine_nudge'] },

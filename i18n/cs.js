@@ -3427,6 +3427,7 @@ translations.cs = {
     vision_step_schedule_btn_title: "Naplánovat v kalendáři",
     nm_goal_reminder: "Pamatujte na svůj cíl",
     faq_a_share_whatsapp: "Možnost sdílení najdete na několika místech: „Sdílet tento úspěch“ v okně s gratulací po dosažení cíle, 📤 u receptu, 📤 vedle tréninku v sekci Sport a „✨ Sdílet Aplikaci“ v Nastavení. Zvolte WhatsApp, e-mail nebo kopírování. Zpráva vyjde přehledně uspořádaná se všemi podrobnostmi – u cíle: pokrok, jak dlouho to trvalo, a vaše odměna; u receptu: suroviny a postup přípravy; u tréninku: čas, vzdálenost a fotka. Dole je vždy malý odkaz na aplikaci, takže kdo chce, může ji hned otevřít. Před odesláním můžete text ještě upravit v aplikaci WhatsApp.",
+    faq_q_app_icon: "Ikona aplikace v telefonu je pořád ta stará – jak ji aktualizovat?", faq_a_app_icon: "NOT10.ai má novou ikonu. Na Androidu se obvykle aktualizuje sama během jednoho až dvou dnů (někdy telefon požádá o schválení nové ikony). Na iPhonu se ikona na ploše změní jen tehdy, když se aplikace přidá znovu: odstraňte ikonu z plochy, otevřete app.not10.ai v Safari a klepněte na Sdílet › Přidat na plochu. Nic se neztratí – vše je uložené v účtu (možná bude potřeba se znovu přihlásit).",
     faq_q_share_whatsapp: "Jak sdílet cíl, recept nebo trénink přes WhatsApp?",
     sport_share_closing_3: "Hýbu se dál",
     sport_share_closing_2: "Moje tělo říká děkuju",

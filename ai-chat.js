@@ -21,6 +21,9 @@ const AI_CHAT_SVG = {
     food: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8c-3-2-8-1-8 5 0 4 3 8 5 8 1 0 2-.6 3-.6s2 .6 3 .6c2 0 5-4 5-8 0-6-5-7-8-5z"/><path d="M12 8c0-2 1-4 3-5"/></svg>',
     photo: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg>',
     table: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M9 4v16"/></svg>',
+    // הלב בברכה (במקום 💛, לפי בקשה מפורשת, 2026-11-15: "ללב סגול כזה מצויר שיהיה קשור לאפליקציה"): לב מצויר
+    // ביד בסגול, עם הניצוץ של העוזר בפינה
+    heart: '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="aiHeartG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d8b4fe"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs><path d="M12 20.3c-.4 0-.8-.2-1.1-.5C7.3 17 3.7 14 3.4 9.7 3.2 6.6 5.3 4.3 8 4.3c1.7 0 3.1.9 4 2.5.9-1.6 2.4-2.6 4.1-2.6 2.7 0 4.7 2.4 4.5 5.5-.3 4.3-3.9 7.3-7.5 10.1-.3.3-.7.5-1.1.5z" fill="url(#aiHeartG)" stroke="#7c3aed" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.4 8.2c.2-1 .9-1.7 1.8-1.9" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity=".85"/><path class="ai-heart-spark" d="M20.2 1.6l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="#f5edff" stroke="#a78bfa" stroke-width=".6" stroke-linejoin="round"/></svg>',
 };
 // הכיתוב של כלי בלי האימוג'י שבתחילתו (בזכוכית יש ציור במקומו)
 function aiChatPlainLabel(s) { return String(s || '').replace(/^\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*\s*/u, ''); }
@@ -86,7 +89,12 @@ function aiChatBubble(text, who, cls) {
     if (!b) return null;
     const el = document.createElement('div');
     el.className = `ai-chat-msg ${who === 'me' ? 'is-me' : 'is-bot'}${cls ? ' ' + cls : ''}`;
-    el.textContent = text;
+    if (who !== 'me' && text.includes('💛')) {
+        text.split('💛').forEach((part, i) => {
+            if (i) { const h = document.createElement('span'); h.className = 'ai-chat-heart'; h.innerHTML = AI_CHAT_SVG.heart; el.appendChild(h); }
+            if (part) el.appendChild(document.createTextNode(part));
+        });
+    } else el.textContent = text;
     b.appendChild(el);
     aiChatScroll();
     return el;

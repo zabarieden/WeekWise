@@ -3423,6 +3423,7 @@ translations.yo = {
     vision_step_schedule_btn_title: "Ṣètò sínú kàlẹ́ńdà",
     nm_goal_reminder: "Rántí àfojúsùn rẹ",
     faq_a_share_whatsapp: "Àṣàyàn láti fi nǹkan ránṣẹ́ wà ní ibi mélòó kan: 'Fi Àṣeyọrí Yìí Ránṣẹ́' nínú ayẹyẹ nígbà tí o bá dé góńgó kan, 📤 lórí ìlànà oúnjẹ, 📤 lẹ́gbẹ̀ẹ́ eré-ìdárayá kan nínú Eré-ìdárayá, àti '✨ Fi Ohun Èlò Ránṣẹ́' nínú Ètò. Yan WhatsApp, ímeèlì tàbí dídà kọ. Ìfiránṣẹ́ náà máa ń jáde ní mímọ́ àti létòlétò pẹ̀lú àwọn àlàyé – fún góńgó: ìlọsíwájú, bí ó ṣe pẹ́ tó àti èsan rẹ; fún ìlànà oúnjẹ: àwọn èròjà àti àwọn ìtọ́ni; fún eré-ìdárayá: àkókò, ìjìnnà àti fọ́tò. Ní ìsàlẹ̀, ìjápọ̀ kékeré sí ohun èlò náà máa ń wà nígbà gbogbo, kí ẹnikẹ́ni tó bá fẹ́ lè wọlé tààrà. O ṣì lè ṣàtúnṣe ọ̀rọ̀ náà nínú WhatsApp kí o tó fi ránṣẹ́.",
+    faq_q_app_icon: "Àmì ohun èlò lórí fóònù mi ṣì jẹ́ ti àtijọ́ – báwo ni mo ṣe lè ṣe àtúnṣe rẹ̀?", faq_a_app_icon: "NOT10.ai ní àmì tuntun. Lórí Android, ó sábà máa ń ṣe àtúnṣe ara rẹ̀ láàárín ọjọ́ kan tàbí méjì (nígbà mìíràn fóònù yóò béèrè pé kí o fọwọ́ sí àmì tuntun náà). Lórí iPhone, àmì ojú-ìbojú ilé máa ń yí padà nìkan tí a bá tún ohun èlò náà fi kún un: yọ àmì náà kúrò lójú-ìbojú ilé, ṣí app.not10.ai nínú Safari kí o sì tẹ Pín › Fi kún Ojú-ìbojú Ilé. Kò sí ohun tí yóò sọnù – gbogbo nǹkan wà ní ìpamọ́ nínú àkọọ́lẹ̀ (ó lè di dandan láti wọlé lẹ́ẹ̀kan sí i).",
     faq_q_share_whatsapp: "Báwo ni mo ṣe lè fi góńgó, ìlànà oúnjẹ tàbí eré-ìdárayá ránṣẹ́ lórí WhatsApp?",
     sport_share_closing_3: "Ẹ jẹ́ ká máa gbéra nìṣó",
     sport_share_closing_2: "Ara mi ń dúpẹ́",

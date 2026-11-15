@@ -3423,6 +3423,7 @@ translations.sw = {
     vision_step_schedule_btn_title: "Panga kwenye kalenda",
     nm_goal_reminder: "Kumbuka lengo lako",
     faq_a_share_whatsapp: "Utapata chaguo la kushiriki katika sehemu kadhaa: 'Shiriki Mafanikio Haya' kwenye skrini ya sherehe unapofikia lengo, 📤 kwenye mapishi, 📤 kando ya mazoezi katika Michezo, na '✨ Shiriki Programu' katika Mipangilio. Chagua WhatsApp, barua pepe au kunakili. Ujumbe hutoka ukiwa umepangwa vizuri pamoja na maelezo – kwa lengo: maendeleo, muda uliochukua na zawadi yako; kwa mapishi: viungo na maelekezo; kwa mazoezi: muda, umbali na picha. Chini kabisa daima kuna kiungo kidogo cha programu, ili yeyote anayetaka aingie moja kwa moja. Bado unaweza kuhariri maandishi kwenye WhatsApp kabla ya kutuma.",
+    faq_q_app_icon: "Aikoni ya programu kwenye simu bado ni ile ya zamani – nitaisasishaje?", faq_a_app_icon: "NOT10.ai ina aikoni mpya. Kwenye Android kwa kawaida husasishwa yenyewe ndani ya siku moja au mbili (wakati mwingine simu huomba kuidhinisha aikoni mpya). Kwenye iPhone, aikoni ya skrini ya mwanzo hubadilika tu programu inapoongezwa upya: ondoa aikoni kwenye skrini ya mwanzo, fungua app.not10.ai kwenye Safari kisha gusa Shiriki › Ongeza kwenye Skrini ya Mwanzo. Hakuna kinachopotea – kila kitu kimehifadhiwa kwenye akaunti (huenda ukahitaji kuingia tena).",
     faq_q_share_whatsapp: "Ninashirikije lengo, mapishi au mazoezi kwenye WhatsApp?",
     sport_share_closing_3: "Tuendelee kusonga",
     sport_share_closing_2: "Mwili wangu unasema asante",

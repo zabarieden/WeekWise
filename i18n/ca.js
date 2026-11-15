@@ -3423,6 +3423,7 @@ translations.ca = {
     vision_step_schedule_btn_title: "Programar al calendari",
     nm_goal_reminder: "Recorda el teu objectiu",
     faq_a_share_whatsapp: "Trobaràs l'opció de compartir en diversos llocs: «Compartir Aquest Assoliment» a la celebració quan assoleixes un objectiu, 📤 en una recepta, 📤 al costat d'un entrenament a Esport i «✨ Compartir Aplicació» a Configuració. Tria WhatsApp, correu electrònic o copiar. El missatge surt ben ordenat amb els detalls – en un objectiu: el progrés, quant de temps has trigat i la teva recompensa; en una recepta: els ingredients i els passos de preparació; en un entrenament: el temps, la distància i la foto. Al final sempre hi ha un petit enllaç a l'app, perquè qui vulgui hi pugui entrar directament. Encara pots editar el text a WhatsApp abans d'enviar-lo.",
+    faq_q_app_icon: "La icona de l'app al meu telèfon encara és l'antiga, com l'actualitzo?", faq_a_app_icon: "NOT10.ai té una icona nova. A Android normalment s'actualitza sola en un o dos dies (de vegades el telèfon demana aprovar la icona nova). A l'iPhone, la icona de la pantalla d'inici només canvia quan es torna a afegir l'app: treu la icona de la pantalla d'inici, obre app.not10.ai al Safari i toca Comparteix › Afegeix a la pantalla d'inici. No es perd res: tot està desat al compte (potser caldrà tornar a iniciar la sessió).",
     faq_q_share_whatsapp: "Com comparteixo un objectiu, una recepta o un entrenament per WhatsApp?",
     sport_share_closing_3: "Seguim en moviment",
     sport_share_closing_2: "El meu cos m'ho agraeix",
