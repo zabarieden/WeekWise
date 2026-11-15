@@ -18677,7 +18677,8 @@ async function requestRoutineFromAI(text, days, btn) {
         const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-routine-request`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ text, weekdays: days && days.length ? days : null, lang: currentLang }),
+            // שורות ריקות ורווחים כפולים (נוח לכתוב ככה) - מסודרים לפני השליחה
+            body: JSON.stringify({ text: String(text).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n').trim(), weekdays: days && days.length ? days : null, lang: currentLang }),
         });
         const result = await res.json().catch(() => ({}));
         if (result.error === 'limit_reached') {
@@ -18687,7 +18688,17 @@ async function requestRoutineFromAI(text, days, btn) {
             } else showAppToast(t('routine_ai_limit'), 'error');
             return null;
         }
-        if (!res.ok || !Array.isArray(result.tabs) || !result.tabs.length) { showAppToast(t('routine_ai_failed'), 'error'); return null; }
+        if (!res.ok || !Array.isArray(result.tabs) || !result.tabs.length) {
+            // לחשבון המפתחת בלבד: הסיבה האמיתית מהשרת (למשל שגיאה של ספק ה-AI), כדי לדעת מה לתקן
+            let why = '';
+            if (isDevSuperuserAccount) {
+                let detail = String(result.detail || '');
+                try { detail = JSON.parse(detail).error.message || detail; } catch {}
+                why = ` [${result.error || res.status}${detail ? ': ' + detail.slice(0, 160) : ''}]`;
+            }
+            showAppToast(t('routine_ai_failed') + why, 'error');
+            return null;
+        }
         if (!isPremiumUser) cachedScheduleAiLifetimeUsed++;
         return result.tabs;
     } catch {

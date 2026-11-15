@@ -3701,13 +3701,14 @@
                 <button type="button" class="daily-board-close-btn" onclick="closeModal('modal-daily-board')" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                 <h3 data-i18n="daily_board_title">Daily Agenda</h3>
                 <div class="daily-board-tabs-row">
-                    <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
                     <!-- שעות הבלוקים הן עכשיו לכל טאב בנפרד (לא גלובלי לכולם) - לפי
                          בקשה מפורשת ("כל פעם שמוסיפים טאב יהיה אפשר לשחק עם השעות
                          ולשנות לכל טאב שונה"). גם עברו לכאן מהגדרות הכלליות, כי שם
-                         לא היה ברור לאיזה טאב הן מתייחסות -->
+                         לא היה ברור לאיזה טאב הן מתייחסות. ⚙️ ראשון בשורה - בקצה הימני בעברית ובשפות מימין
+                         לשמאל, בקצה השמאלי באנגלית (לפי בקשה מפורשת, 2026-11-15) -->
+                    <button type="button" class="daily-board-tab-add" id="daily-board-settings-btn" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
+                    <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
                     <button type="button" class="daily-board-tab-add" id="daily-board-overview-btn" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
-                    <button type="button" class="daily-board-tab-add" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <!-- ➕ פותח בחירה: טאב ריק / שכפול הטאב הנוכחי / תבניות מוכנות (פרימיום) - לפי בקשה מפורשת -->
                     <!-- ✨ עוזר השגרה - גלוי בשורת הטאבים (לפי בקשה מפורשת, 2026-11-15), נפתח עם שם הטאב הנוכחי -->
                     <button type="button" class="daily-board-tab-add" id="daily-board-ai-btn" onclick="openRoutineAiModal(routineActiveTabName())" data-i18n-title="routine_ai_title" title="Routine assistant"><i class="ic-spark" aria-hidden="true"></i></button>
@@ -4507,7 +4508,7 @@
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
     <script src="i18n/core.js?v=523"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=645"></script>
+    <script src="app.js?v=646"></script>
     <script src="ai-chat.js?v=8"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
