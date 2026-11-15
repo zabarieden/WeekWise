@@ -7428,11 +7428,9 @@ html[dir="rtl"] .gv-back-icon { transform: scaleX(-1); }
 .gv-scroll::-webkit-scrollbar { display: none; }
 .gv-scroll > * { flex-shrink: 0; }
 
-/* הפתק הקבוע - "בדרך ל-10 · לא עוצרים" */
-.gv-note { position: relative; align-self: flex-start; max-width: min(310px, 88%); display: flex; flex-direction: column; gap: 3px; margin-top: 6px; padding: 12px 16px 13px; border-radius: 6px 6px 16px 6px; background: #fff3a8; color: #2b2410; transform: rotate(-1.4deg); box-shadow: 0 10px 22px rgba(0, 0, 0, .28), inset 0 -2px 0 rgba(0, 0, 0, .05); }
-.gv-note::before { content: ""; position: absolute; top: -8px; left: 50%; width: 58px; height: 16px; transform: translateX(-50%) rotate(2deg); border-radius: 3px; background: rgba(255, 255, 255, .55); box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
-.gv-note strong { font-size: 1rem; font-weight: 800; }
-.gv-note span { font-size: .8rem; line-height: 1.45; color: #4a3f1c; }
+/* the date of today at the top (her pick, option 9, 2026-11-15 - the yellow note is gone) */
+.gv-date { margin: 6px 2px 0; font-size: .82rem; font-weight: 700; letter-spacing: .03em; color: var(--text-secondary); }
+.gv-date:empty { display: none; }
 
 /* הצעדים הקטנים של היום */
 .gv-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
@@ -7492,6 +7490,12 @@ html[dir="rtl"] .gv-back-icon { transform: scaleX(-1); }
 .gv-stone.is-done svg { width: 19px; height: 19px; }
 .gv-stone.is-current { width: 60px; height: 60px; font-size: 1.6rem; background: var(--accent-pink); box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent-pink) 24%, transparent), 0 0 28px color-mix(in srgb, var(--accent-pink) 60%, transparent); animation: gvGlow 2.8s ease-in-out infinite; }
 .gv-stone.is-future { width: 38px; height: 38px; font-size: .78rem; color: var(--text-secondary); background: var(--bg-sheet); border: 2px dashed color-mix(in srgb, var(--text-primary) 28%, transparent); }
+/* where you are now: a glowing dot marked "Here" */
+.gv-here { display: flex; flex-direction: column; align-items: center; gap: 4px; transform: translateY(12px); }
+.gv-here-dot { width: 26px; height: 26px; border-radius: 50%; background: var(--accent-pink); box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent-pink) 22%, transparent), 0 0 22px color-mix(in srgb, var(--accent-pink) 55%, transparent); animation: gvHerePing 2.2s ease-out infinite; }
+.gv-here-tag { padding: 2px 9px; border-radius: 999px; background: var(--text-primary); color: var(--bg-main); font-size: .72rem; font-weight: 800; line-height: 1.35; white-space: nowrap; }
+@keyframes gvHerePing { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-pink) 50%, transparent), 0 0 22px color-mix(in srgb, var(--accent-pink) 55%, transparent); } 100% { box-shadow: 0 0 0 16px transparent, 0 0 22px color-mix(in srgb, var(--accent-pink) 55%, transparent); } }
+.gv-path.is-compact .gv-here-dot { width: 22px; height: 22px; }
 .gv-stone.is-sum { width: auto; min-width: 46px; height: 32px; padding: 0 10px; border-radius: 999px; font-size: .78rem; white-space: nowrap; }
 .gv-flag { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font-size: 1.45rem; background: var(--bg-sheet); border: 2px solid color-mix(in srgb, var(--accent-gold) 65%, transparent); box-sizing: border-box; }
 .gv-flag.is-reached { border-color: var(--accent-gold); box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-gold) 22%, transparent), 0 0 26px color-mix(in srgb, var(--accent-gold) 55%, transparent); }
@@ -7606,7 +7610,7 @@ html[dir="rtl"] .gv-back-icon { transform: scaleX(-1); }
 
 .gv-icon-btn:focus-visible, .gv-check:focus-visible, .gv-today-body:focus-visible, .gv-chip-goal:focus-visible, .gv-bubble-btn:focus-visible, .gv-did-btn:focus-visible, .gv-set-step-btn:focus-visible, .gv-step-routine:focus-visible, .gv-action-btn:focus-visible, .gv-achieved-card:focus-visible, .gv-own-goal-btn:focus-visible, .gv-counter-btn:focus-visible, .vision-goal-icon-opt:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
-    .goals-view.open, .gv-stone.is-current, .gv-path.draw-in .gv-path-walked, .gv-path.draw-in .gv-node, .gv-path.draw-in .gv-label, .gv-path.draw-in .gv-bubble { animation: none; }
+    .goals-view.open, .gv-stone.is-current, .gv-here-dot, .gv-path.draw-in .gv-path-walked, .gv-path.draw-in .gv-node, .gv-path.draw-in .gv-label, .gv-path.draw-in .gv-bubble { animation: none; }
 }
 
 /* --- 📚 ספריית יעדים (goals-library.js): מסך מלא מעל "היעדים שלי" (1950 - מתחת לחלונות הצפים, 2000).

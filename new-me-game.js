@@ -302,7 +302,9 @@ const NMG_ME_W = 124, NMG_ME_H = 150, NMG_ME_HOME = { x: 195, y: 595 };
 let nmgMePos = null;     // מרכז הדמות ביחידות של הציור (390×844); null = המקום שלה על השביל
 let nmgMeDragged = false;
 function nmgMeScale(y) { return Math.max(0.6, Math.min(1, 0.6 + (y - 380) / 260 * 0.4)); }
-function nmgMeClamp(p) { return { x: Math.max(45, Math.min(NMH_W - 45, p.x)), y: Math.max(360, Math.min(650, p.y)) }; }
+// the whole figure stays inside the hall, also turned sideways while flying (her report 2026-11-15: "כשהיא עפה ... נחתכת"):
+// half its width at this depth (it is smaller further back) plus a little for the glow. Doors 3 and 5 at the edge are still reachable
+function nmgMeClamp(p) { const y = Math.max(360, Math.min(650, p.y)), m = 66 * nmgMeScale(y) + 4; return { x: Math.max(m, Math.min(NMH_W - m, p.x)), y }; }
 function nmgMeStyle(p) { return `left:${nmhX(p.x - NMG_ME_W / 2)};top:${nmhY(p.y - NMG_ME_H / 2)};width:${nmhX(NMG_ME_W)};height:${nmhY(NMG_ME_H)};--mes:${nmgMeScale(p.y).toFixed(3)}`; }
 function nmgMeHallHtml() {
     const s = nmgShownStage();

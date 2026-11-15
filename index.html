@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=617">
+    <link rel="stylesheet" href="theme.css?v=618">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1524,11 +1524,8 @@
                     </button>
                 </div>
                 <div class="gv-scroll" id="goals-view-scroll">
-                    <!-- תזכורת קבועה (לפי בקשה מפורשת): "בדרך ל-10 · לא עוצרים" - לא צריך להיות מושלמים, רק קצת כל יום -->
-                    <div class="gv-note" role="note">
-                        <strong data-i18n="gv_note_title">On the way to 10 · keep going</strong>
-                        <span data-i18n="gv_note_text">We don't have to be perfect – just do a little every day to move forward.</span>
-                    </div>
+                    <!-- התאריך של היום (אפשרות 9 שבחרה, 2026-11-15; הפתק הצהוב "בדרך ל-10" נמחק לבקשתה) -->
+                    <p id="gv-date" class="gv-date"></p>
                     <!-- הצעדים הקטנים של היום מכל היעדים, עם ✓ מהיר (אותם פריטים כמו בהצצה להיום) -->
                     <section id="gv-today" class="gv-today hidden">
                         <div class="gv-section-head">
@@ -4506,9 +4503,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=523"></script>
+    <script src="i18n/core.js?v=524"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=646"></script>
+    <script src="app.js?v=647"></script>
     <script src="ai-chat.js?v=8"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
@@ -4519,8 +4516,8 @@
     <script src="new-me-challenges.js?v=15"></script>
     <script src="secret-room.js?v=39"></script>
     <script src="secret-places.js?v=33"></script>
-    <script src="new-me-game.js?v=18"></script>
-    <script src="world3d.js?v=15"></script>
+    <script src="new-me-game.js?v=19"></script>
+    <script src="world3d.js?v=16"></script>
     <script src="books.js?v=9"></script>
     <script src="home.js?v=33"></script>
     <script src="shop-depts.js?v=2"></script>

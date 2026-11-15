@@ -19207,6 +19207,8 @@ function openGoalsVisionDrawer(goalId) {
         if (sel && sel.is_achieved) visionSelectedGoalId = null;
     }
     visionAnimatePath = true;
+    const dateEl = document.getElementById('gv-date');
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString(currentLang, { weekday: 'long', day: 'numeric', month: 'long' });
     const scroll = document.getElementById('goals-view-scroll');
     if (scroll) scroll.scrollTop = 0;
     // מהמטמון מיד, ואחרי הטעינה שוב (בפעם הראשונה - השביל מצטייר אחרי הטעינה)
@@ -22169,7 +22171,7 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
         else el.style.right = `calc(${f(100 - p.x)}% + ${r + 10}px)`;
         el.style.maxWidth = cap ? `min(${room}, ${cap}px)` : room;
     };
-    const radius = { done: 21, future: 19, current: 30, start: 30, flag: 27 };
+    const radius = { done: 21, future: 19, current: 16, start: 16, flag: 27 };
     const lastIdx = Math.max(1, nodes.length - 1);
     nodes.forEach((n, i) => {
         const p = pts[i];
@@ -22191,7 +22193,8 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
         } else if (n.kind === 'sum-future') {
             node.innerHTML = `<span class="gv-stone is-sum is-future">${visionLtr('+' + n.n)}</span>`;
         } else if (n.kind === 'current' || n.kind === 'start') {
-            node.innerHTML = `<span class="gv-stone is-current">${visionEsc(visionGoalIcon(goal))}</span>`;
+            // where you are now: a glowing dot marked "Here" (her pick, option 9, 2026-11-15 - instead of the goal's emoji)
+            node.innerHTML = `<span class="gv-here"><span class="gv-here-dot"></span><span class="gv-here-tag">${visionEsc(t('gv_here'))}</span></span>`;
         } else {
             node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">🏆</span>`;
             label = model.flag;

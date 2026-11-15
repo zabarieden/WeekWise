@@ -631,7 +631,9 @@ function nmg3dFollowWatch() {
 function nmg3dFollowClamp(p) {
     const L = nmgFollow.layer, el = nmgFollow.el;
     const W = L.clientWidth, H = L.clientHeight, w = el.offsetWidth || 128, h = el.offsetHeight || 140;
-    return { x: Math.max(4, Math.min(W - w - 4, p.x)), y: Math.max(60, Math.min(H - h - 96, p.y)) };
+    // the 3D model is drawn a bit wider than the box (wings and tail when it turns) - keep that inside the screen too, so it is never cut
+    const pad = el.classList.contains('has-3d') ? Math.round(w * 0.14) : 0;
+    return { x: Math.max(4 + pad, Math.min(W - w - 4 - pad, p.x)), y: Math.max(60, Math.min(H - h - 96, p.y)) };
 }
 function nmg3dFollowPlace() {
     const L = nmgFollow.layer;
