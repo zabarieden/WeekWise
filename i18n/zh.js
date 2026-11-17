@@ -3577,6 +3577,7 @@ translations.zh = {
     apptour_m_newme_link: "一切都计入「每日饮食记录」和「我的一天」；体重与「卡路里与体重指标」共享。",
     apptour_m_newme_text: "魔法游戏世界里的 1,300 / 1,500 卡路里饮食计划：带 ✓ 的今日菜单、三种更换方式 – 从菜单、从已保存的餐食，或把吃了什么写给 AI，由它算出卡路里 – 购物清单、用餐提醒，以及包含成就、围度和照片的进步旅程。还有 🏆 20 个挑战 – 终点有礼物 – 以及本周挑战。",
     apptour_ai_table_text: "描述需要的表格，AI会设计好列（高级版）。",
+    apptour_ai_money_text: "三个简短问题，这个月就排进预算：收入、计划、剩余。",
     apptour_ai_photo_link: "保存在「我的食谱」中。",
     apptour_ai_photo_text: "拍下写好的食谱，AI会自动填好新食谱。",
     apptour_ai_schedule_link: "它们会显示在日历和「我的一天」中。",

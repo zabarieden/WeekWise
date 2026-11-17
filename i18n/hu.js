@@ -3577,6 +3577,7 @@ translations.hu = {
     apptour_m_newme_link: "Minden beleszámít a Napi Étkezéskövetőbe és a Napom részbe; a testsúly közös a Kalória- és testsúlymutatókkal.",
     apptour_m_newme_text: "1300 / 1500 kalóriás étkezési terv egy varázslatos játékvilágban: a mai menü ✓-vel, csere háromféleképpen – a menüből, a mentett ételeidből, vagy megírod az AI-nak, mit ettél, és kiszámolja a kalóriát – bevásárlólista, étkezési emlékeztetők és fejlődési út kitüntetésekkel, testméretekkel és fotókkal. Ráadásul 🏆 20 kihívás – a végén ajándékkal – és a hét kihívása.",
     apptour_ai_table_text: "Írd le, milyen táblázat kell – az AI megtervezi az oszlopait (Prémium).",
+    apptour_ai_money_text: "Három rövid kérdés – és a hónap bekerül a költségvetésbe: bejön, tervezett, marad.",
     apptour_ai_photo_link: "A Receptjeim közé kerül.",
     apptour_ai_photo_text: "Fotózz le egy leírt receptet – az AI kitölt helyetted egy új receptet.",
     apptour_ai_schedule_link: "Megjelennek a naptárban és a Napom részben.",

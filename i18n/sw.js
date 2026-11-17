@@ -3577,6 +3577,7 @@ translations.sw = {
     apptour_m_newme_link: "Kila kitu huhesabiwa katika Kifuatiliaji cha Chakula cha Kila Siku na Siku Yangu; uzito unashirikiwa na Vipimo vya Kalori na Uzito.",
     apptour_m_newme_text: "Mpango wa chakula wa kalori 1,300 / 1,500 ndani ya ulimwengu wa mchezo wa kichawi: menyu ya leo yenye ✓, ubadilishaji kwa njia tatu – kutoka kwenye menyu, kwenye milo uliyohifadhi, au kwa kuiandikia AI ulichokula, nayo inahesabu kalori – orodha ya ununuzi, vikumbusho vya mlo na safari ya maendeleo yenye mafanikio, vipimo na picha. Pia 🏆 changamoto 20 – zenye zawadi mwishoni – na changamoto ya wiki.",
     apptour_ai_table_text: "Eleza jedwali unalohitaji – AI hubuni safu zake (Premium).",
+    apptour_ai_money_text: "Maswali matatu mafupi – na mwezi unapangwa kwenye bajeti: kinachoingia, kilichopangwa, kinachobaki.",
     apptour_ai_photo_link: "Huhifadhiwa katika Mapishi Yangu.",
     apptour_ai_photo_text: "Piga picha ya mapishi yaliyoandikwa – AI hujaza mapishi mapya kwa ajili yako.",
     apptour_ai_schedule_link: "Huonekana kwenye kalenda na kwenye Siku Yangu.",

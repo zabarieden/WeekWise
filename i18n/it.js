@@ -3577,6 +3577,7 @@ translations.it = {
     apptour_m_newme_link: "Tutto conta nel Diario Alimentare Giornaliero e nella Mia Giornata; il peso è condiviso con Metriche di Calorie e Peso.",
     apptour_m_newme_text: "Un piano alimentare da 1.300 / 1.500 calorie dentro un magico mondo di gioco: il menu di oggi con ✓, sostituzioni in tre modi – dal menu, dai tuoi pasti salvati o scrivendo all'IA cosa hai mangiato, e lei calcola le calorie – lista della spesa, promemoria pasti e un percorso di progressi con conquiste, misure e foto. E in più 🏆 20 sfide – con un regalo alla fine – e una sfida della settimana.",
     apptour_ai_table_text: "Descrivi la tabella che ti serve – l'IA ne progetta le colonne (Premium).",
+    apptour_ai_money_text: "Tre domande brevi – e il mese è pianificato nel budget: entrate, previsto, avanzo.",
     apptour_ai_photo_link: "Salvata in “Le Mie Ricette”.",
     apptour_ai_photo_text: "Fotografa una ricetta scritta – l'IA compila una nuova ricetta per te.",
     apptour_ai_schedule_link: "Compaiono nel calendario e nella Mia Giornata.",

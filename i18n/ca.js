@@ -3577,6 +3577,7 @@ translations.ca = {
     apptour_m_newme_link: "Tot compta al Registre Diari d'Àpats i al Meu Dia; el pes es comparteix amb Mètriques de Calories i Pes.",
     apptour_m_newme_text: "Un pla d'àpats de 1.300 / 1.500 calories dins d'un món de joc màgic: el menú d'avui amb ✓, canvis de tres maneres – del menú, dels teus àpats desats o escrivint a la IA què has menjat, i ella calcula les calories – una llista de compres, recordatoris d'àpats i un camí de progrés amb assoliments, mesures i fotos. I a més, 🏆 20 reptes – amb un regal al final – i un repte de la setmana.",
     apptour_ai_table_text: "Descriu la taula que necessites – la IA en dissenya les columnes (Premium).",
+    apptour_ai_money_text: "Tres preguntes curtes i el mes queda planificat al pressupost: entra, previst, queda.",
     apptour_ai_photo_link: "Es desa a Les Meves Receptes.",
     apptour_ai_photo_text: "Fotografia una recepta escrita – la IA omple una recepta nova per tu.",
     apptour_ai_schedule_link: "Apareixen al calendari i al Meu Dia.",

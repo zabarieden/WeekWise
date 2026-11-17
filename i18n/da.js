@@ -3577,6 +3577,7 @@ translations.da = {
     apptour_m_newme_link: "Alt tæller med i Daglig Måltidssporing og Min Dag; vægten deles med Kalorie- og vægtoversigt.",
     apptour_m_newme_text: "En madplan på 1.300 / 1.500 kalorier i en magisk spilverden: dagens menu med ✓, byt på tre måder – fra menuen, fra dine gemte måltider eller ved at skrive til AI'en, hvad du spiste, så regner den kalorierne ud – en indkøbsliste, måltidspåmindelser og en fremskridtsrejse med præstationer, kropsmål og billeder. Derudover 🏆 20 udfordringer – med en gave til sidst – og ugens udfordring.",
     apptour_ai_table_text: "Beskriv den tabel, du har brug for – AI'en designer kolonnerne (Premium).",
+    apptour_ai_money_text: "Tre korte spørgsmål – og måneden er planlagt i budgettet: ind, planlagt, tilbage.",
     apptour_ai_photo_link: "Gemmes i Mine Opskrifter.",
     apptour_ai_photo_text: "Tag et billede af en skreven opskrift – AI'en udfylder en ny opskrift for dig.",
     apptour_ai_schedule_link: "De vises i kalenderen og i Min Dag.",

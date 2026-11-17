@@ -3577,6 +3577,7 @@ translations.nl = {
     apptour_m_newme_link: "Alles telt mee in de Dagelijkse Maaltijdtracker en Mijn Dag; het gewicht wordt gedeeld met Calorie- en Gewichtsmetingen.",
     apptour_m_newme_text: "Een maaltijdplan van 1.300 / 1.500 calorieën in een magische spelwereld: het menu van vandaag met ✓, op drie manieren wisselen – uit het menu, uit je opgeslagen maaltijden of door aan AI te schrijven wat je hebt gegeten, en die berekent de calorieën – een boodschappenlijst, maaltijdherinneringen en een voortgangsreis met prestaties, metingen en foto's. Plus 🏆 20 uitdagingen – met een cadeau aan het einde – en een uitdaging van de week.",
     apptour_ai_table_text: "Beschrijf de tabel die je nodig hebt – de AI ontwerpt de kolommen (Premium).",
+    apptour_ai_money_text: "Drie korte vragen – en de maand staat in je budget: komt binnen, gepland, over.",
     apptour_ai_photo_link: "Opgeslagen in Mijn Recepten.",
     apptour_ai_photo_text: "Fotografeer een geschreven recept – de AI vult een nieuw recept voor je in.",
     apptour_ai_schedule_link: "Ze verschijnen in de kalender en in Mijn Dag.",

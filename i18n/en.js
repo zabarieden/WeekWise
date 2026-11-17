@@ -3577,6 +3577,7 @@ translations.en = {
     apptour_m_newme_link: "Everything counts in the Daily Meal Tracker and My Day; weight is shared with Calorie & Weight Metrics.",
     apptour_m_newme_text: "A 1,300 / 1,500 calorie meal plan inside a magical game world: today’s menu with ✓, swaps three ways – from the menu, from your saved meals, or by writing to the AI what you ate, and it works out the calories – a shopping list, meal reminders and a progress journey with achievements, measurements and photos. Plus 🏆 20 challenges – with a gift at the end – and a challenge of the week.",
     apptour_ai_table_text: "Describe the table you need – the AI designs its columns (Premium).",
+    apptour_ai_money_text: "Three short questions – and the month is planned in your budget: comes in, planned, left over.",
     apptour_ai_photo_link: "Saved in My Recipes.",
     apptour_ai_photo_text: "Snap a written recipe – the AI fills in a new recipe for you.",
     apptour_ai_schedule_link: "They appear in the calendar and in My Day.",

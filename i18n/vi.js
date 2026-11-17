@@ -3577,6 +3577,7 @@ translations.vi = {
     apptour_m_newme_link: "Mọi thứ được tính vào Theo Dõi Bữa Ăn Hàng Ngày và Ngày Của Tôi; cân nặng dùng chung với Chỉ Số Calo và Cân Nặng.",
     apptour_m_newme_text: "Kế hoạch ăn uống 1.300 / 1.500 calo trong một thế giới trò chơi phép thuật: thực đơn hôm nay có ✓, đổi món theo ba cách – từ thực đơn, từ bữa ăn đã lưu, hoặc viết cho AI món đã ăn và AI tính calo – danh sách mua sắm, nhắc bữa ăn và hành trình tiến bộ với thành tích, số đo và ảnh. Thêm 🏆 20 thử thách – với một món quà ở cuối – và thử thách của tuần.",
     apptour_ai_table_text: "Mô tả bảng cần dùng – AI thiết kế các cột (Premium).",
+    apptour_ai_money_text: "Ba câu hỏi ngắn – và tháng này đã nằm gọn trong ngân sách: thu vào, dự tính, còn lại.",
     apptour_ai_photo_link: "Được lưu trong Công Thức Của Tôi.",
     apptour_ai_photo_text: "Chụp một công thức viết sẵn – AI điền giúp một công thức mới.",
     apptour_ai_schedule_link: "Chúng hiện trong lịch và trong Ngày Của Tôi.",

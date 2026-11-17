@@ -3577,6 +3577,7 @@ translations.yo = {
     apptour_m_newme_link: "Gbogbo rẹ̀ ni a ń kà nínú Àtẹ̀lé Oúnjẹ Ojoojúmọ́ àti Ọjọ́ Mi; a ń pín ìwúwo pẹ̀lú Ìwọ̀n Kálórì àti Ìwúwo.",
     apptour_m_newme_text: "Ètò oúnjẹ kálórì 1,300 / 1,500 nínú ayé eré idán: àkójọ oúnjẹ òní pẹ̀lú ✓, pípààrọ̀ ní ọ̀nà mẹ́ta – láti inú àkójọ oúnjẹ, láti inú oúnjẹ tí o fi pamọ́, tàbí nípa kíkọ ohun tí o jẹ sí AI, yóò sì ṣírò kálórì – àtòjọ ọjà, ìránnilétí oúnjẹ àti ìrìn-àjò ìtẹ̀síwájú pẹ̀lú àṣeyọrí, ìwọ̀n àti àwòrán. Àti 🏆 ìpèníjà 20 – pẹ̀lú ẹ̀bùn ní òpin – àti ìpèníjà ọ̀sẹ̀.",
     apptour_ai_table_text: "Ṣàpèjúwe tábìlì tí o nílò – AI yóò ṣe àwọn kọ́lọ́mù rẹ̀ (Premium).",
+    apptour_ai_money_text: "Ìbéèrè kúkúrú mẹ́ta – oṣù náà sì wà létòlétò nínú ìnáwó: ohun tó ń wọlé, ètò, ohun tó kù.",
     apptour_ai_photo_link: "A fi pamọ́ sínú Àwọn Ìlànà Mi.",
     apptour_ai_photo_text: "Ya àwòrán ìlànà-oúnjẹ tí a kọ sílẹ̀ – AI yóò kún ìlànà-oúnjẹ tuntun fún ọ.",
     apptour_ai_schedule_link: "Wọ́n ń hàn nínú kàlẹ́ńdà àti nínú Ọjọ́ Mi.",

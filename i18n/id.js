@@ -3577,6 +3577,7 @@ translations.id = {
     apptour_m_newme_link: "Semuanya dihitung di Pelacak Makanan Harian dan Hariku; berat badan dibagikan dengan Metrik Kalori dan Berat Badan.",
     apptour_m_newme_text: "Rencana makan 1.300 / 1.500 kalori di dalam dunia permainan ajaib: menu hari ini dengan ✓, penggantian dengan tiga cara – dari menu, dari makanan tersimpan, atau dengan menulis ke AI apa yang dimakan, lalu AI menghitung kalorinya – daftar belanja, pengingat makan, dan perjalanan progres dengan pencapaian, ukuran tubuh, dan foto. Ditambah 🏆 20 tantangan – dengan hadiah di akhir – dan tantangan minggu ini.",
     apptour_ai_table_text: "Jelaskan tabel yang dibutuhkan – AI merancang kolomnya (Premium).",
+    apptour_ai_money_text: "Tiga pertanyaan singkat – dan bulan ini tertata di anggaran: masuk, direncanakan, sisa.",
     apptour_ai_photo_link: "Disimpan di Resep Saya.",
     apptour_ai_photo_text: "Foto resep tertulis – AI mengisikan resep baru untuk Anda.",
     apptour_ai_schedule_link: "Muncul di kalender dan di Hariku.",

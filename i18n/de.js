@@ -3577,6 +3577,7 @@ translations.de = {
     apptour_m_newme_link: "Alles zählt in „Täglicher Mahlzeiten-Tracker“ und „Mein Tag“; das Gewicht wird mit „Kalorien- und Gewichtswerte“ geteilt.",
     apptour_m_newme_text: "Ein Ernährungsplan mit 1.300 / 1.500 Kalorien in einer magischen Spielwelt: das heutige Menü mit ✓, Tausch auf drei Arten – aus dem Menü, aus deinen gespeicherten Mahlzeiten oder indem du der KI schreibst, was du gegessen hast, und sie berechnet die Kalorien – eine Einkaufsliste, Erinnerungen an Mahlzeiten und eine Fortschrittsreise mit Erfolgen, Körpermaßen und Fotos. Dazu 🏆 20 Challenges – mit einem Geschenk am Ende – und eine Challenge der Woche.",
     apptour_ai_table_text: "Beschreibe die Tabelle, die du brauchst – die KI entwirft ihre Spalten (Premium).",
+    apptour_ai_money_text: "Drei kurze Fragen – und der Monat steht im Budget: rein, geplant, übrig.",
     apptour_ai_photo_link: "Wird in Meine Rezepte gespeichert.",
     apptour_ai_photo_text: "Fotografiere ein geschriebenes Rezept – die KI legt ein neues Rezept für dich an.",
     apptour_ai_schedule_link: "Sie erscheinen im Kalender und in „Mein Tag“.",

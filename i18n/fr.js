@@ -3577,6 +3577,7 @@ translations.fr = {
     apptour_m_newme_link: "Tout compte dans le Suivi Quotidien des Repas et Ma Journée ; le poids est partagé avec les Métriques de Calories et de Poids.",
     apptour_m_newme_text: "Un programme de repas à 1 300 / 1 500 calories dans un monde de jeu magique : le menu du jour avec ✓, des échanges de trois façons – depuis le menu, depuis vos repas enregistrés ou en écrivant à l'IA ce que vous avez mangé, et elle calcule les calories – une liste de courses, des rappels de repas et un parcours de progression avec réussites, mensurations et photos. Et aussi 🏆 20 défis – avec un cadeau à la fin – ainsi qu'un défi de la semaine.",
     apptour_ai_table_text: "Décrivez le tableau dont vous avez besoin – l'IA conçoit ses colonnes (Premium).",
+    apptour_ai_money_text: "Trois petites questions – et le mois est planifié dans votre budget : rentrées, prévu, reste.",
     apptour_ai_photo_link: "Enregistrée dans Mes Recettes.",
     apptour_ai_photo_text: "Photographiez une recette écrite – l'IA remplit une nouvelle recette pour vous.",
     apptour_ai_schedule_link: "Ils apparaissent dans le calendrier et dans Ma Journée.",

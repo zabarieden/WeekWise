@@ -3580,6 +3580,7 @@ translations.ro = {
     apptour_m_newme_link: "Totul se numără în „Jurnal Zilnic de Alimentație” și în „Ziua Mea”; greutatea e comună cu „Statistici Calorii și Greutate”.",
     apptour_m_newme_text: "Un plan alimentar de 1.300 / 1.500 de calorii într-o lume de joc magică: meniul de azi cu ✓, schimbări în trei feluri – din meniu, din mesele tale salvate sau scriind pentru AI ce ai mâncat, iar AI calculează caloriile – o listă de cumpărături, mementouri pentru mese și o călătorie a progresului cu realizări, măsurători și fotografii. Plus 🏆 20 de provocări – cu un cadou la final – și o provocare a săptămânii.",
     apptour_ai_table_text: "Descrie tabelul de care ai nevoie – AI îi proiectează coloanele (Premium).",
+    apptour_ai_money_text: "Trei întrebări scurte – și luna e planificată în buget: intră, planificat, rămâne.",
     apptour_ai_photo_link: "Se salvează în Rețetele Mele.",
     apptour_ai_photo_text: "Fotografiază o rețetă scrisă – AI completează o rețetă nouă pentru tine.",
     apptour_ai_schedule_link: "Apar în calendar și în „Ziua Mea”.",

@@ -3581,6 +3581,7 @@ translations.cs = {
     apptour_m_newme_link: "Vše se započítává v sekcích Denní Sledovač Jídel a Můj Den; hmotnost je sdílená se sekcí Metriky kalorií a hmotnosti.",
     apptour_m_newme_text: "Jídelní plán na 1 300 / 1 500 kalorií v kouzelném herním světě: dnešní menu s ✓, výměny třemi způsoby – z menu, z uložených jídel nebo tak, že AI napíšete, co bylo k jídlu, a AI spočítá kalorie – nákupní seznam, připomínky jídel a cesta pokroku s úspěchy, měřeními a fotkami. A k tomu 🏆 20 výzev – s dárkem na konci – a výzva týdne.",
     apptour_ai_table_text: "Popište, jakou tabulku potřebujete – AI navrhne její sloupce (Premium).",
+    apptour_ai_money_text: "Tři krátké otázky – a měsíc je naplánovaný v rozpočtu: příjem, plán, zbývá.",
     apptour_ai_photo_link: "Uloží se do sekce Moje Recepty.",
     apptour_ai_photo_text: "Vyfoťte napsaný recept – AI za vás vyplní nový recept.",
     apptour_ai_schedule_link: "Objeví se v kalendáři a v sekci Můj Den.",

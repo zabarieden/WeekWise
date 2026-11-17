@@ -3583,6 +3583,7 @@ translations.pl = {
     apptour_m_newme_link: "Wszystko liczy się w sekcjach Dzienny Rejestr Posiłków i Mój Dzień; waga jest wspólna z sekcją Wskaźniki Kalorii i Wagi.",
     apptour_m_newme_text: "Plan posiłków na 1300 / 1500 kalorii w magicznym świecie gry: dzisiejsze menu z ✓, zamiany na trzy sposoby – z menu, z zapisanych posiłków albo opisując AI zjedzony posiłek, a AI policzy kalorie – lista zakupów, przypomnienia o posiłkach i podróż z postępami, osiągnięciami, pomiarami i zdjęciami. Do tego 🏆 20 wyzwań – z prezentem na końcu – i wyzwanie tygodnia.",
     apptour_ai_table_text: "Opisz, jakiej tabeli potrzebujesz – AI zaprojektuje jej kolumny (Premium).",
+    apptour_ai_money_text: "Trzy krótkie pytania – i miesiąc jest zaplanowany w budżecie: wpływa, zaplanowane, zostaje.",
     apptour_ai_photo_link: "Zapisuje się w sekcji Moje Przepisy.",
     apptour_ai_photo_text: "Zrób zdjęcie spisanego przepisu – AI wypełni za ciebie nowy przepis.",
     apptour_ai_schedule_link: "Pojawią się w kalendarzu i w sekcji Mój Dzień.",

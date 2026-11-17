@@ -3577,6 +3577,7 @@ translations.es = {
     apptour_m_newme_link: "Todo cuenta en el Registro Diario de Comidas y en Mi Día; el peso se comparte con Métricas de Calorías y Peso.",
     apptour_m_newme_text: "Un plan de comidas de 1.300 / 1.500 calorías dentro de un mundo de juego mágico: el menú de hoy con ✓, cambios de tres maneras – del menú, de tus comidas guardadas o escribiéndole a la IA lo que comiste, y calcula las calorías – lista de compras, recordatorios de comidas y un camino de progreso con logros, medidas y fotos. Y además, 🏆 20 retos – con un regalo al final – y un reto de la semana.",
     apptour_ai_table_text: "Describe la tabla que necesitas – la IA diseña sus columnas (Premium).",
+    apptour_ai_money_text: "Tres preguntas cortas y el mes queda planificado en tu presupuesto: entra, previsto, queda.",
     apptour_ai_photo_link: "Se guarda en Mis Recetas.",
     apptour_ai_photo_text: "Fotografía una receta escrita – la IA completa una receta nueva por ti.",
     apptour_ai_schedule_link: "Aparecen en el calendario y en Mi Día.",

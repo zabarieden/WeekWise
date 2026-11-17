@@ -2127,6 +2127,7 @@ const APP_TOUR_STEPS = [
     { id: 'ai_food', ch: 'ai', ctx: 'ai', tab: 'food', target: '#ai-chat .ai-chat-tool[data-tool="food"]', titleKey: 'ai_brain_tab_food', text: 'apptour_ai_food_text', link: 'apptour_ai_food_link' },
     { id: 'ai_photo', ch: 'ai', ctx: 'ai', tab: 'photo', target: '#ai-chat .ai-chat-tool[data-tool="photo"]', titleKey: 'ai_brain_tab_photo', text: 'apptour_ai_photo_text', link: 'apptour_ai_photo_link' },
     { id: 'ai_table', ch: 'ai', ctx: 'ai', tab: 'table', target: '#ai-chat .ai-chat-tool[data-tool="table"]', titleKey: 'ai_brain_tab_table', text: 'apptour_ai_table_text' },
+    { id: 'ai_money', ch: 'ai', ctx: 'ai', tab: 'money', target: '#ai-chat .ai-chat-tool[data-tool="money"]', titleKey: 'ai_chat_tool_money', text: 'apptour_ai_money_text' },
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
     // התפריט - כל פריט, לפי הסדר שבו הוא מופיע: למעלה מצב לילה, רשימה/אריחים וחיפוש, ואז הפריטים מלמעלה למטה
     { id: 'm_night', ch: 'menu', ctx: 'menu', icon: '🌙', target: '#hamburger-drawer-overlay .js-night-btn', titleKey: 'menu_night_mode', text: 'apptour_night_text' },

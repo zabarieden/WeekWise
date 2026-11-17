@@ -3577,6 +3577,7 @@ translations.sv = {
     apptour_m_newme_link: "Allt räknas i Daglig Måltidsspårare och Min Dag; vikten delas med Kalori- och viktstatistik.",
     apptour_m_newme_text: "En måltidsplan på 1 300 / 1 500 kalorier i en magisk spelvärld: dagens meny med ✓, byten på tre sätt – från menyn, från dina sparade måltider eller genom att skriva till AI vad du åt, så räknar den ut kalorierna – en inköpslista, måltidspåminnelser och en framstegsresa med prestationer, kroppsmått och bilder. Dessutom 🏆 20 utmaningar – med en present i slutet – och veckans utmaning.",
     apptour_ai_table_text: "Beskriv tabellen du behöver – AI:n utformar kolumnerna (Premium).",
+    apptour_ai_money_text: "Tre korta frågor – och månaden är planerad i budgeten: in, planerat, kvar.",
     apptour_ai_photo_link: "Sparas i Mina Recept.",
     apptour_ai_photo_text: "Fotografera ett skrivet recept – AI:n fyller i ett nytt recept åt dig.",
     apptour_ai_schedule_link: "De visas i kalendern och i Min Dag.",

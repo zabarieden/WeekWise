@@ -3577,6 +3577,7 @@ translations.fi = {
     apptour_m_newme_link: "Kaikki lasketaan osioihin Päivittäinen Ateriaseuranta ja Päiväni; paino on yhteinen osion Kalori- ja painomittarit kanssa.",
     apptour_m_newme_text: "1 300 / 1 500 kalorin ateriasuunnitelma taianomaisessa pelimaailmassa: tämän päivän ruokalista ✓-merkinnöin, vaihdot kolmella tavalla – ruokalistalta, tallennetuista aterioistasi tai kirjoittamalla tekoälylle, mitä söit, niin se laskee kalorit – ostoslista, ateriamuistutukset ja edistymismatka saavutuksineen, mittoineen ja kuvineen. Lisäksi 🏆 20 haastetta – lopussa lahja – sekä viikon haaste.",
     apptour_ai_table_text: "Kuvaile, millaisen taulukon tarvitset – AI suunnittelee sen sarakkeet (Premium).",
+    apptour_ai_money_text: "Kolme lyhyttä kysymystä – ja kuukausi on suunniteltu budjettiin: tulot, suunniteltu, jää.",
     apptour_ai_photo_link: "Tallentuu osioon Omat Reseptit.",
     apptour_ai_photo_text: "Kuvaa kirjoitettu resepti – AI täyttää uuden reseptin puolestasi.",
     apptour_ai_schedule_link: "Ne näkyvät kalenterissa ja osiossa Päiväni.",

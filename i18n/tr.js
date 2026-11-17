@@ -3577,6 +3577,7 @@ translations.tr = {
     apptour_m_newme_link: "Her şey Günlük Öğün Takibi'nde ve Günüm'de sayılır; kilo, Kalori ve Kilo Ölçümleri ile ortaktır.",
     apptour_m_newme_text: "Büyülü bir oyun dünyasında 1.300 / 1.500 kalorilik beslenme planı: ✓ ile bugünkü menü, üç yolla değişim – menüden, kayıtlı öğünlerinden ya da ne yediğini yapay zekâya yazarak, kaloriyi de o hesaplar – alışveriş listesi, öğün hatırlatmaları ve başarılar, ölçüler ve fotoğraflarla bir ilerleme yolculuğu. Ayrıca 🏆 20 görev – sonunda bir hediyeyle – ve haftanın görevi.",
     apptour_ai_table_text: "İhtiyacın olan tabloyu anlat – AI sütunlarını tasarlar (Premium).",
+    apptour_ai_money_text: "Üç kısa soru – ve ay bütçende planlanır: gelen, planlanan, kalan.",
     apptour_ai_photo_link: "Tariflerim'e kaydedilir.",
     apptour_ai_photo_text: "Yazılı bir tarifin fotoğrafını çek – AI senin için yeni bir tarif doldurur.",
     apptour_ai_schedule_link: "Takvimde ve Günüm'de görünürler.",
