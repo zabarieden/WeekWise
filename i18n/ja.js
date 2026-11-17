@@ -1495,7 +1495,7 @@ translations.ja = {
     nm_late_none: "🌙 なし",
     nm_late_rem_drink_body: "お茶、ハーブティー、または水で、ゆったり1日を締めくくりましょう 🍵",
     nm_late_rem_drink_title: "🌙 温かい飲み物を",
-    nm_late_rem_eat_body: "約{kcal} kcalまで。そのあとはゆっくり休みましょう 💛",
+    nm_late_rem_eat_body: "約{kcal} kcalまで。そのあとはゆっくり休みましょう 💜",
     nm_late_rem_eat_title: "🌙 寝る前に少しだけ",
     nm_late_row_drink: "1日の終わりに温かい飲み物を 🍵",
     nm_late_row_eat: "寝る前に少しだけ · 約{kcal} kcalまで",

@@ -1495,7 +1495,7 @@ translations.ur = {
     nm_late_none: "🌙 کچھ نہیں",
     nm_late_rem_drink_body: "چائے، ہربل چائے یا پانی – دن کا پرسکون اختتام 🍵",
     nm_late_rem_drink_title: "🌙 کچھ گرم پینے کو",
-    nm_late_rem_eat_body: "~{kcal} کیلوریز تک، پھر آرام 💛",
+    nm_late_rem_eat_body: "~{kcal} کیلوریز تک، پھر آرام 💜",
     nm_late_rem_eat_title: "🌙 سونے سے پہلے کچھ ہلکا",
     nm_late_row_drink: "دن کے اختتام پر کچھ گرم پینے کو 🍵",
     nm_late_row_eat: "سونے سے پہلے کچھ ہلکا · ~{kcal} کیلوریز تک",

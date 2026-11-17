@@ -1495,7 +1495,7 @@ translations.ko = {
     nm_late_none: "🌙 없음",
     nm_late_rem_drink_body: "차, 허브티 또는 물 – 하루를 차분하게 마무리해요 🍵",
     nm_late_rem_drink_title: "🌙 따뜻한 음료 한 잔",
-    nm_late_rem_eat_body: "~{kcal} kcal까지, 그다음엔 푹 쉬어요 💛",
+    nm_late_rem_eat_body: "~{kcal} kcal까지, 그다음엔 푹 쉬어요 💜",
     nm_late_rem_eat_title: "🌙 자기 전에 가볍게",
     nm_late_row_drink: "하루를 마무리하는 따뜻한 음료 🍵",
     nm_late_row_eat: "자기 전에 가볍게 · ~{kcal} kcal까지",

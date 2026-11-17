@@ -1495,7 +1495,7 @@ translations.vi = {
     nm_late_none: "🌙 Không gì cả",
     nm_late_rem_drink_body: "Trà, trà thảo mộc hoặc nước – khép lại ngày thật nhẹ nhàng 🍵",
     nm_late_rem_drink_title: "🌙 Chút gì ấm để uống",
-    nm_late_rem_eat_body: "Tối đa ~{kcal} kcal, rồi nghỉ ngơi 💛",
+    nm_late_rem_eat_body: "Tối đa ~{kcal} kcal, rồi nghỉ ngơi 💜",
     nm_late_rem_eat_title: "🌙 Chút gì nhỏ trước khi ngủ",
     nm_late_row_drink: "Chút gì ấm để uống, khép lại một ngày 🍵",
     nm_late_row_eat: "Chút gì nhỏ trước khi ngủ · tối đa ~{kcal} kcal",

@@ -1495,7 +1495,7 @@ translations.th = {
     nm_late_none: "🌙 ไม่มี",
     nm_late_rem_drink_body: "ชา ชาสมุนไพร หรือน้ำเปล่า – ปิดวันอย่างสงบ 🍵",
     nm_late_rem_drink_title: "🌙 เครื่องดื่มอุ่นๆ สักแก้ว",
-    nm_late_rem_eat_body: "ไม่เกิน ~{kcal} กิโลแคลอรี แล้วพักผ่อน 💛",
+    nm_late_rem_eat_body: "ไม่เกิน ~{kcal} กิโลแคลอรี แล้วพักผ่อน 💜",
     nm_late_rem_eat_title: "🌙 อะไรเล็กๆ ก่อนนอน",
     nm_late_row_drink: "เครื่องดื่มอุ่นๆ ปิดท้ายวัน 🍵",
     nm_late_row_eat: "อะไรเล็กๆ ก่อนนอน · ไม่เกิน ~{kcal} กิโลแคลอรี",

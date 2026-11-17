@@ -1495,7 +1495,7 @@ translations.id = {
     nm_late_none: "🌙 Tidak ada",
     nm_late_rem_drink_body: "Teh, teh herbal, atau air – akhiri hari dengan tenang 🍵",
     nm_late_rem_drink_title: "🌙 Minuman hangat",
-    nm_late_rem_eat_body: "Sampai ~{kcal} kkal, lalu istirahat 💛",
+    nm_late_rem_eat_body: "Sampai ~{kcal} kkal, lalu istirahat 💜",
     nm_late_rem_eat_title: "🌙 Sesuatu yang kecil sebelum tidur",
     nm_late_row_drink: "Minuman hangat untuk mengakhiri hari 🍵",
     nm_late_row_eat: "Sesuatu yang kecil sebelum tidur · sampai ~{kcal} kkal",

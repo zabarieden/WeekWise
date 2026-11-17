@@ -1495,7 +1495,7 @@ translations.bn = {
     nm_late_none: "🌙 কিছু না",
     nm_late_rem_drink_body: "চা, ভেষজ চা বা পানি – শান্তভাবে দিন শেষ করুন 🍵",
     nm_late_rem_drink_title: "🌙 গরম কিছু পান করুন",
-    nm_late_rem_eat_body: "~{kcal} ক্যালরি পর্যন্ত, তারপর বিশ্রাম 💛",
+    nm_late_rem_eat_body: "~{kcal} ক্যালরি পর্যন্ত, তারপর বিশ্রাম 💜",
     nm_late_rem_eat_title: "🌙 ঘুমের আগে হালকা কিছু",
     nm_late_row_drink: "দিন শেষে গরম কিছু পানীয় 🍵",
     nm_late_row_eat: "ঘুমের আগে হালকা কিছু · ~{kcal} ক্যালরি পর্যন্ত",

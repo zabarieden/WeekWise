@@ -1495,7 +1495,7 @@ translations.uk = {
     nm_late_none: "🌙 Нічого",
     nm_late_rem_drink_body: "Чай, трав’яний настій або вода – щоб спокійно завершити день 🍵",
     nm_late_rem_drink_title: "🌙 Щось тепле попити",
-    nm_late_rem_eat_body: "До ~{kcal} ккал, а потім відпочинок 💛",
+    nm_late_rem_eat_body: "До ~{kcal} ккал, а потім відпочинок 💜",
     nm_late_rem_eat_title: "🌙 Щось невелике перед сном",
     nm_late_row_drink: "Щось тепле, щоб завершити день 🍵",
     nm_late_row_eat: "Щось невелике перед сном · до ~{kcal} ккал",

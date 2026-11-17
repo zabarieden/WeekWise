@@ -1495,7 +1495,7 @@ translations.ro = {
     nm_late_none: "🌙 Nimic",
     nm_late_rem_drink_body: "Ceai, o infuzie de plante sau apă – ca ziua să se încheie în liniște 🍵",
     nm_late_rem_drink_title: "🌙 Ceva cald de băut",
-    nm_late_rem_eat_body: "Până la ~{kcal} kcal, apoi odihnă 💛",
+    nm_late_rem_eat_body: "Până la ~{kcal} kcal, apoi odihnă 💜",
     nm_late_rem_eat_title: "🌙 Ceva mic înainte de culcare",
     nm_late_row_drink: "Ceva cald de băut la încheierea zilei 🍵",
     nm_late_row_eat: "Ceva mic înainte de culcare · până la ~{kcal} kcal",

@@ -1495,7 +1495,7 @@ translations.tr = {
     nm_late_none: "🌙 Hiçbir şey",
     nm_late_rem_drink_body: "Çay, bitki çayı ya da su – günü sakince bitir 🍵",
     nm_late_rem_drink_title: "🌙 Sıcak bir içecek",
-    nm_late_rem_eat_body: "~{kcal} kcal'ye kadar, sonra dinlen 💛",
+    nm_late_rem_eat_body: "~{kcal} kcal'ye kadar, sonra dinlen 💜",
     nm_late_rem_eat_title: "🌙 Uyumadan önce küçük bir şey",
     nm_late_row_drink: "Günü bitirmek için sıcak bir içecek 🍵",
     nm_late_row_eat: "Uyumadan önce küçük bir şey · ~{kcal} kcal'ye kadar",

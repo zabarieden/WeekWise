@@ -1495,7 +1495,7 @@ translations.zh = {
     nm_late_none: "🌙 不需要",
     nm_late_rem_drink_body: "茶、花草茶或水——平静地结束这一天 🍵",
     nm_late_rem_drink_title: "🌙 喝点温热的",
-    nm_late_rem_eat_body: "最多约 {kcal} 千卡，然后好好休息 💛",
+    nm_late_rem_eat_body: "最多约 {kcal} 千卡，然后好好休息 💜",
     nm_late_rem_eat_title: "🌙 睡前来点小东西",
     nm_late_row_drink: "喝点温热的，为一天收尾 🍵",
     nm_late_row_eat: "睡前来点小东西 · 最多约 {kcal} 千卡",

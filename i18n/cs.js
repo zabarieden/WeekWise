@@ -1495,7 +1495,7 @@ translations.cs = {
     nm_late_none: "🌙 Nic",
     nm_late_rem_drink_body: "Čaj, bylinkový čaj nebo voda – pro klidný konec dne 🍵",
     nm_late_rem_drink_title: "🌙 Něco teplého k pití",
-    nm_late_rem_eat_body: "Do ~{kcal} kcal, pak odpočinek 💛",
+    nm_late_rem_eat_body: "Do ~{kcal} kcal, pak odpočinek 💜",
     nm_late_rem_eat_title: "🌙 Něco malého před spaním",
     nm_late_row_drink: "Něco teplého k pití na konec dne 🍵",
     nm_late_row_eat: "Něco malého před spaním · do ~{kcal} kcal",

@@ -1495,7 +1495,7 @@ translations.yo = {
     nm_late_none: "🌙 Kò sí nǹkan",
     nm_late_rem_drink_body: "Tíì, tíì ewéko tàbí omi – láti parí ọjọ́ ní ìdákẹ́jẹ́ẹ́ 🍵",
     nm_late_rem_drink_title: "🌙 Nǹkan gbígbóná láti mu",
-    nm_late_rem_eat_body: "Títí dé ~{kcal} kcal, lẹ́yìn náà ìsinmi 💛",
+    nm_late_rem_eat_body: "Títí dé ~{kcal} kcal, lẹ́yìn náà ìsinmi 💜",
     nm_late_rem_eat_title: "🌙 Nǹkan kékeré kí o tó sùn",
     nm_late_row_drink: "Nǹkan gbígbóná láti mu láti parí ọjọ́ 🍵",
     nm_late_row_eat: "Nǹkan kékeré kí o tó sùn · títí dé ~{kcal} kcal",

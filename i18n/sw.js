@@ -1495,7 +1495,7 @@ translations.sw = {
     nm_late_none: "🌙 Hakuna",
     nm_late_rem_drink_body: "Chai, chai ya mitishamba au maji – maliza siku kwa utulivu 🍵",
     nm_late_rem_drink_title: "🌙 Kinywaji cha moto",
-    nm_late_rem_eat_body: "Hadi kalori ~{kcal}, kisha pumzika 💛",
+    nm_late_rem_eat_body: "Hadi kalori ~{kcal}, kisha pumzika 💜",
     nm_late_rem_eat_title: "🌙 Kitu kidogo kabla ya kulala",
     nm_late_row_drink: "Kinywaji cha moto cha kumaliza siku 🍵",
     nm_late_row_eat: "Kitu kidogo kabla ya kulala · hadi kalori ~{kcal}",

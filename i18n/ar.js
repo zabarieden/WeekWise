@@ -1495,7 +1495,7 @@ translations.ar = {
     nm_late_none: "🌙 لا شيء",
     nm_late_rem_drink_body: "شاي أو منقوع أعشاب أو ماء – لإنهاء اليوم بهدوء 🍵",
     nm_late_rem_drink_title: "🌙 مشروب دافئ",
-    nm_late_rem_eat_body: "حتى ~{kcal} سعرة، ثم راحة 💛",
+    nm_late_rem_eat_body: "حتى ~{kcal} سعرة، ثم راحة 💜",
     nm_late_rem_eat_title: "🌙 شيء صغير قبل النوم",
     nm_late_row_drink: "مشروب دافئ لإنهاء اليوم 🍵",
     nm_late_row_eat: "شيء صغير قبل النوم · حتى ~{kcal} سعرة",

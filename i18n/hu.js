@@ -1495,7 +1495,7 @@ translations.hu = {
     nm_late_none: "🌙 Semmi",
     nm_late_rem_drink_body: "Tea, gyógytea vagy víz – zárd nyugodtan a napot 🍵",
     nm_late_rem_drink_title: "🌙 Valami meleg ital",
-    nm_late_rem_eat_body: "Legfeljebb ~{kcal} kcal, aztán pihenés 💛",
+    nm_late_rem_eat_body: "Legfeljebb ~{kcal} kcal, aztán pihenés 💜",
     nm_late_rem_eat_title: "🌙 Valami apróság lefekvés előtt",
     nm_late_row_drink: "Valami meleg ital a nap lezárására 🍵",
     nm_late_row_eat: "Valami apróság lefekvés előtt · legfeljebb ~{kcal} kcal",

@@ -1505,7 +1505,7 @@ translations.he = {
     nm_late_none: "🌙 בלי",
     nm_late_rem_drink_body: "תה, חליטה או מים – לסיים את היום ברוגע 🍵",
     nm_late_rem_drink_title: "🌙 משהו חם לשתות",
-    nm_late_rem_eat_body: "עד ~{kcal} קק״ל, ואז לנוח 💛",
+    nm_late_rem_eat_body: "עד ~{kcal} קק״ל, ואז לנוח 💜",
     nm_late_rem_eat_title: "🌙 משהו קטן לפני השינה",
     nm_late_row_drink: "משהו חם לשתות לסיום היום 🍵",
     nm_late_row_eat: "משהו קטן לפני השינה · עד ~{kcal} קק״ל",

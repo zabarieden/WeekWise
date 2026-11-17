@@ -1495,7 +1495,7 @@ translations.it = {
     nm_late_none: "🌙 Niente",
     nm_late_rem_drink_body: "Tè, una tisana o acqua – per chiudere la giornata con calma 🍵",
     nm_late_rem_drink_title: "🌙 Qualcosa di caldo da bere",
-    nm_late_rem_eat_body: "Fino a ~{kcal} kcal, poi riposo 💛",
+    nm_late_rem_eat_body: "Fino a ~{kcal} kcal, poi riposo 💜",
     nm_late_rem_eat_title: "🌙 Qualcosa di piccolo prima di dormire",
     nm_late_row_drink: "Qualcosa di caldo per chiudere la giornata 🍵",
     nm_late_row_eat: "Qualcosa di piccolo prima di dormire · fino a ~{kcal} kcal",

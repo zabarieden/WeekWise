@@ -1495,7 +1495,7 @@ translations.ca = {
     nm_late_none: "🌙 Res",
     nm_late_rem_drink_body: "Te, una infusió o aigua – per acabar el dia amb calma 🍵",
     nm_late_rem_drink_title: "🌙 Alguna cosa calenta per beure",
-    nm_late_rem_eat_body: "Fins a ~{kcal} kcal, i després a descansar 💛",
+    nm_late_rem_eat_body: "Fins a ~{kcal} kcal, i després a descansar 💜",
     nm_late_rem_eat_title: "🌙 Alguna cosa petita abans de dormir",
     nm_late_row_drink: "Alguna cosa calenta per beure i tancar el dia 🍵",
     nm_late_row_eat: "Alguna cosa petita abans de dormir · fins a ~{kcal} kcal",

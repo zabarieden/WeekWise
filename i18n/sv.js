@@ -1495,7 +1495,7 @@ translations.sv = {
     nm_late_none: "🌙 Inget",
     nm_late_rem_drink_body: "Te, örtte eller vatten – avsluta dagen i lugn och ro 🍵",
     nm_late_rem_drink_title: "🌙 Något varmt att dricka",
-    nm_late_rem_eat_body: "Upp till ~{kcal} kcal, sedan vila 💛",
+    nm_late_rem_eat_body: "Upp till ~{kcal} kcal, sedan vila 💜",
     nm_late_rem_eat_title: "🌙 Något litet före läggdags",
     nm_late_row_drink: "Något varmt att dricka för att avsluta dagen 🍵",
     nm_late_row_eat: "Något litet före läggdags · upp till ~{kcal} kcal",

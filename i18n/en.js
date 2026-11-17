@@ -1505,7 +1505,7 @@ translations.en = {
     nm_late_none: "🌙 Nothing",
     nm_late_rem_drink_body: "Tea, an herbal infusion or water – end the day calmly 🍵",
     nm_late_rem_drink_title: "🌙 Something warm to drink",
-    nm_late_rem_eat_body: "Up to ~{kcal} kcal, then rest 💛",
+    nm_late_rem_eat_body: "Up to ~{kcal} kcal, then rest 💜",
     nm_late_rem_eat_title: "🌙 Something small before bed",
     nm_late_row_drink: "Something warm to drink to end the day 🍵",
     nm_late_row_eat: "Something small before bed · up to ~{kcal} kcal",

@@ -1495,7 +1495,7 @@ translations.nl = {
     nm_late_none: "🌙 Niets",
     nm_late_rem_drink_body: "Thee, kruidenthee of water – sluit de dag rustig af 🍵",
     nm_late_rem_drink_title: "🌙 Iets warms om te drinken",
-    nm_late_rem_eat_body: "Tot ~{kcal} kcal, en dan rust 💛",
+    nm_late_rem_eat_body: "Tot ~{kcal} kcal, en dan rust 💜",
     nm_late_rem_eat_title: "🌙 Iets kleins voor het slapen",
     nm_late_row_drink: "Iets warms om de dag mee af te sluiten 🍵",
     nm_late_row_eat: "Iets kleins voor het slapen · tot ~{kcal} kcal",

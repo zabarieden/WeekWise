@@ -1154,7 +1154,15 @@ function ygBubble(lines, who, text, extra) {
     const el = document.createElement('div');
     el.className = `yg-line is-${who}${extra ? ' ' + extra : ''}`;
     if (YG_WHO[who]) el.innerHTML = `<span class="yg-name">${srEsc(t(YG_WHO[who]))}</span>`;
-    el.appendChild(document.createTextNode(text));
+    // 💛 → הלב הסגול המצויר של האפליקציה (כמו בעוזר; לפי בקשה מפורשת, 2026-11-17: "הלב ב-Sky אפשר לשנות")
+    const heart = typeof AI_CHAT_SVG !== 'undefined' && AI_CHAT_SVG.heart;
+    String(text).split('💛').forEach((part, i) => {
+        if (i) {
+            if (heart) { const h = document.createElement('span'); h.className = 'ai-chat-heart'; h.innerHTML = heart; el.appendChild(h); }
+            else el.appendChild(document.createTextNode('💜'));
+        }
+        if (part) el.appendChild(document.createTextNode(part));
+    });
     if (!YG_PIC[who]) { lines.appendChild(el); return el; }
     const row = document.createElement('div');
     row.className = `yg-row is-${who}${extra ? ' ' + extra : ''}`;

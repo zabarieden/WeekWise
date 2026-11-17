@@ -1495,7 +1495,7 @@ translations.fi = {
     nm_late_none: "🌙 Ei mitään",
     nm_late_rem_drink_body: "Teetä, yrttiteetä tai vettä – päätä päivä rauhallisesti 🍵",
     nm_late_rem_drink_title: "🌙 Jotain lämmintä juotavaa",
-    nm_late_rem_eat_body: "Enintään ~{kcal} kcal, sitten lepoa 💛",
+    nm_late_rem_eat_body: "Enintään ~{kcal} kcal, sitten lepoa 💜",
     nm_late_rem_eat_title: "🌙 Jotain pientä ennen nukkumaanmenoa",
     nm_late_row_drink: "Jotain lämmintä juotavaa päivän päätteeksi 🍵",
     nm_late_row_eat: "Jotain pientä ennen nukkumaanmenoa · enintään ~{kcal} kcal",
