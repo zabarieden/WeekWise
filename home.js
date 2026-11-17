@@ -495,72 +495,129 @@ function toggleHomeFocus(force) {
     if (layer) layer.classList.toggle('hidden', !on);
     if (on) { homeFocusShownKey = ''; homeFocusPeekKey = ''; renderHomeFocus(); }
 }
+// ◎ פוקוס = רשימה של היום (לפי בקשה מפורשת, 2026-11-17: "שיהיה כמו רשימה - מה שסיימתי ממש בקטן עם וי ומה שנשאר יראה
+// כמובן", ולמעלה "מטרה קטנה לסוף השנה... עד 2 מטרות"). מה שסומן קטן ודהוי עם ✓, מה שנשאר בגודל מלא עם עיגול לסימון,
+// והדבר של עכשיו מודגש. המטרות: מה שבחרו (עד 2, נשמר במכשיר), ואם לא בחרו - היעדים שהתאריך שלהם עד סוף השנה
+const HOME_FOCUS_GOALS_MAX = 2;
+function homeFocusGoalsKey() { return `weekwise_focus_goals_${currentUserId}`; }
+function homeFocusChosenGoalIds() {
+    try { const v = JSON.parse(localStorage.getItem(homeFocusGoalsKey()) || 'null'); return Array.isArray(v) ? v : null; } catch { return null; }
+}
+function homeFocusActiveGoals() { return (typeof visionGoalsCache !== 'undefined' ? visionGoalsCache : []).filter(g => !g.is_achieved); }
+function homeFocusGoals() {
+    const goals = homeFocusActiveGoals();
+    const ids = homeFocusChosenGoalIds();
+    if (ids) return ids.map(id => goals.find(g => g.id === id)).filter(Boolean).slice(0, HOME_FOCUS_GOALS_MAX);
+    if (typeof visionHorizon !== 'function' || typeof visionEffectiveDeadline !== 'function') return [];
+    return goals.filter(g => visionHorizon(g) !== 'life')
+        .sort((x, y) => String(visionEffectiveDeadline(x)).localeCompare(String(visionEffectiveDeadline(y))))
+        .slice(0, HOME_FOCUS_GOALS_MAX);
+}
+function homeFocusDaysTo(dateStr) {
+    const end = new Date(dateStr + 'T00:00:00'), now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.round((end - now) / 86400000));
+}
+function homeFocusGoalsHtml() {
+    const goals = homeFocusGoals();
+    const yearEnd = `${new Date().getFullYear()}-12-31`;
+    const head = `<div class="hf-goals-head"><span>🎯 ${myDayEsc(t('home_focus_goals_title'))} <small>· ${myDayEsc(t('home_focus_days_left').replace('{n}', homeFocusDaysTo(yearEnd)))}</small></span><button type="button" class="hf-goals-pick" onclick="openHomeFocusGoalPicker()">${myDayEsc(t(goals.length ? 'home_focus_goals_change' : 'home_focus_goals_choose'))}</button></div>`;
+    if (!goals.length) return `<section class="hf-goals is-empty">${head}</section>`;
+    const rows = goals.map(g => {
+        const p = typeof visionGoalProgress === 'function' ? visionGoalProgress(g) : { pct: 0, label: '' };
+        const deadline = typeof visionEffectiveDeadline === 'function' ? visionEffectiveDeadline(g) : null;
+        const meta = [p.label || '', deadline && deadline <= yearEnd ? t('home_focus_days_left').replace('{n}', homeFocusDaysTo(deadline)) : ''].filter(Boolean).join(' · ');
+        const icon = typeof visionGoalIcon === 'function' ? visionGoalIcon(g) : '🎯';
+        return `<button type="button" class="hf-goal" onclick="toggleHomeFocus(false); openGoalsVisionDrawer('${g.id}')">
+            <span class="hf-goal-top"><span class="hf-goal-icon" aria-hidden="true">${myDayEsc(icon)}</span><span class="hf-goal-title">${myDayEsc(g.title)}</span><span class="hf-goal-pct">${p.pct}%</span></span>
+            <span class="hf-goal-bar" aria-hidden="true"><i style="width:${p.pct}%"></i></span>
+            ${meta ? `<span class="hf-goal-meta">${myDayEsc(meta)}</span>` : ''}
+        </button>`;
+    }).join('');
+    return `<section class="hf-goals">${head}${rows}</section>`;
+}
+function openHomeFocusGoalPicker() {
+    const layer = document.getElementById('home-focus-layer');
+    if (!layer) return;
+    layer.querySelectorAll('.hf-pick').forEach(x => x.remove());
+    const goals = homeFocusActiveGoals();
+    const chosen = new Set(homeFocusGoals().map(g => g.id));
+    const box = document.createElement('div');
+    box.className = 'hf-pick';
+    box.setAttribute('role', 'dialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-label', t('home_focus_goals_title'));
+    box.innerHTML = `<div class="hf-pick-card"><h3>🎯 ${myDayEsc(t('home_focus_goals_pick_title'))}</h3>
+        ${goals.length ? `<div class="hf-pick-list">${goals.map(g => `<button type="button" class="hf-pick-item${chosen.has(g.id) ? ' is-on' : ''}" data-id="${g.id}" aria-pressed="${chosen.has(g.id)}"><span class="hf-pick-box" aria-hidden="true"></span><span>${myDayEsc((typeof visionGoalIcon === 'function' ? visionGoalIcon(g) + ' ' : '') + g.title)}</span></button>`).join('')}</div>`
+            : `<p class="hf-pick-empty">${myDayEsc(t('home_focus_goals_none'))}</p>`}
+        <div class="hf-pick-actions">${goals.length ? `<button type="button" class="btn-primary hf-pick-save">${myDayEsc(t('home_focus_goals_save'))}</button>` : `<button type="button" class="btn-primary hf-pick-add">${myDayEsc(t('home_focus_goals_add'))}</button>`}<button type="button" class="btn-secondary hf-pick-close">${myDayEsc(t('close_btn'))}</button></div></div>`;
+    const sync = () => {
+        const full = chosen.size >= HOME_FOCUS_GOALS_MAX;
+        box.querySelectorAll('.hf-pick-item').forEach(b => {
+            const on = chosen.has(b.dataset.id);
+            b.classList.toggle('is-on', on);
+            b.setAttribute('aria-pressed', String(on));
+            b.disabled = full && !on;
+        });
+    };
+    box.querySelectorAll('.hf-pick-item').forEach(b => b.addEventListener('click', () => {
+        if (chosen.has(b.dataset.id)) chosen.delete(b.dataset.id);
+        else if (chosen.size < HOME_FOCUS_GOALS_MAX) chosen.add(b.dataset.id);
+        sync();
+    }));
+    sync();
+    box.querySelector('.hf-pick-close').onclick = () => box.remove();
+    box.addEventListener('click', e => { if (e.target === box) box.remove(); });
+    const save = box.querySelector('.hf-pick-save');
+    if (save) save.onclick = () => {
+        try { localStorage.setItem(homeFocusGoalsKey(), JSON.stringify([...chosen])); } catch {}
+        box.remove();
+        renderHomeFocus();
+    };
+    const add = box.querySelector('.hf-pick-add');
+    if (add) add.onclick = () => { box.remove(); toggleHomeFocus(false); openGoalsVisionDrawer(); };
+    layer.appendChild(box);
+    (box.querySelector('.hf-pick-item:not(:disabled)') || box.querySelector('button')).focus();
+}
 function renderHomeFocus() {
     const body = document.getElementById('home-focus-body');
     if (!body) return;
-    const pick = myDayPickNow(myDayItems);
-    if (!pick) {
-        homeFocusShownKey = '';
-        homeFocusPeekKey = '';
-        homeFocusDeck = [];
-        // אין כלום פתוח: מנוחה - כוכבים שמנצנצים בשקט, בלי טקסט (לפי בחירה מפורשת, 2026-11-08: אפשרות 8 "כוכבים"
-        // מתוך 20); המשפט נשאר רק לקורא מסך
-        // כוכב בעל 4 קצוות (נצנוץ), לא נקודה
+    homeFocusDeck = [];
+    const goalsHtml = homeFocusGoalsHtml();
+    const items = myDayItems.filter(it => it.checkable)
+        .slice().sort((x, y) => (x.minutes === null ? 1e4 : x.minutes) - (y.minutes === null ? 1e4 : y.minutes));
+    if (!items.length) {
+        // אין כלום היום: מנוחה - כוכבים שמנצנצים בשקט (בחירה 2026-11-08, אפשרות 8), והמטרות למעלה
         const stars = HOME_FOCUS_STARS.map(([x, y, r, d, gold]) => {
-            const s = r * 2.6;
-            return `<path d="M${x} ${y - s}Q${x} ${y} ${x + s} ${y}Q${x} ${y} ${x} ${y + s}Q${x} ${y} ${x - s} ${y}Q${x} ${y} ${x} ${y - s}Z" class="hf-star${gold ? ' is-gold' : ''}" style="animation-delay:${d}s"/>`;
+            const sz = r * 2.6;
+            return `<path d="M${x} ${y - sz}Q${x} ${y} ${x + sz} ${y}Q${x} ${y} ${x} ${y + sz}Q${x} ${y} ${x - sz} ${y}Q${x} ${y} ${x} ${y - sz}Z" class="hf-star${gold ? ' is-gold' : ''}" style="animation-delay:${d}s"/>`;
         }).join('');
-        body.innerHTML = `<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>`;
+        body.innerHTML = `${goalsHtml}<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>`;
         return;
     }
-    const after = myDayItems.filter(it => it !== pick.item && !it.done && it.checkable && it.minutes !== null && (pick.item.minutes === null || it.minutes > pick.item.minutes)).sort((a, b) => a.minutes - b.minutes);
-    const deck = [pick.item, ...after];
-    homeFocusDeck = deck;
-    let at = homeFocusPeekKey ? deck.findIndex(it => homeFocusKey(it) === homeFocusPeekKey) : 0;
-    // הכרטיס שדפדפו אליו סומן או ירד מהיום - חוזרים לעכשיו
-    if (at < 0) { at = 0; homeFocusPeekKey = ''; }
-    const item = deck[at];
-    const next = deck.length > 1 ? deck[(at + 1) % deck.length] : null;
-    const time = myDayFormatMinutes(item.minutes);
-    const when = at === 0
-        ? `${t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later')}${time ? ` · ${time}` : ''}`
-        : t('home_focus_then').replace('{item}', time);
-    // כרטיס מאחור לכל דבר נוסף בחפיסה (עד שניים), והבא בתור כתוב לאורכם
-    const backs = Math.min(deck.length - 1, 2);
-    // הכרטיס נכנס מהצד רק כשהוא באמת חדש, לא בכל רענון של היום
-    const key = homeFocusKey(item);
-    const isNew = key !== homeFocusShownKey;
-    homeFocusShownKey = key;
-    const then = next ? `${myDayFormatMinutes(next.minutes)} ${next.title}` : '';
-    body.innerHTML = `
-        <div class="home-focus-stack${backs ? ` has-back-${backs}` : ''}${isNew ? ' is-new' : ''}">
-            ${backs > 1 ? '<span class="home-focus-back b2" aria-hidden="true"></span>' : ''}${backs ? '<span class="home-focus-back b1" aria-hidden="true"></span>' : ''}
-            <div class="home-focus-card">
-                <div class="home-focus-head">
-                    <span class="home-focus-when">${myDayEsc(when)}</span>
-                    <button type="button" class="home-focus-done" aria-label="${myDayEsc(t('home_focus_done_aria'))}"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                </div>
-                <span class="home-focus-title">${myDayEsc(item.title)}</span>
-            </div>
-            ${next ? `<span class="home-focus-then" aria-hidden="true">${myDayEsc(then)}</span><button type="button" class="home-focus-peek" aria-label="${myDayEsc(t('home_focus_then').replace('{item}', then))}"></button>` : ''}
-        </div>`;
-    body.querySelector('.home-focus-done').onclick = e => {
-        e.currentTarget.disabled = true;
-        item.toggle(true);
-    };
-    if (!next) return;
-    body.querySelector('.home-focus-peek').onclick = () => homeFocusStep(1);
-    // החלקה של הכרטיס הצידה (לכל כיוון) = הבא בתור
-    const card = body.querySelector('.home-focus-card');
-    let swipe = null;
-    card.onpointerdown = e => { swipe = { x: e.clientX, y: e.clientY }; };
-    card.onpointercancel = () => { swipe = null; };
-    card.onpointerup = e => {
-        if (!swipe) return;
-        const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-        swipe = null;
-        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) homeFocusStep(1);
-    };
+    const pick = myDayPickNow(myDayItems);
+    const done = items.filter(it => it.done).length, left = items.length - done;
+    const pct = Math.round((done / items.length) * 100);
+    const check = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const rows = items.map((it, i) => {
+        const time = myDayFormatMinutes(it.minutes);
+        if (it.done) {
+            return `<li class="hf-row is-done"><button type="button" class="hf-undo" data-i="${i}" aria-label="${myDayEsc(t('home_focus_undo_aria').replace('{item}', it.title))}">${check}</button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span></li>`;
+        }
+        const isNow = pick && pick.item === it && (pick.label === 'now' || pick.label === 'next');
+        const tag = isNow ? `<span class="hf-tag">${myDayEsc(t(pick.label === 'now' ? 'myday_now' : 'myday_next'))}</span>` : '';
+        return `<li class="hf-row${isNow ? ' is-now' : ''}"><button type="button" class="hf-check" data-i="${i}" aria-label="${myDayEsc(t('home_focus_done_aria'))}: ${myDayEsc(it.title)}"></button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span>${tag}</li>`;
+    }).join('');
+    body.innerHTML = `${goalsHtml}
+        <section class="hf-today">
+            <div class="hf-sum"><span><b>${myDayEsc(t('home_focus_done_n').replace('{n}', done))}</b> · ${myDayEsc(left ? t('home_focus_left_n').replace('{n}', left) : t('home_focus_all_done'))}</span><span class="hf-pct">${pct}%</span></div>
+            <div class="hf-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>
+            <ul class="hf-list">${rows}</ul>
+        </section>`;
+    body.querySelectorAll('.hf-check').forEach(btn => { btn.onclick = () => { btn.disabled = true; btn.classList.add('is-ticking'); items[Number(btn.dataset.i)].toggle(true); }; });
+    body.querySelectorAll('.hf-undo').forEach(btn => { btn.onclick = () => { btn.disabled = true; items[Number(btn.dataset.i)].toggle(false); }; });
+    const nowRow = body.querySelector('.hf-row.is-now');
+    if (nowRow) requestAnimationFrame(() => { try { nowRow.scrollIntoView({ block: 'nearest' }); } catch {} });
 }
 function homeFocusStep(dir) {
     const n = homeFocusDeck.length;

@@ -12298,3 +12298,49 @@ html[dir="rtl"] .wm-room-nav.next svg, html:not([dir="rtl"]) .wm-room-nav.prev s
 .wm-finish-card p { margin: 0 0 16px; color: var(--wm-soft); line-height: 1.5; }
 .wm-row { display: flex; gap: 10px; flex-wrap: wrap; }
 @media (prefers-reduced-motion: reduce) { .wm-fog i, .wm-sky-bob, .wm-station.is-here::after, .wm-zoom, .wm-finish-card { animation: none; } .wm-stone .halo { animation: none; opacity: .4; } }
+
+/* ◎ פוקוס כרשימה (לפי בקשה מפורשת, 2026-11-17): למעלה עד 2 מטרות לסוף השנה, מתחת רשימת היום - מה שנעשה קטן ודהוי עם ✓,
+   מה שנשאר בגודל מלא עם עיגול לסימון, והדבר של עכשיו עם קו ניאון */
+.home-focus-body { justify-content: flex-start; gap: 16px; overflow-y: auto; padding: 58px 0 12px; scrollbar-width: none; }
+.home-focus-body::-webkit-scrollbar { display: none; }
+.home-focus-body .home-focus-rest { margin-top: auto; margin-bottom: auto; }
+.hf-goals { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.hf-goals-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .82rem; font-weight: 800; color: var(--text-secondary); }
+.hf-goals-head small { font-size: inherit; font-weight: 600; }
+.hf-goals-pick { flex: none; padding: 6px 2px; border: none; background: none; color: var(--focus-neon); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+.hf-goal { display: flex; flex-direction: column; gap: 7px; width: 100%; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--focus-glass-line); background: var(--focus-glass); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; box-sizing: border-box; }
+.hf-goal-top { display: flex; align-items: center; gap: 8px; }
+.hf-goal-icon { flex: none; font-size: 1.1rem; }
+.hf-goal-title { flex: 1; min-width: 0; font-size: .95rem; font-weight: 800; overflow-wrap: anywhere; }
+.hf-goal-pct, .hf-pct { flex: none; font-size: .85rem; font-weight: 800; color: var(--focus-neon); font-variant-numeric: tabular-nums; }
+.hf-goal-bar, .hf-bar { display: flex; height: 6px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 10%, transparent); overflow: hidden; }
+.hf-goal-bar i, .hf-bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
+.hf-goal-meta { font-size: .75rem; color: var(--text-secondary); overflow-wrap: anywhere; }
+.hf-today { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.hf-sum { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: .9rem; color: var(--text-secondary); }
+.hf-sum b { color: var(--text-primary); }
+.hf-list { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.hf-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 16px; background: var(--focus-glass); border: 1px solid var(--focus-glass-line); }
+.hf-row.is-now { border-color: var(--focus-neon); box-shadow: 0 0 0 1px var(--focus-neon), 0 0 22px -6px var(--focus-neon); }
+.hf-check { flex: none; width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--text-primary) 45%, transparent); background: transparent; cursor: pointer; transition: background .2s ease, border-color .2s ease; }
+.hf-check.is-ticking { background: var(--focus-neon); border-color: var(--focus-neon); }
+.hf-time { flex: none; font-size: .8rem; font-weight: 700; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.hf-title { flex: 1; min-width: 0; font-size: 1rem; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+.hf-tag { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 800; background: color-mix(in srgb, var(--focus-neon) 22%, transparent); color: var(--text-primary); }
+.hf-row.is-done { gap: 6px; padding: 1px 6px; background: none; border-color: transparent; opacity: .55; }
+.hf-row.is-done .hf-title { font-size: .74rem; font-weight: 500; }
+.hf-row.is-done .hf-time { font-size: .68rem; font-weight: 500; }
+.hf-undo { flex: none; width: 18px; height: 18px; padding: 0; display: grid; place-items: center; border: none; border-radius: 50%; background: var(--focus-neon); color: #fff; cursor: pointer; }
+.hf-undo svg { width: 11px; height: 11px; }
+.hf-pick { position: absolute; inset: 0; z-index: 30; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .45); }
+.hf-pick-card { width: 100%; max-width: 460px; max-height: 80%; overflow-y: auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); border-radius: 24px 24px 0 0; background: linear-gradient(var(--bg-sheet), var(--bg-sheet)), var(--bg-main); color: var(--text-primary); }
+.hf-pick-card h3 { margin: 0; font-size: 1.05rem; }
+.hf-pick-list { display: flex; flex-direction: column; gap: 8px; }
+.hf-pick-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); background: color-mix(in srgb, var(--text-primary) 4%, transparent); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; overflow-wrap: anywhere; box-sizing: border-box; }
+.hf-pick-item.is-on { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 14%, transparent); }
+.hf-pick-item:disabled { opacity: .45; cursor: default; }
+.hf-pick-box { flex: none; width: 20px; height: 20px; box-sizing: border-box; border-radius: 6px; border: 2px solid color-mix(in srgb, var(--text-primary) 40%, transparent); }
+.hf-pick-item.is-on .hf-pick-box { background: var(--accent-purple); border-color: var(--accent-purple); box-shadow: inset 0 0 0 3px var(--bg-sheet); }
+.hf-pick-empty { margin: 0; color: var(--text-secondary); }
+.hf-pick-actions { display: flex; gap: 10px; }
+.hf-pick-actions > * { flex: 1; }
