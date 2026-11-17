@@ -12344,3 +12344,12 @@ html[dir="rtl"] .wm-room-nav.next svg, html:not([dir="rtl"]) .wm-room-nav.prev s
 .hf-pick-empty { margin: 0; color: var(--text-secondary); }
 .hf-pick-actions { display: flex; gap: 10px; }
 .hf-pick-actions > * { flex: 1; }
+/* השגרה בתוך הפוקוס - מצומצמת (2026-11-17) */
+.hf-row.is-routine:not(.is-done) { padding: 7px 12px; border-radius: 12px; }
+.hf-row.is-routine:not(.is-done) .hf-title { font-size: .86rem; font-weight: 600; }
+.hf-row.is-routine .hf-check { width: 20px; height: 20px; }
+.hf-row.is-plain { padding: 3px 8px; background: none; border-color: transparent; }
+.hf-dot { flex: none; width: 6px; height: 6px; margin-inline: 7px; border-radius: 50%; background: color-mix(in srgb, var(--text-primary) 40%, transparent); }
+.hf-row.is-plain { padding: 1px 8px; gap: 8px; }
+.hf-row.is-plain .hf-title { font-size: .8rem; font-weight: 500; color: var(--text-secondary); }
+.hf-row.is-plain .hf-time { font-size: .72rem; font-weight: 500; }

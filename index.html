@@ -115,7 +115,7 @@
         @keyframes bootTwinkle { from { opacity: 1; transform: scale(1); } to { opacity: .45; transform: scale(.7); } }
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before { animation: none; } .boot-sparkle i { top: var(--y); } }
     </style>
-    <link rel="stylesheet" href="theme.css?v=637">
+    <link rel="stylesheet" href="theme.css?v=638">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -2952,6 +2952,14 @@
                             <span class="switch-slider"></span>
                         </label>
                     </div>
+                    <!-- 🧑‍🍳 קיצור דרך למתכונים במסך הבית - כבוי כברירת מחדל (home.js: toggleHomeRecipesShortcut) -->
+                    <div class="settings-toggle-row">
+                        <label class="settings-label" data-i18n="settings_home_recipes_label" for="home-recipes-toggle">Recipes shortcut on the home screen</label>
+                        <label class="switch">
+                            <input type="checkbox" id="home-recipes-toggle" onchange="toggleHomeRecipesShortcut()">
+                            <span class="switch-slider"></span>
+                        </label>
+                    </div>
                     <!-- 🌦️ מזג אוויר בשמיים - כבוי כברירת מחדל (צריך אישור מיקום; המיקום נשמר רק במכשיר) -->
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_weather_label" for="home-weather-toggle">Weather in the home screen sky</label>
@@ -4545,9 +4553,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=547"></script>
+    <script src="i18n/core.js?v=548"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=667"></script>
+    <script src="app.js?v=668"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
@@ -4562,7 +4570,7 @@
     <script src="world3d.js?v=16"></script>
     <script src="world-map.js?v=1"></script>
     <script src="books.js?v=9"></script>
-    <script src="home.js?v=38"></script>
+    <script src="home.js?v=39"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=7"></script>

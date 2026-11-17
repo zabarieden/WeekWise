@@ -2446,8 +2446,8 @@ async function appTourEnsureContext(step) {
     let changed = false;
     // מצב הפוקוס: פתוח רק בשלבים שלו
     const focusOn = typeof isHomeFocusOn === 'function' && isHomeFocusOn();
-    if (ctx !== 'focus' && focusOn) { toggleHomeFocus(false); changed = true; }
-    if (ctx === 'focus' && !focusOn && typeof toggleHomeFocus === 'function') { toggleHomeFocus(true); changed = true; }
+    if (ctx !== 'focus' && focusOn) { toggleHomeFocus(false, false); changed = true; }
+    if (ctx === 'focus' && !focusOn && typeof toggleHomeFocus === 'function') { toggleHomeFocus(true, false); changed = true; }
     if (ctx !== 'goals' && goalsOverlay && goalsOverlay.classList.contains('open')) { closeGoalsVisionDrawer(); changed = true; }
     if (ctx !== 'notebooks' && notebooksSection && notebooksSection.classList.contains('active-tab')) { goHome(); changed = true; }
     const routineModal = document.getElementById('modal-daily-board');
@@ -2887,7 +2887,9 @@ function closeAppTour() {
     if (appTourCtx === 'settings' || appTourCtx === 'settings_sub') { backToSettingsMain(); closeModal('modal-settings-drawer'); }
     if (appTourCtx === 'menu') closeHamburgerMenu();
     if (appTourCtx === 'goals') closeGoalsVisionDrawer();
-    if (appTourCtx === 'focus' && typeof toggleHomeFocus === 'function') toggleHomeFocus(false);
+    if (appTourCtx === 'focus' && typeof toggleHomeFocus === 'function') toggleHomeFocus(false, false);
+    // מי שהיה בפוקוס לפני הסיור - חוזר אליו
+    if (typeof homeFocusRestore === 'function') setTimeout(homeFocusRestore, 0);
     if (appTourCtx === 'routine') closeModal('modal-daily-board');
     clearTimeout(appTourDemoTimer);
     appTourCtx = null;
@@ -10340,7 +10342,7 @@ const HELP_FAQ_TABS = ['general', 'premium', 'new_me', 'settings'];
 const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
-    { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
+    { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_recipes_shortcut', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
     { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'habits_streaks', 'routine_nudge'] },
     // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
@@ -19705,7 +19707,10 @@ function openGoalsVisionDrawer(goalId) {
 }
 function closeGoalsVisionDrawer() {
     const view = document.getElementById('vision-drawer-overlay');
+    const wasOpen = !!(view && view.classList.contains('open'));
     if (view) { view.classList.remove('open'); view.setAttribute('aria-hidden', 'true'); }
+    // נכנסו ליעד מתוך הפוקוס - חוזרים לפוקוס (הוא נשאר פתוח עד ✕)
+    if (wasOpen && typeof homeFocusRestore === 'function' && !appTourActive) setTimeout(homeFocusRestore, 0);
     // ספריית היעדים נפתחת מעל המסך הזה - נסגרת איתו
     if (typeof closeGoalsLibrary === 'function') closeGoalsLibrary();
     const wrapper = document.querySelector('.phone-wrapper');

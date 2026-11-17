@@ -487,10 +487,15 @@ function homeFocusKey(item) { return `${item.title}|${item.minutes}`; }
 function isHomeFocusOn() { return document.body.classList.contains('home-focus-on'); }
 // [x, y, רדיוס, השהיה בשניות, זהב] - הכוכבים של מצב המנוחה בפוקוס
 const HOME_FOCUS_STARS = [[40, 40, 2.2, 0], [200, 30, 2.2, 0.9], [180, 150, 2.2, 1.7], [60, 150, 2.2, 0.9], [120, 24, 2.2, 1.7], [90, 96, 3, 0, true], [150, 80, 2.6, 0.9, true], [132, 120, 2, 1.7]];
-function toggleHomeFocus(force) {
+// persist=false: פתיחה/סגירה רגעית (הסיור, מעבר ליעד מתוך הפוקוס) שלא משנה את הבחירה. הבחירה נשמרת במכשיר (localStorage,
+// לא sessionStorage) - כך שהפוקוס נשאר גם אחרי יציאה מהאפליקציה וכניסה חזרה, עד שלוחצים ✕ (לפי בקשה מפורשת, 2026-11-17)
+const HOME_FOCUS_KEY = 'weekwise_home_focus';
+function homeFocusSaved() { try { return localStorage.getItem(HOME_FOCUS_KEY) === '1'; } catch { return false; } }
+function homeFocusRestore() { if (homeFocusSaved() && !isHomeFocusOn()) toggleHomeFocus(true, false); }
+function toggleHomeFocus(force, persist = true) {
     const on = typeof force === 'boolean' ? force : !isHomeFocusOn();
     document.body.classList.toggle('home-focus-on', on);
-    try { sessionStorage.setItem('weekwise_home_focus', on ? '1' : '0'); } catch {}
+    if (persist) { try { localStorage.setItem(HOME_FOCUS_KEY, on ? '1' : '0'); } catch {} }
     const layer = document.getElementById('home-focus-layer');
     if (layer) layer.classList.toggle('hidden', !on);
     if (on) { homeFocusShownKey = ''; homeFocusPeekKey = ''; renderHomeFocus(); }
@@ -528,7 +533,7 @@ function homeFocusGoalsHtml() {
         const deadline = typeof visionEffectiveDeadline === 'function' ? visionEffectiveDeadline(g) : null;
         const meta = [p.label || '', deadline && deadline <= yearEnd ? t('home_focus_days_left').replace('{n}', homeFocusDaysTo(deadline)) : ''].filter(Boolean).join(' · ');
         const icon = typeof visionGoalIcon === 'function' ? visionGoalIcon(g) : '🎯';
-        return `<button type="button" class="hf-goal" onclick="toggleHomeFocus(false); openGoalsVisionDrawer('${g.id}')">
+        return `<button type="button" class="hf-goal" onclick="toggleHomeFocus(false, false); openGoalsVisionDrawer('${g.id}')">
             <span class="hf-goal-top"><span class="hf-goal-icon" aria-hidden="true">${myDayEsc(icon)}</span><span class="hf-goal-title">${myDayEsc(g.title)}</span><span class="hf-goal-pct">${p.pct}%</span></span>
             <span class="hf-goal-bar" aria-hidden="true"><i style="width:${p.pct}%"></i></span>
             ${meta ? `<span class="hf-goal-meta">${myDayEsc(meta)}</span>` : ''}
@@ -575,7 +580,7 @@ function openHomeFocusGoalPicker() {
         renderHomeFocus();
     };
     const add = box.querySelector('.hf-pick-add');
-    if (add) add.onclick = () => { box.remove(); toggleHomeFocus(false); openGoalsVisionDrawer(); };
+    if (add) add.onclick = () => { box.remove(); toggleHomeFocus(false, false); openGoalsVisionDrawer(); };
     layer.appendChild(box);
     (box.querySelector('.hf-pick-item:not(:disabled)') || box.querySelector('button')).focus();
 }
@@ -584,7 +589,8 @@ function renderHomeFocus() {
     if (!body) return;
     homeFocusDeck = [];
     const goalsHtml = homeFocusGoalsHtml();
-    const items = myDayItems.filter(it => it.checkable)
+    // השגרה בפנים, מצומצמת (לפי בקשה מפורשת, 2026-11-17: "לשים גם את השגרה ביותר צמצום")
+    const items = myDayItems.filter(it => it.checkable || it.kind === 'routine')
         .slice().sort((x, y) => (x.minutes === null ? 1e4 : x.minutes) - (y.minutes === null ? 1e4 : y.minutes));
     if (!items.length) {
         // אין כלום היום: מנוחה - כוכבים שמנצנצים בשקט (בחירה 2026-11-08, אפשרות 8), והמטרות למעלה
@@ -596,22 +602,24 @@ function renderHomeFocus() {
         return;
     }
     const pick = myDayPickNow(myDayItems);
-    const done = items.filter(it => it.done).length, left = items.length - done;
-    const pct = Math.round((done / items.length) * 100);
+    const countable = items.filter(it => it.checkable);
+    const done = countable.filter(it => it.done).length, left = countable.length - done;
+    const pct = countable.length ? Math.round((done / countable.length) * 100) : 0;
     const check = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     const rows = items.map((it, i) => {
         const time = myDayFormatMinutes(it.minutes);
         if (it.done) {
-            return `<li class="hf-row is-done"><button type="button" class="hf-undo" data-i="${i}" aria-label="${myDayEsc(t('home_focus_undo_aria').replace('{item}', it.title))}">${check}</button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span></li>`;
+            return `<li class="hf-row is-done${it.kind === 'routine' ? ' is-routine' : ''}"><button type="button" class="hf-undo" data-i="${i}" aria-label="${myDayEsc(t('home_focus_undo_aria').replace('{item}', it.title))}">${check}</button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span></li>`;
         }
+        if (!it.checkable) return `<li class="hf-row is-routine is-plain"><span class="hf-dot" aria-hidden="true"></span>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span></li>`;
         const isNow = pick && pick.item === it && (pick.label === 'now' || pick.label === 'next');
         const tag = isNow ? `<span class="hf-tag">${myDayEsc(t(pick.label === 'now' ? 'myday_now' : 'myday_next'))}</span>` : '';
-        return `<li class="hf-row${isNow ? ' is-now' : ''}"><button type="button" class="hf-check" data-i="${i}" aria-label="${myDayEsc(t('home_focus_done_aria'))}: ${myDayEsc(it.title)}"></button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span>${tag}</li>`;
+        return `<li class="hf-row${it.kind === 'routine' ? ' is-routine' : ''}${isNow ? ' is-now' : ''}"><button type="button" class="hf-check" data-i="${i}" aria-label="${myDayEsc(t('home_focus_done_aria'))}: ${myDayEsc(it.title)}"></button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span>${tag}</li>`;
     }).join('');
     body.innerHTML = `${goalsHtml}
         <section class="hf-today">
-            <div class="hf-sum"><span><b>${myDayEsc(t('home_focus_done_n').replace('{n}', done))}</b> · ${myDayEsc(left ? t('home_focus_left_n').replace('{n}', left) : t('home_focus_all_done'))}</span><span class="hf-pct">${pct}%</span></div>
-            <div class="hf-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>
+            ${countable.length ? `<div class="hf-sum"><span><b>${myDayEsc(t('home_focus_done_n').replace('{n}', done))}</b> · ${myDayEsc(left ? t('home_focus_left_n').replace('{n}', left) : t('home_focus_all_done'))}</span><span class="hf-pct">${pct}%</span></div>
+            <div class="hf-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>` : ''}
             <ul class="hf-list">${rows}</ul>
         </section>`;
     body.querySelectorAll('.hf-check').forEach(btn => { btn.onclick = () => { btn.disabled = true; btn.classList.add('is-ticking'); items[Number(btn.dataset.i)].toggle(true); }; });
@@ -842,7 +850,7 @@ function initHomeV2() {
         const tip = document.getElementById('myday-water-tip');
         if (tip && !tip.classList.contains('hidden') && !e.target.closest('.myday-water-info, #myday-water-tip')) toggleMyDayWaterInfo();
     });
-    try { if (sessionStorage.getItem('weekwise_home_focus') === '1') toggleHomeFocus(true); } catch {}
+    try { if (localStorage.getItem(HOME_FOCUS_KEY) === '1' || sessionStorage.getItem('weekwise_home_focus') === '1') toggleHomeFocus(true); } catch {}
 }
 
 // ===================== שלב 2: נגיעות אישיות =====================
@@ -978,11 +986,26 @@ async function toggleGoodThingsSetting() {
     }
 }
 
+// 🧑‍🍳 קיצור דרך למתכונים - רק למי שמדליק/ה אותו בהגדרות (כבוי כברירת מחדל, נשמר במכשיר)
+const HOME_RECIPES_KEY = 'weekwise_home_recipes';
+function isHomeRecipesShortcutOn() { try { return localStorage.getItem(HOME_RECIPES_KEY) === 'true'; } catch { return false; } }
+function toggleHomeRecipesShortcut() {
+    const toggle = document.getElementById('home-recipes-toggle');
+    const on = toggle ? toggle.checked : !isHomeRecipesShortcutOn();
+    try { localStorage.setItem(HOME_RECIPES_KEY, String(on)); } catch {}
+    renderHomeChips();
+}
+
 // --- הצ'יפים הקטנים מתחת לברכה: רצף, ספירה לאחור, ובערב "3 דברים טובים" ---
 function renderHomeChips() {
     const box = document.getElementById('home-chips');
     if (!box) return;
     const chips = [];
+    const recipesToggle = document.getElementById('home-recipes-toggle');
+    if (recipesToggle) recipesToggle.checked = isHomeRecipesShortcutOn();
+    if (isHomeRecipesShortcutOn()) {
+        chips.push(`<button type="button" class="home-chip home-chip-recipes" onclick="navigateFromMenu('nutrition-section', 'recipes')"><span aria-hidden="true">🧑‍🍳</span><span>${myDayEsc(t('nav_recipes'))}</span></button>`);
+    }
     // הרצף (🔥 X ימים ברצף) כבר לא במסך הראשי - לפי בקשה מפורשת: "לא נראה טוב ולא קשור"
     if (homeCountdown) {
         chips.push(`<button type="button" class="home-chip home-chip-countdown" onclick="openHomeCountdown()">${HOME_HOURGLASS_SVG}<span>${myDayEsc(homeCountdownText(homeCountdown))}</span></button>`);
