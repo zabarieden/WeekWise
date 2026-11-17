@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=630">
+    <link rel="stylesheet" href="theme.css?v=631">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -1547,6 +1547,8 @@
                         </div>
                         <div id="gv-today-list" class="gv-today-list"></div>
                     </section>
+                    <!-- 🗓️ לפי טווח: החודש / השנה / לכל החיים (רעיון 17 שבחרה, כמו Things 3) -->
+                    <div id="gv-horizons" class="gv-horizons hidden" role="tablist"></div>
                     <div id="gv-chips" class="gv-chips hidden"></div>
                     <div id="gv-goal" class="gv-goal"></div>
                     <!-- מצב ריק: איור שביל, הסבר + הנושאים של ספריית היעדים (goals-library.js) -->
@@ -4270,6 +4272,10 @@
                             <label class="vision-goal-mini-label" for="vision-goal-reminder-text" data-i18n="vision_reminder_text_label">What's the small step?</label>
                             <input type="text" id="vision-goal-reminder-text" maxlength="60" data-i18n-placeholder="vision_small_step_ph" placeholder="e.g. 10 minutes of easy running">
                             <p class="vision-goal-field-hint" data-i18n="vision_small_step_hint">Small on purpose – something doable even on a hard day.</p>
+                            <!-- 🕐 באיזו שעה ביום (רעיון 20 שבחרה, כמו Productive) - כך הצעד יושב בשעה שלו ב"היום שלי" -->
+                            <label class="vision-goal-mini-label" data-i18n="vision_step_time_label">At what time of day?</label>
+                            <div id="vision-goal-step-time-chips" class="vision-goal-category-chips"></div>
+                            <input type="time" id="vision-goal-step-time-input" class="hidden" aria-label="Time">
                         </div>
                     </div>
 
@@ -4521,9 +4527,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=538"></script>
+    <script src="i18n/core.js?v=539"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=659"></script>
+    <script src="app.js?v=660"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
@@ -4537,7 +4543,7 @@
     <script src="new-me-game.js?v=19"></script>
     <script src="world3d.js?v=16"></script>
     <script src="books.js?v=9"></script>
-    <script src="home.js?v=35"></script>
+    <script src="home.js?v=36"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=7"></script>

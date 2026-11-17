@@ -22232,10 +22232,53 @@ function buildGoalsTodayCard(item) {
     return card;
 }
 
+// 🗓️ טווח של יעד (כמו Things 3, רעיון 17 שבחרה): לפי התאריך שלו - עד סוף החודש = "החודש", עד סוף השנה = "השנה",
+// אחרת (או בלי תאריך) = "לכל החיים". יעד שהתאריך שלו עבר נשאר ב"החודש"
+const VISION_HORIZON_KEY = 'weekwise_goals_horizon';
+function visionHorizon(goal) {
+    const deadline = visionEffectiveDeadline(goal);
+    if (!deadline) return 'life';
+    const now = new Date();
+    const monthEnd = getLocalDateString(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+    const yearEnd = `${now.getFullYear()}-12-31`;
+    if (deadline <= monthEnd) return 'month';
+    if (deadline <= yearEnd) return 'year';
+    return 'life';
+}
+function visionHorizonFilter() { try { return localStorage.getItem(VISION_HORIZON_KEY) || 'all'; } catch { return 'all'; } }
+function renderGoalsHorizons(activeGoals, selected) {
+    const row = document.getElementById('gv-horizons');
+    if (!row) return activeGoals;
+    const present = ['month', 'year', 'life'].filter(h => activeGoals.some(g => visionHorizon(g) === h));
+    let filter = visionHorizonFilter();
+    if (filter !== 'all' && !present.includes(filter)) filter = 'all';
+    row.classList.toggle('hidden', activeGoals.length < 3 || present.length < 2);
+    if (activeGoals.length < 3 || present.length < 2) { row.innerHTML = ''; return activeGoals; }
+    row.innerHTML = '';
+    ['all', ...present].forEach(h => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'gv-horizon' + (filter === h ? ' selected' : '');
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', filter === h ? 'true' : 'false');
+        const n = h === 'all' ? activeGoals.length : activeGoals.filter(g => visionHorizon(g) === h).length;
+        b.textContent = `${t(`gv_horizon_${h}`)} · ${n}`;
+        b.onclick = () => {
+            try { localStorage.setItem(VISION_HORIZON_KEY, h); } catch {}
+            const list = h === 'all' ? activeGoals : activeGoals.filter(g => visionHorizon(g) === h);
+            if (list.length && !(selected && list.some(g => g.id === selected.id))) selectVisionGoal(list[0].id);
+            else renderVisionGoalsList();
+        };
+        row.appendChild(b);
+    });
+    return filter === 'all' ? activeGoals : activeGoals.filter(g => visionHorizon(g) === filter);
+}
+
 // צ'יפ לכל יעד פעיל (רק כשיש יותר מיעד אחד) - בוחרים איזה שביל לראות
-function renderGoalsChips(activeGoals, selected) {
+function renderGoalsChips(allActiveGoals, selected) {
     const wrap = document.getElementById('gv-chips');
     if (!wrap) return;
+    const activeGoals = renderGoalsHorizons(allActiveGoals, selected);
     wrap.innerHTML = '';
     wrap.classList.toggle('hidden', activeGoals.length < 2);
     if (activeGoals.length < 2) return;
@@ -23100,7 +23143,7 @@ function getPeekGoalTaskItems() {
             if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== weekday) return;
             if (goal.reminder_freq === 'xweek' && visionXweekMet(goal) && !visionCheckedToday(goal.id, null)) return;
             const text = visionSmallStepText(goal) || goal.title;
-            items.push({ goalId: goal.id, icon, text, tag: text === goal.title ? null : goal.title, done: visionCheckedToday(goal.id, null), toggle: checked => toggleGoalReminderCheck(goal.id, checked) });
+            items.push({ goalId: goal.id, icon, text, tag: text === goal.title ? null : goal.title, time: goal.reminder_time ? String(goal.reminder_time).slice(0, 5) : null, done: visionCheckedToday(goal.id, null), toggle: checked => toggleGoalReminderCheck(goal.id, checked) });
         }
     });
     return items;
@@ -23561,6 +23604,7 @@ function openVisionGoalModal(goalId = null, template = null, opts = {}) {
     // 👣 הצעד הקטן: ביעד חדש - כל יום כברירת מחדל ("רק קצת כל יום"), או מה שבתוכנית; בעריכה - מה שנשמר
     selectedVisionReminderFreq = goal ? (goal.reminder_freq || null) : ((template && template.freq) || 'daily');
     selectedVisionReminderTimes = goal && Number(goal.reminder_times) >= 2 ? Number(goal.reminder_times) : 3;
+    selectedVisionStepTime = goal && goal.reminder_time ? String(goal.reminder_time).slice(0, 5) : null;
     if (goal && opts.focusSmallStep && !selectedVisionReminderFreq) selectedVisionReminderFreq = 'daily';
     selectedVisionReminderWeekday = goal && goal.reminder_weekday != null ? Number(goal.reminder_weekday) : new Date().getDay();
     document.getElementById('vision-goal-reminder-text').value = goal ? (goal.reminder_text || '') : ((template && template.daily) || '');
@@ -23690,6 +23734,34 @@ function renderVisionReminderFields() {
         }
     }
     document.getElementById('vision-goal-reminder-text-wrap').classList.toggle('hidden', !selectedVisionReminderFreq);
+    renderVisionStepTimeChips();
+}
+// 🕐 שעה ביום לצעד הקטן (רעיון 20 שבחרה): בלי שעה / בוקר / צהריים / ערב / שעה אחרת (שדה שעה)
+const VISION_STEP_TIMES = [[null, 'vision_step_time_none'], ['08:00', 'vision_step_time_morning'], ['13:00', 'vision_step_time_noon'], ['19:00', 'vision_step_time_evening'], ['other', 'vision_step_time_other']];
+let selectedVisionStepTime = null;
+function renderVisionStepTimeChips() {
+    const chips = document.getElementById('vision-goal-step-time-chips');
+    const input = document.getElementById('vision-goal-step-time-input');
+    if (!chips || !input) return;
+    const preset = VISION_STEP_TIMES.some(([v]) => v && v !== 'other' && v === selectedVisionStepTime);
+    const isOther = !!selectedVisionStepTime && !preset;
+    chips.innerHTML = '';
+    VISION_STEP_TIMES.forEach(([v, key]) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        const on = v === 'other' ? isOther : v === selectedVisionStepTime;
+        chip.className = 'vision-goal-category-chip' + (on ? ' selected' : '');
+        chip.textContent = t(key);
+        chip.onclick = () => {
+            if (v === 'other') { selectedVisionStepTime = input.value || '07:00'; renderVisionStepTimeChips(); input.focus(); return; }
+            selectedVisionStepTime = v;
+            renderVisionStepTimeChips();
+        };
+        chips.appendChild(chip);
+    });
+    input.classList.toggle('hidden', !isOther);
+    if (isOther) input.value = selectedVisionStepTime;
+    input.onchange = () => { if (/^\d{2}:\d{2}$/.test(input.value)) selectedVisionStepTime = input.value; };
 }
 function selectVisionReminderFreq(freq) {
     selectedVisionReminderFreq = freq;
@@ -23873,6 +23945,7 @@ async function saveVisionGoal() {
     payload.reminder_freq = reminderFreq;
     payload.reminder_weekday = reminderFreq === 'weekly' ? selectedVisionReminderWeekday : null;
     payload.reminder_times = reminderFreq === 'xweek' ? selectedVisionReminderTimes : null;
+    payload.reminder_time = reminderFreq && /^\d{2}:\d{2}$/.test(selectedVisionStepTime || '') ? selectedVisionStepTime : null;
     payload.reminder_text = reminderFreq ? (document.getElementById('vision-goal-reminder-text').value.trim().slice(0, 60) || null) : null;
     const month = currentMonthKey();
     const wantsFocus = document.getElementById('vision-goal-focus-toggle').checked && isPremiumUser;

@@ -156,7 +156,7 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
         const linkedTime = linked ? String(linked.time || '').slice(0, 5) : '';
         items.push({
             // גם בסינון "שגרה" - הוא חלק מהשגרה (בלי זה הפריט נעלם שם לגמרי)
-            kind: 'task', group: 'tasks', alsoGroup: linked ? 'routine' : null, minutes: linkedTime ? scheduleTimeToMinutes(linkedTime) : null, done: !!gi.done, checkable: true, title: gi.text, toggle: checked => gi.toggle(checked),
+            kind: 'task', group: 'tasks', alsoGroup: linked ? 'routine' : null, minutes: linkedTime ? scheduleTimeToMinutes(linkedTime) : (gi.time ? scheduleTimeToMinutes(gi.time) : null), done: !!gi.done, checkable: true, title: gi.text, toggle: checked => gi.toggle(checked),
             build: () => {
                 // אותה שורה של הצצה להיום (✓ / תגית היעד / ⓘ), מסודרת מחדש לעמודות של הציר:
                 // [שעה] [נקודה] [טקסט + תגית] [ⓘ] [✓]
