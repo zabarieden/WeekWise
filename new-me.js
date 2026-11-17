@@ -150,11 +150,22 @@ function nmDayHtml(n, cls = '') {
 // ---------- פריטים בתפריט ----------
 function nmItemKey(plan, slot, opt) { return `p${plan}_${slot}_${opt}`; }
 // האפשרויות של ארוחה בתוכנית (A–C מה-PDF, ו-D/E החדשות - לא בכל ארוחה)
-function nmSlotOpts(plan, slot) { const s = NEW_ME_PLANS[plan] && NEW_ME_PLANS[plan][slot]; return s ? Object.keys(s.options) : []; }
+// כל האפשרויות (לזיהוי מפתח ישן) / האפשרויות לבחירה עכשיו: במבנה "2 ארוחות + מעדן" משבצות הנשנוש הן רק המעדנים, ובשאר
+// המבנים - בלי המעדנים
+function nmSlotOptsAll(plan, slot) { const s = NEW_ME_PLANS[plan] && NEW_ME_PLANS[plan][slot]; return s ? Object.keys(s.options) : []; }
+function nmSlotOpts(plan, slot) {
+    const s = NEW_ME_PLANS[plan] && NEW_ME_PLANS[plan][slot];
+    if (!s) return [];
+    const keys = Object.keys(s.options);
+    if (!/^snack/.test(slot)) return keys;
+    const dessert = nmDessertActive();
+    return keys.filter(k => !!s.options[k].dessert === dessert);
+}
 function nmHasOpt(plan, slot, opt) { return nmSlotOpts(plan, slot).includes(opt); }
+function nmFirstOpt(plan, slot) { return nmSlotOpts(plan, slot)[0] || 'A'; }
 function nmParseItem(key) {
-    const m = /^p(1300|1500)_(meal1|snack1|meal2|snack2)_([A-F])$/.exec(key || '');
-    return m && nmHasOpt(Number(m[1]), m[2], m[3]) ? { key, plan: Number(m[1]), slot: m[2], opt: m[3] } : null;
+    const m = /^p(1300|1500)_(meal1|snack1|meal2|snack2)_([A-J])$/.exec(key || '');
+    return m && nmSlotOptsAll(Number(m[1]), m[2]).includes(m[3]) ? { key, plan: Number(m[1]), slot: m[2], opt: m[3] } : null;
 }
 // ארוחה אישית (מהארוחות הקבועות או מכתיבה ל-AI) - מפתח c_<uuid> מטבלת new_me_custom_meals
 function nmIsCustomKey(key) { return /^c_[0-9a-f-]{36}$/i.test(key || ''); }
@@ -172,7 +183,7 @@ function nmItemInfo(key) {
     if (!p) return null;
     const o = NEW_ME_PLANS[p.plan][p.slot].options[p.opt];
     const n = nmOptNutrition(p.plan, p.slot, p.opt);
-    return { ...p, kcal: n.kcal, protein: n.protein, small: !!o.small };
+    return { ...p, kcal: n.kcal, protein: n.protein, small: !!o.small, fixed: !!o.dessert };
 }
 // 🧈 הבחירות שבתוך אפשרות (NEW_ME_PICKS, לפי בקשה מפורשת, 2026-10-14): בשאלון - מה שנבחר בו, אחרת מה שנשמר בפרופיל,
 // ועד שבוחרים - ברירת המחדל. בטקסט: "זה או זה או זה"
@@ -249,15 +260,15 @@ function nmItemFull(it) { return it.custom ? (it.text || t(it.source === 'ai' ||
 // הנוכחית (כך שמעבר 1,300↔1,500 מתאים את המנה); מפתח מלא = פריט מכל התפריט או ארוחה אישית
 function nmPermanentKey(slot) {
     const v = (nmProfile && nmProfile['choice_' + slot]) || 'A';
-    if (/^[A-F]$/.test(v) && nmHasOpt(nmProfile.plan, slot, v)) return nmItemKey(nmProfile.plan, slot, v);
-    return nmValidKey(v) ? v : nmItemKey(nmProfile.plan, slot, 'A');
+    if (/^[A-J]$/.test(v) && nmHasOpt(nmProfile.plan, slot, v)) return nmItemKey(nmProfile.plan, slot, v);
+    return nmValidKey(v) && !/^[A-J]$/.test(v) ? v : nmItemKey(nmProfile.plan, slot, nmFirstOpt(nmProfile.plan, slot));
 }
 function nmIsOverride(slot) { return !!(nmToday && nmToday.overrides && nmValidKey(nmToday.overrides[slot])); }
 function nmTodayKey(slot) { return nmIsOverride(slot) ? nmToday.overrides[slot] : nmPermanentKey(slot); }
 function nmIsFree(slot) { return !!(nmToday && nmToday.free_slot === slot); }
 function nmFreeKcal() { return (nmToday && Number(nmToday.free_kcal)) || NEW_ME_FREE_MEAL_KCAL; }
 // לשאלון: האות שנבחרה לכל משבצת (פריט מכל התפריט → A)
-function nmChoice(slot) { const v = nmProfile && nmProfile['choice_' + slot]; return /^[A-F]$/.test(v || '') && nmHasOpt(nmProfile.plan, slot, v) ? v : 'A'; }
+function nmChoice(slot) { const v = nmProfile && nmProfile['choice_' + slot]; return /^[A-J]$/.test(v || '') && nmHasOpt(nmProfile.plan, slot, v) ? v : (nmProfile ? nmFirstOpt(nmProfile.plan, slot) : 'A'); }
 // שתי אהובות לכל ארוחה (לפי בקשה מפורשת: "מתוך 6 אפשרויות או 4 הם יבחרו ב2 שהן הכי אוהבים וזה יהיה רשום בתפריט או זה
 // או זה"): choice_<slot> = הראשונה (מה שמוצג), choice2_<slot> = השנייה - בכל יום נגיעה בה מחליפה אליה להיום
 function nmChoice2(slot) { const v = nmProfile && nmProfile['choice2_' + slot]; return /^[A-Z]$/.test(v || '') ? v : null; }
@@ -691,8 +702,19 @@ const NM_STRUCTURES = [
     { id: 'both', hidden: [] },
     // only lunch and dinner, for days with little time (her ask 2026-11-15) - all of the day's calories go to the two
     { id: 'two', hidden: ['snack1', 'snack2'] },
+    // 2 ארוחות + מעדן אחרי כל אחת (עד 150 קלוריות) - לפי בקשה מפורשת, 2026-11-17. נשמר כסימן 'dessert' ב-hidden_slots
+    // (nmHiddenSlots מסנן אותו, כך שכל השאר לא רואים אותו)
+    { id: 'dessert', hidden: [], dessert: true },
 ];
-function nmStructureId(hidden) {
+function nmDessertMode() { return String((nmProfile && nmProfile.hidden_slots) || '').split(',').includes('dessert'); }
+function nmDessertActive() { return nmTimes ? !!nmTimes.dessert : nmDessertMode(); }
+function nmAddMinutes(hhmm, mins) {
+    const [h, m] = String(hhmm || '00:00').split(':').map(Number);
+    const total = Math.min(23 * 60 + 59, (h || 0) * 60 + (m || 0) + mins);
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+function nmStructureId(hidden, dessert) {
+    if (dessert) return 'dessert';
     const key = (hidden || []).slice().sort().join(',');
     const st = NM_STRUCTURES.find(s => s.hidden.slice().sort().join(',') === key);
     return st ? st.id : null;
@@ -729,6 +751,7 @@ function nmTimesStart(opts = {}) {
     nmTimes = {
         mode: null,
         hidden: opts.fresh ? [] : nmHiddenSlots(),
+        dessert: opts.fresh ? false : nmDessertMode(),
         times: Object.fromEntries(NEW_ME_DEFAULT_ORDER.map((s, i) => [s, opts.fresh ? NEW_ME_REMINDER_DEFAULTS[i] : nmSlotReminderTime(s)])),
         found: [], hide: true, firstTime: !!opts.firstTime, inQuiz: !!opts.inQuiz,
     };
@@ -740,7 +763,7 @@ function nmTimesBodyHtml() {
     let html = `<p class="nm-times-q">${nmEsc(t('nm_times_q'))}</p><div class="nm-times-picks">${pick('routine', 'nm_times_from_routine')}${pick('manual', 'nm_times_manual')}</div>`;
     if (!s.mode) return html;
     if (s.mode === 'routine' && !s.found.length) html += `<p class="nm-soft-warn">${nmEsc(t('nm_times_none_found'))}</p>`;
-    const struct = nmStructureId(s.hidden);
+    const struct = nmStructureId(s.hidden, s.dessert);
     html += `
         <div class="nm-slot-name">${nmEsc(t('nm_struct_q'))}</div>
         <div class="nm-struct-picks" role="radiogroup" aria-label="${nmEsc(t('nm_struct_q'))}">${NM_STRUCTURES.map(st => `<button type="button" role="radio" class="nm-struct-pick${struct === st.id ? ' selected' : ''}" aria-checked="${struct === st.id}" data-struct="${st.id}" onclick="nmTimesStructure('${st.id}')">${nmEsc(t('nm_struct_' + st.id))}</button>`).join('')}</div>
@@ -784,6 +807,7 @@ async function nmTimesPick(mode) {
         nmTimes.routineTimes = times;
         Object.assign(nmTimes.times, times);
         if (nmTwoMeals(nmTimes.hidden)) nmTimesApplyDefaults(true);
+        else if (nmTimes.dessert) nmTimesApplyDefaults(false);
     } else { nmTimes.found = []; nmTimes.routineTimes = null; }
     nmTimes.mode = mode;
     nmTimesRerender();
@@ -791,16 +815,28 @@ async function nmTimesPick(mode) {
 function nmTimesStructure(id) {
     const st = NM_STRUCTURES.find(s => s.id === id);
     if (!nmTimes || !st) return;
-    const wasTwo = nmTwoMeals(nmTimes.hidden);
+    const shape = () => (nmTimes.dessert ? 'dessert' : nmTwoMeals(nmTimes.hidden) ? 'two' : 'all');
+    const was = shape();
     nmTimes.hidden = st.hidden.slice();
-    if (wasTwo !== nmTwoMeals(nmTimes.hidden)) nmTimesApplyDefaults(!wasTwo);
+    nmTimes.dessert = !!st.dessert;
+    if (was !== shape()) nmTimesApplyDefaults(shape() === 'two');
+    if (nmQuiz) nmQuizFixChoices(nmQuiz);
     nmTimesRerender();
 }
 // מעבר אל "2 ארוחות + נשנוש" וממנו: השעות שלא שונו ביד עוברות לשעות של המבנה - מהשגרה לפי סוג הארוחה (צהריים / ערב /
 // נשנוש), ובלי שגרה 11:30 / 16:00 / 19:00 (או בחזרה לשעות הרגילות)
 function nmTimesApplyDefaults(two) {
     const s = nmTimes, rt = s.routineTimes || {};
-    ['meal1', 'meal2', 'snack1'].forEach(slot => {
+    const edited = slot => !!(s.edited && s.edited[slot]);
+    // 2 ארוחות + מעדן: ארוחת צהריים וארוחת ערב (מהשגרה, או 11:30 / 19:00), וכל מעדן חצי שעה אחרי הארוחה שלו
+    if (s.dessert) {
+        if (!edited('meal1')) s.times.meal1 = rt.meal2 || rt.meal1 || NEW_ME_DESSERT_TIMES.meal1;
+        if (!edited('meal2')) s.times.meal2 = rt.snack2 || NEW_ME_DESSERT_TIMES.meal2;
+        if (!edited('snack1')) s.times.snack1 = nmAddMinutes(s.times.meal1, 30);
+        if (!edited('snack2')) s.times.snack2 = nmAddMinutes(s.times.meal2, 30);
+        return;
+    }
+    (two ? ['meal1', 'meal2', 'snack1'] : ['meal1', 'meal2', 'snack1', 'snack2']).forEach(slot => {
         if (s.edited && s.edited[slot]) return;
         const fromRoutine = two ? { meal1: rt.meal2 || rt.meal1, meal2: rt.snack2, snack1: rt.snack1 }[slot] : rt[slot];
         s.times[slot] = fromRoutine || (two ? NEW_ME_TWO_MEAL_TIMES[slot] : NEW_ME_REMINDER_DEFAULTS[NEW_ME_DEFAULT_ORDER.indexOf(slot)]);
@@ -815,7 +851,7 @@ function nmTimesSet(slot, value) {
 function nmTimesProfileRow() {
     const s = nmTimes;
     const order = NEW_ME_DEFAULT_ORDER.slice().sort((a, b) => s.times[a].localeCompare(s.times[b]) || NEW_ME_DEFAULT_ORDER.indexOf(a) - NEW_ME_DEFAULT_ORDER.indexOf(b));
-    const row = { hidden_slots: s.hidden.join(',') || null, meal_order: order.join(','), meal_times_set_at: new Date().toISOString() };
+    const row = { hidden_slots: s.hidden.concat(s.dessert ? ['dessert'] : []).join(',') || null, meal_order: order.join(','), meal_times_set_at: new Date().toISOString() };
     if (s.mode === 'routine' && s.found.length && s.hide) row.routine_meals_checked = true;
     return row;
 }
@@ -912,6 +948,7 @@ function nmLateTime() { const r = nmLateRow(); return (r && r.time) || NEW_ME_LA
 // השם של הארוחה לפי המקום שלה בסדר המקורי (בוקר / צהריים / נשנוש / ערב קלה) - לא זז כשגוררים
 function nmSlotName(slot) {
     // "2 ארוחות + נשנוש" (לפי בקשה מפורשת, 2026-10-14): שתי הארוחות הן ארוחת צהריים וארוחת ערב
+    if (nmDessertActive()) { if (slot === 'meal1') return t('nm_pos_3'); if (slot === 'meal2') return t('nm_pos_evening'); return t('nm_pos_dessert'); }
     if (nmTwoMeals()) { if (slot === 'meal1') return t('nm_pos_3'); if (slot === 'meal2') return t('nm_pos_evening'); }
     return nmPosName(Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot)));
 }
@@ -1598,6 +1635,15 @@ function nmQuizLate(c) { nmQuiz.late = c; nmRenderQuiz(nmRoot()); }
 // (כמה ארוחות ומתי). בוחרים עד 2 אהובות לכל ארוחה ("זה או זה"), ובאפשרויות עם בחירות (פיתה וממרח, קורנפלקס וחלב, משהו
 // קל) - עד 3 דברים שאוהבים. כל בחירה מאוזנת מיד (nmBalance), והסה"כ בקופסה שלמטה
 function nmQuizTime(slot) { return nmTimes ? nmTimes.times[slot] : nmSlotReminderTime(slot); }
+// אחרי מעבר אל "2 ארוחות + מעדן" וממנו: בחירה שכבר לא מוצעת במשבצת עוברת לראשונה שמוצעת (השנייה - יורדת)
+function nmQuizFixChoices(q) {
+    if (!q || !q.choices) return;
+    ['snack1', 'snack2'].forEach(slot => {
+        const c = q.choices[slot];
+        if (!nmIsCustomKey(c) && !nmHasOpt(q.plan, slot, c)) q.choices[slot] = nmFirstOpt(q.plan, slot);
+        if (q.choices2 && q.choices2[slot] && !nmIsCustomKey(q.choices2[slot]) && !nmHasOpt(q.plan, slot, q.choices2[slot])) q.choices2[slot] = null;
+    });
+}
 function nmQuizActive() {
     const active = nmTimes ? nmTimesActive() : (nmProfile && !nmQuiz.fresh ? nmActiveOrder() : NEW_ME_DEFAULT_ORDER.slice());
     return active.slice().sort((a, b) => String(nmQuizTime(a)).localeCompare(String(nmQuizTime(b))) || NEW_ME_DEFAULT_ORDER.indexOf(a) - NEW_ME_DEFAULT_ORDER.indexOf(b));
@@ -1607,9 +1653,9 @@ function nmQuizItem(q, slot) {
     const choice = q.choices[slot];
     if (nmIsCustomKey(choice) && nmCustomMeal(choice)) return nmItemInfo(choice);
     const P = NEW_ME_PLANS[q.plan][slot];
-    const opt = P.options[choice] ? choice : 'A';
+    const opt = nmHasOpt(q.plan, slot, choice) ? choice : nmFirstOpt(q.plan, slot);
     const n = nmOptNutrition(q.plan, slot, opt);
-    return { key: opt, kcal: n.kcal, protein: n.protein, small: !!P.options[opt].small };
+    return { key: opt, kcal: n.kcal, protein: n.protein, small: !!P.options[opt].small, fixed: !!P.options[opt].dessert };
 }
 function nmQuizOptionHtml(q, slot, key, info) {
     const picked = q.choices[slot] === key || (q.choices2 && q.choices2[slot] === key);
@@ -1625,7 +1671,8 @@ function nmQuizPicksToggle(id, open) { if (nmQuiz) nmQuiz.picksClosed[id] = !ope
 function nmQuizMenuHtml(q) {
     const active = nmQuizActive();
     const P = NEW_ME_PLANS[q.plan];
-    const qSlots = active.map(slot => { const it = nmQuizItem(q, slot); return { slot, kcal: it.kcal, small: !!it.small }; });
+    nmQuizFixChoices(q);
+    const qSlots = active.map(slot => { const it = nmQuizItem(q, slot); return { slot, kcal: it.kcal, small: !!it.small, fixed: !!it.fixed }; });
     const sideQuiz = active.includes('meal1') && nmQuizItem(q, 'meal1').small;
     const sideShown = active.includes('meal1') && [q.choices.meal1, q.choices2 && q.choices2.meal1].some(k => k && NEW_ME_PLANS[q.plan].meal1.options[k] && NEW_ME_PLANS[q.plan].meal1.options[k].small);
     if (sideQuiz) qSlots.push({ slot: 'side', kcal: nmSideInfo().kcal, small: true, fixed: true });
@@ -1979,7 +2026,7 @@ function nmBalanceSlots(overrides) {
         const ov = overrides && overrides[slot];
         const it = free ? null : nmItemInfo(ov || nmTodayKey(slot));
         const ck = !ov && nmTodayCheckins[slot];
-        return { slot, free, small: !!(it && it.small), fixed: !!ck, kcal: ck ? Number(ck.kcal) || 0 : free ? nmFreeKcal() : (it ? it.kcal : 0) };
+        return { slot, free, small: !!(it && it.small), fixed: !!ck || !!(it && it.fixed), kcal: ck ? Number(ck.kcal) || 0 : free ? nmFreeKcal() : (it ? it.kcal : 0) };
     });
     // 🕐 הארוחה הקטנה הנוספת נספרת ביום כמו שהיא (בלי תיקון)
     if (nmSideOn(overrides)) slots.push({ slot: 'side', small: true, fixed: true, kcal: nmSideKcal() });
@@ -2646,7 +2693,7 @@ async function nmSetMealHidden(slot, hide) {
         if (nmTodayCheckins[slot]) await nmUncheck(slot);
         hidden.add(slot);
     } else hidden.delete(slot);
-    const value = [...hidden].join(',') || null;
+    const value = [...hidden].concat(nmDessertMode() ? ['dessert'] : []).join(',') || null;
     const { error } = await supabaseClient.from('new_me_profile').update({ hidden_slots: value, updated_at: new Date().toISOString() }).eq('user_id', currentUserId);
     if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
     nmProfile.hidden_slots = value;
@@ -4670,7 +4717,7 @@ function nmShiftMonth(delta) {
 // (send-due-reminders) גם כשהאפליקציה סגורה, ולא נשלחות אם הארוחה כבר סומנה. השורות בטבלה לפי
 // מקום (1–4, ו-5 ל-21:00), אבל השעה שייכת לארוחה (slot): כשגוררים, השעה עוברת איתה למקום החדש
 function nmReminderRow(i) { return nmReminders.find(r => r.position === i + 1) || null; }
-function nmSlotDefaultTime(slot) { return (nmTwoMeals() && NEW_ME_TWO_MEAL_TIMES[slot]) || NEW_ME_REMINDER_DEFAULTS[Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot))]; }
+function nmSlotDefaultTime(slot) { return (nmDessertActive() && NEW_ME_DESSERT_TIMES[slot]) || (nmTwoMeals() && NEW_ME_TWO_MEAL_TIMES[slot]) || NEW_ME_REMINDER_DEFAULTS[Math.max(0, NEW_ME_DEFAULT_ORDER.indexOf(slot))]; }
 function nmSlotReminderRow(slot) { return nmReminders.find(r => r.slot === slot && r.position <= 4) || null; }
 function nmSlotReminderTime(slot) { const r = nmSlotReminderRow(slot); return (r && r.time) || nmSlotDefaultTime(slot); }
 function nmSlotReminderEnabled(slot) { const r = nmSlotReminderRow(slot); return !r || r.enabled !== false; }
