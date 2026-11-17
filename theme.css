@@ -12136,3 +12136,10 @@ html[dir="rtl"] .gv-letter { padding: 12px 14px 12px 44px; }
 @keyframes gvCoinDrop { from { transform: translateY(-80px) rotate(-30deg); opacity: 0; } 60% { opacity: 1; } }
 .gv-jar-pct { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { .gv-coin.is-new { animation: none; } }
+
+/* 👥 accountability friend */
+.gv-action-btn.is-friend-on { border-color: color-mix(in srgb, var(--accent-purple) 55%, transparent); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); }
+.gv-friend-body { gap: 10px; }
+.gv-friend-again, .gv-friend-stop { min-height: 48px; border-radius: 16px; font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; }
+.gv-friend-again { border: none; background: var(--accent-purple); color: #fff; }
+.gv-friend-stop { border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); }

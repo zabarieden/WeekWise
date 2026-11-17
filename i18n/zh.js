@@ -2535,6 +2535,7 @@ translations.zh = {
     gv_reward_at_label: "奖励什么时候打开？", gv_reward_at_end: "达成目标时", gv_reward_open: "你的奖励打开了！",
     gv_plan_title: "计划",
     gv_week_label: "最近7天",
+    gv_friend_btn: "监督伙伴", gv_friend_on: "已与朋友共享", gv_friend_text: "我正在朝“{goal}”前进。可以在这里看我的进展：", gv_friend_again: "再次发送链接", gv_friend_stop: "停止共享", gv_friend_stopped: "已停止共享——链接已失效", gv_friend_update: "告诉我的朋友", gv_friend_update_text: "我在“{goal}”中完成了一站：{station} ✓", gshare_on_way: "正在朝目标前进", gshare_reached_eyebrow: "已达成的目标", gshare_reached: "目标达成！🏆", gshare_since: "自 {date} 起在路上", gshare_stations: "站点", gshare_made_with: "由 NOT10.ai 制作", gshare_missing: "这个链接已失效", faq_q_goal_friend: "怎样和监督伙伴共享一个目标？", faq_a_goal_friend: "在“我的目标”里，路的下方点“👥 监督伙伴”。会生成一个只读链接（无需账号），只显示这一个目标：它的站点、最近 7 天和最近 12 周——不包含你的其他任何信息。可以通过 WhatsApp 或任何方式发送。完成一站时，一点就能给朋友发更新；“停止共享”会立刻让链接失效。",
     gv_review_btn: "1 分钟每周回顾", gv_review_past: "回顾", gv_review_q1: "什么有用？", gv_review_q2: "什么很难？", gv_review_q3: "下一步是什么？", gv_review_saved: "已保存", gv_station_q: "是什么帮你走到这一站？", gv_letter_title: "旅程第 {n} 周", gv_letter_from_review: "上周你写下的下一步是：{next}", gv_letter_generic: "新的一周开始了。今天迈出一小步就够了。",
     gv_strength_label: "习惯强度", gv_heat_label: "12 周",
     gv_did_today_done: "✓ 今天已完成",

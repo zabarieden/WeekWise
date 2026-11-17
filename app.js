@@ -10235,7 +10235,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
-    { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
+    { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
     { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week', 'achievements'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
     { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_money', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
@@ -21866,6 +21866,9 @@ async function loadVisionGoals() {
     ]);
     visionGoalsCache = goalsRes.data || [];
     visionMilestonesCache = milestonesRes.data || [];
+    // 👥 שיתופים עם חבר מלווה (goal_shares) - לא חוסם את הטעינה
+    supabaseClient.from('goal_shares').select('token, goal_id').eq('user_id', currentUserId)
+        .then(({ data }) => { visionSharesCache = data || []; }, () => {});
     // 📝 סיכומים שבועיים ותשובות אחרי תחנה (vision_goal_notes) - לא חוסם את הטעינה
     supabaseClient.from('vision_goal_notes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(300)
         .then(({ data }) => { visionNotesCache = data || []; if (document.getElementById('vision-drawer-overlay')?.classList.contains('open')) renderVisionGoalsList(); }, () => {});
@@ -22515,6 +22518,18 @@ function showStationReflection(goalId, milestoneId) {
     box.className = 'gv-station-q';
     box.innerHTML = `<label><span>💬 ${visionEsc(t('gv_station_q'))}</span><textarea rows="2" maxlength="400"></textarea></label><div class="gv-station-q-actions"><button type="button" class="gv-station-q-skip">${visionEsc(t('nm_review_later'))}</button><button type="submit">${visionEsc(t('save_generic'))}</button></div>`;
     box.querySelector('.gv-station-q-skip').onclick = () => box.remove();
+    // 📤 לעדכן את החבר המלווה, כשהיעד משותף
+    const share = visionGoalShare(goalId);
+    if (share) {
+        const goal = visionGoalsCache.find(g => g.id === goalId);
+        const m = visionMilestonesCache.find(x => x.id === milestoneId);
+        const up = document.createElement('button');
+        up.type = 'button';
+        up.className = 'gv-station-q-skip';
+        up.textContent = `📤 ${t('gv_friend_update')}`;
+        up.onclick = () => openSharePicker(`💜 ${t('gv_friend_update_text').replace('{goal}', goal ? goal.title : '').replace('{station}', m ? m.title : '')}\n${visionShareLink(share.token)}`, { footer: 'none' });
+        box.querySelector('.gv-station-q-actions').prepend(up);
+    }
     box.onsubmit = async e => {
         e.preventDefault();
         const text = box.querySelector('textarea').value.trim();
@@ -23087,8 +23102,51 @@ function buildGoalActions(goal) {
         add(focus ? 'is-focus-on' : 'is-focus', `<span aria-hidden="true">🎯</span><span>${visionEsc(t(focus ? 'vision_focus_unpin_title' : 'vision_focus_pin_title'))}${!focus && !isPremiumUser ? ' ⭐' : ''}</span>`, () => toggleVisionFocus(goal.id));
         add('is-achieve', visionEsc(t('vision_mark_achieved_btn')), () => setVisionGoalAchieved(goal.id));
     }
+    // 👥 חבר מלווה (כמו Coach.me, רעיון 14 שבחרה): קישור לצפייה בלבד בשביל של היעד
+    const shared = visionGoalShare(goal.id);
+    add(shared ? 'is-friend-on' : 'is-friend', `<span aria-hidden="true">👥</span><span>${visionEsc(t(shared ? 'gv_friend_on' : 'gv_friend_btn'))}</span>`, () => openGoalFriend(goal));
     add('is-delete', '<span aria-hidden="true">🗑️</span>', () => deleteVisionGoal(goal.id), t('vision_goal_delete_btn_title'));
     return row;
+}
+let visionSharesCache = [];
+function visionGoalShare(goalId) { return visionSharesCache.find(s => s.goal_id === goalId) || null; }
+function visionShareLink(token) { return `https://${typeof SHARE_APP_HOST !== 'undefined' ? SHARE_APP_HOST : 'app.not10.ai'}/goal.html?t=${encodeURIComponent(token)}&l=${encodeURIComponent(currentLang)}`; }
+function visionNewShareToken() {
+    const bytes = new Uint8Array(18);
+    crypto.getRandomValues(bytes);
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function sendGoalFriendLink(goal, token) {
+    openSharePicker(`💜 ${t('gv_friend_text').replace('{goal}', goal.title)}\n${visionShareLink(token)}`, { footer: 'none', subject: goal.title });
+}
+async function openGoalFriend(goal) {
+    if (!supabaseClient || !currentUserId) return;
+    const share = visionGoalShare(goal.id);
+    if (!share) {
+        const token = visionNewShareToken();
+        const { error } = await supabaseClient.from('goal_shares').insert({ token, user_id: currentUserId, goal_id: goal.id });
+        if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+        visionSharesCache.push({ token, goal_id: goal.id });
+        renderVisionGoalsList();
+        sendGoalFriendLink(goal, token);
+        return;
+    }
+    // כבר משותף: לשלוח שוב את הקישור, או להפסיק לשתף (הקישור מפסיק לעבוד)
+    document.querySelectorAll('.gv-friend-overlay').forEach(x => x.remove());
+    const ov = document.createElement('div');
+    ov.className = 'ach-overlay gv-friend-overlay';
+    ov.innerHTML = `<div class="ach-sheet" role="dialog" aria-modal="true"><div class="ach-head"><h2>👥 ${visionEsc(t('gv_friend_on'))}</h2><button type="button" class="ach-x" aria-label="${visionEsc(t('close_btn'))}">✕</button></div><div class="ach-body gv-friend-body"><button type="button" class="gv-friend-again">📤 ${visionEsc(t('gv_friend_again'))}</button><button type="button" class="gv-friend-stop">${visionEsc(t('gv_friend_stop'))}</button></div></div>`;
+    ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.ach-x')) ov.remove(); });
+    ov.querySelector('.gv-friend-again').onclick = () => { ov.remove(); sendGoalFriendLink(goal, share.token); };
+    ov.querySelector('.gv-friend-stop').onclick = async () => {
+        const { error } = await supabaseClient.from('goal_shares').delete().eq('token', share.token);
+        if (error) { showAppToast(t('nm_save_error'), 'error'); return; }
+        visionSharesCache = visionSharesCache.filter(s => s.token !== share.token);
+        ov.remove();
+        showAppToast(t('gv_friend_stopped'));
+        renderVisionGoalsList();
+    };
+    (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
 }
 
 // ההתקדמות משפיעה על כמה מקומות במסך (השביל, התגיות, הצעדים של היום) - מרנדרים מחדש

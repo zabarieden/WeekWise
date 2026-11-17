@@ -2535,6 +2535,7 @@ translations.ja = {
     gv_reward_at_label: "ごほうびはいつ開く？", gv_reward_at_end: "目標を達成したとき", gv_reward_open: "ごほうびが開きました！",
     gv_plan_title: "プラン",
     gv_week_label: "直近7日間",
+    gv_friend_btn: "見守りフレンド", gv_friend_on: "フレンドと共有中", gv_friend_text: "「{goal}」に向かっています。進み具合はここで見られます：", gv_friend_again: "リンクをもう一度送る", gv_friend_stop: "共有をやめる", gv_friend_stopped: "共有をやめました。リンクはもう使えません", gv_friend_update: "フレンドに知らせる", gv_friend_update_text: "「{goal}」のステーションを通過：{station} ✓", gshare_on_way: "目標に向かって", gshare_reached_eyebrow: "達成した目標", gshare_reached: "目標達成！🏆", gshare_since: "{date}から進行中", gshare_stations: "ステーション", gshare_made_with: "NOT10.aiで作成", gshare_missing: "このリンクはもう有効ではありません", faq_q_goal_friend: "見守りフレンドと目標を共有するには？", faq_a_goal_friend: "マイ目標で道のりの下の「👥 見守りフレンド」をタップします。閲覧専用のリンク（アカウント不要）ができ、この目標だけ（ステーション、直近7日、直近12週間）が表示され、ほかの情報は見えません。WhatsAppなどで送れます。ステーションを終えたらワンタップでフレンドに知らせられ、「共有をやめる」でリンクはすぐに無効になります。",
     gv_review_btn: "1分の週ふり返り", gv_review_past: "ふり返り", gv_review_q1: "うまくいったことは？", gv_review_q2: "大変だったことは？", gv_review_q3: "次の一歩は？", gv_review_saved: "保存しました", gv_station_q: "このステーションに着くまで、何が助けになった？", gv_letter_title: "道のり{n}週目", gv_letter_from_review: "先週、次の一歩はこう書きました：{next}", gv_letter_generic: "新しい1週間のはじまり。今日は小さな一歩ひとつで十分です。",
     gv_strength_label: "習慣の強さ", gv_heat_label: "12週間",
     gv_did_today_done: "✓ 今日は完了",

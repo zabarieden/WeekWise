@@ -2535,6 +2535,7 @@ translations.ko = {
     gv_reward_at_label: "보상은 언제 열리나요?", gv_reward_at_end: "목표를 이뤘을 때", gv_reward_open: "보상이 열렸어요!",
     gv_plan_title: "계획",
     gv_week_label: "최근 7일",
+    gv_friend_btn: "응원 친구", gv_friend_on: "친구와 공유 중", gv_friend_text: "\"{goal}\"을(를) 향해 가고 있어요. 여기서 내 진행 상황을 볼 수 있어요:", gv_friend_again: "링크 다시 보내기", gv_friend_stop: "공유 그만하기", gv_friend_stopped: "공유를 멈췄어요 – 링크가 더 이상 작동하지 않아요", gv_friend_update: "친구에게 알리기", gv_friend_update_text: "\"{goal}\"에서 정거장을 지났어요: {station} ✓", gshare_on_way: "목표를 향해", gshare_reached_eyebrow: "이룬 목표", gshare_reached: "목표 달성! 🏆", gshare_since: "{date}부터 진행 중", gshare_stations: "정거장", gshare_made_with: "NOT10.ai로 만들었어요", gshare_missing: "이 링크는 더 이상 유효하지 않아요", faq_q_goal_friend: "응원 친구와 목표를 어떻게 공유하나요?", faq_a_goal_friend: "내 목표에서 길 아래의 '👥 응원 친구'를 누르세요. 보기 전용 링크(계정 필요 없음)가 만들어지고, 이 목표만 – 정거장, 최근 7일, 최근 12주 – 보여줘요. 다른 정보는 보이지 않아요. WhatsApp 등으로 보내면 돼요. 정거장을 마치면 한 번 눌러 친구에게 소식을 보낼 수 있고, '공유 그만하기'를 누르면 링크가 바로 꺼져요.",
     gv_review_btn: "1분 주간 돌아보기", gv_review_past: "돌아보기", gv_review_q1: "뭐가 도움이 됐나요?", gv_review_q2: "뭐가 힘들었나요?", gv_review_q3: "다음 한 걸음은?", gv_review_saved: "저장했어요", gv_station_q: "이 정거장까지 오는 데 뭐가 도움이 됐나요?", gv_letter_title: "여정 {n}주차", gv_letter_from_review: "지난주에 다음 한 걸음을 이렇게 적었어요: {next}", gv_letter_generic: "새로운 한 주가 시작됐어요. 오늘은 작은 한 걸음이면 충분해요.",
     gv_strength_label: "습관의 힘", gv_heat_label: "12주",
     gv_did_today_done: "✓ 오늘 완료",

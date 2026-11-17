@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>NOT10.ai</title>
+<link rel="icon" href="favicon.png?v=7">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap">
+<style>
+/* The accountability friend's read-only page (her pick, idea 14, 2026-11-17): one goal's path, in the app's soft lilac look */
+:root { --bg: #f7f2fc; --card: #ffffff; --ink: #2a1c42; --muted: #6f6485; --line: #ece4f6; --a1: #9b5de5; --a2: #e0739f; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #140e1d; --card: #1f182b; --ink: #f2ebfb; --muted: #ab9fc1; --line: #2e2541; color-scheme: dark; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { min-height: 100vh; background: radial-gradient(ellipse 80% 50% at 20% 0%, color-mix(in srgb, var(--a1) 22%, transparent), transparent 70%), radial-gradient(ellipse 70% 50% at 90% 100%, color-mix(in srgb, var(--a2) 18%, transparent), transparent 70%), var(--bg); color: var(--ink); font-family: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif; padding: max(20px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+main { max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 18px; box-shadow: 0 14px 40px -18px color-mix(in srgb, var(--a1) 45%, transparent); }
+.eyebrow { font-size: .78rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.head { display: flex; align-items: center; gap: 14px; }
+.icon { width: 58px; height: 58px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 1.8rem; background: linear-gradient(140deg, color-mix(in srgb, var(--a1) 25%, var(--card)), color-mix(in srgb, var(--a2) 22%, var(--card))); }
+h1 { margin: 2px 0 0; font-size: 1.35rem; line-height: 1.25; overflow-wrap: anywhere; }
+.since { margin: 4px 0 0; font-size: .85rem; color: var(--muted); }
+.bar { margin-top: 14px; height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 9%, transparent); overflow: hidden; display: flex; }
+.bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--a1), var(--a2)); }
+.prog { margin: 8px 0 0; font-size: .9rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.reached { margin-top: 12px; padding: 10px 14px; border-radius: 16px; background: linear-gradient(140deg, color-mix(in srgb, var(--a1) 18%, var(--card)), color-mix(in srgb, var(--a2) 16%, var(--card))); font-weight: 800; text-align: center; }
+h2 { margin: 0 0 10px; font-size: 1rem; }
+ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+li { display: flex; align-items: center; gap: 10px; font-size: .95rem; overflow-wrap: anywhere; }
+.dot { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: .75rem; font-weight: 800; border: 2px dashed color-mix(in srgb, var(--ink) 28%, transparent); color: var(--muted); }
+li.done .dot { border: none; color: #fff; background: linear-gradient(135deg, var(--a2), var(--a1)); }
+li.done span { color: var(--muted); }
+.week { display: flex; gap: 8px; justify-content: space-between; }
+.week span { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .7rem; font-weight: 700; color: var(--muted); }
+.week i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid color-mix(in srgb, var(--ink) 28%, transparent); }
+.week .on i { border: none; background: linear-gradient(135deg, var(--a2), var(--a1)); }
+.heat { margin-top: 16px; display: grid; grid-template-rows: repeat(7, 13px); grid-auto-flow: column; grid-auto-columns: 13px; gap: 4px; direction: ltr; justify-content: center; }
+[dir="rtl"] .heat { transform: scaleX(-1); }
+.heat i { width: 13px; height: 13px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 9%, transparent); }
+.heat i.on { background: color-mix(in srgb, var(--a2) 75%, var(--a1)); }
+.foot { text-align: center; font-size: .85rem; color: var(--muted); }
+.foot a { color: var(--a1); font-weight: 800; text-decoration: none; }
+.missing { text-align: center; padding: 40px 18px; }
+.skeleton { height: 180px; }
+</style>
+</head>
+<body>
+<main id="g"><div class="card skeleton" aria-hidden="true"></div></main>
+<script src="i18n/core.js?v=542"></script>
+<script>
+(function () {
+    var q = new URLSearchParams(location.search);
+    var token = q.get('t') || '';
+    var langs = (navigator.languages || [navigator.language || 'en']).map(function (l) { return String(l).slice(0, 2).toLowerCase(); });
+    var lang = langs.find(function (l) { return SUPPORTED_LANGUAGES.indexOf(l) >= 0; }) || (SUPPORTED_LANGUAGES.indexOf(q.get('l')) >= 0 ? q.get('l') : 'en');
+    var s = document.createElement('script');
+    s.src = 'i18n/' + lang + '.js?v=' + (typeof I18N_V !== 'undefined' ? I18N_V : '0');
+    s.onload = s.onerror = function () { currentLang = translations[lang] ? lang : 'en'; start(); };
+    document.head.appendChild(s);
+
+    function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function day(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    function start() {
+        document.documentElement.lang = currentLang;
+        document.documentElement.dir = ['he', 'ar', 'ur'].indexOf(currentLang) >= 0 ? 'rtl' : 'ltr';
+        var root = document.getElementById('g');
+        var foot = '<p class="foot"><a href="https://app.not10.ai/">' + esc(t('gshare_made_with')) + '</a></p>';
+        if (!/^[A-Za-z0-9_-]{16,64}$/.test(token)) { root.innerHTML = '<div class="card missing">' + esc(t('gshare_missing')) + '</div>' + foot; return; }
+        fetch('https://fncssznyigwlltoqlfwh.supabase.co/functions/v1/goal-share?t=' + encodeURIComponent(token)).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (data) {
+            if (!data || !data.goal) { root.innerHTML = '<div class="card missing">' + esc(t('gshare_missing')) + '</div>' + foot; return; }
+            var g = data.goal, st = data.stations || [], days = {};
+            (data.days || []).forEach(function (d) { days[d] = 1; });
+            document.title = g.title + ' · NOT10.ai';
+            var pct = 0, prog = '';
+            if (g.track === 'number' && g.target > 0) { pct = Math.min(100, Math.round((Number(g.current) || 0) / g.target * 100)); prog = (Number(g.current) || 0).toLocaleString(currentLang) + ' / ' + Number(g.target).toLocaleString(currentLang) + (g.unit ? ' ' + g.unit : ''); }
+            else if (st.length) { var done = st.filter(function (x) { return x.done; }).length; pct = Math.round(done / st.length * 100); prog = t('gv_stations_progress').replace('{done}', done).replace('{total}', st.length); }
+            if (g.reached) pct = 100;
+            var since = g.started ? new Date(g.started + 'T12:00:00').toLocaleDateString(currentLang, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+            var html = '<div class="card"><div class="eyebrow">' + esc(t(g.reached ? 'gshare_reached_eyebrow' : 'gshare_on_way')) + '</div>'
+                + '<div class="head"><span class="icon" aria-hidden="true">' + esc(g.icon || '🎯') + '</span><div><h1>' + esc(g.title) + '</h1>' + (since ? '<p class="since">' + esc(t('gshare_since').replace('{date}', since)) + '</p>' : '') + '</div></div>'
+                + (pct || prog ? '<div class="bar" role="img" aria-label="' + pct + '%"><i style="width:' + pct + '%"></i></div>' + (prog ? '<p class="prog">' + esc(prog) + '</p>' : '') : '')
+                + (g.reached ? '<div class="reached">' + esc(t('gshare_reached')) + '</div>' : '') + '</div>';
+            if (st.length) html += '<div class="card"><h2>' + esc(t('gshare_stations')) + '</h2><ol>' + st.map(function (x, i) { return '<li class="' + (x.done ? 'done' : '') + '"><span class="dot">' + (x.done ? '✓' : (i + 1)) + '</span><span>' + esc(x.title) + '</span></li>'; }).join('') + '</ol></div>';
+            var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 6);
+            var week = '';
+            for (var i = 0; i < 7; i++) { week += '<span class="' + (days[day(d)] ? 'on' : '') + '"><i></i>' + esc(d.toLocaleDateString(currentLang, { weekday: 'narrow' })) + '</span>'; d.setDate(d.getDate() + 1); }
+            var h = new Date(); h.setHours(0, 0, 0, 0); h.setDate(h.getDate() - 83);
+            var heat = '';
+            for (var k = 0; k < 84; k++) { heat += '<i class="' + (days[day(h)] ? 'on' : '') + '"></i>'; h.setDate(h.getDate() + 1); }
+            html += '<div class="card"><h2>' + esc(t('gv_week_label')) + '</h2><div class="week">' + week + '</div><div class="heat" aria-hidden="true">' + heat + '</div></div>';
+            root.innerHTML = html + foot;
+        });
+    }
+})();
+</script>
+</body>
+</html>
