@@ -21857,6 +21857,9 @@ async function loadVisionGoals() {
     ]);
     visionGoalsCache = goalsRes.data || [];
     visionMilestonesCache = milestonesRes.data || [];
+    // 📝 סיכומים שבועיים ותשובות אחרי תחנה (vision_goal_notes) - לא חוסם את הטעינה
+    supabaseClient.from('vision_goal_notes').select('*').eq('user_id', currentUserId).order('created_at', { ascending: false }).limit(300)
+        .then(({ data }) => { visionNotesCache = data || []; if (document.getElementById('vision-drawer-overlay')?.classList.contains('open')) renderVisionGoalsList(); }, () => {});
     // סימוני "✓ עשיתי היום" / "עמדתי היום" של כל היעדים (אתגרי ימים, צעדים קטנים, 7 הימים האחרונים)
     const checkinGoalIds = visionGoalsCache.map(g => g.id);
     const [checkinsRes, linksRes, stepLinksRes, tabsRes] = await Promise.all([
@@ -22431,6 +22434,9 @@ function renderGoalPanel(goal) {
     // 💭 ה"למה" חוזר ברגע הקשה (כמו Way of Life, רעיון 8 שבחרה): אחרי כמה ימים בלי צעד ליעד הוא עולה לראש היעד
     const whyPop = buildGoalWhyPop(goal);
     if (whyPop) panel.appendChild(whyPop);
+    // ✉️ מכתב בתחילת כל שבוע במסע (כמו Fabulous, רעיון 6 שבחרה) - מה שנכתב בסיכום של השבוע שעבר
+    const letter = buildGoalWeekLetter(goal);
+    if (letter) panel.appendChild(letter);
     // 🎁 הפרס נפתח בתחנה שנבחרה (רעיון 4) - פעם אחת, בפעם הראשונה שרואים את היעד אחרי שהתחנה הושלמה
     setTimeout(() => maybeOpenGoalReward(goal, milestones), 600);
 
@@ -22439,11 +22445,93 @@ function renderGoalPanel(goal) {
     if (!goal.is_achieved) panel.appendChild(buildGoalActionCard(goal, milestones));
     const plan = buildGoalPlan(goal, milestones, prog);
     if (plan) panel.appendChild(plan);
+    // 📝 סיכום שבועי של דקה (כמו סקירה שבועית ב-Notion, רעיון 16 שבחרה) + כל הסיכומים
+    const review = buildGoalReviewCard(goal, milestones);
+    if (review) panel.appendChild(review);
     if (goal.why) panel.appendChild(buildGoalNoteRow('gv-why', '💭', t('vision_why_label'), goal.why));
     if (goal.reward) panel.appendChild(buildGoalNoteRow('gv-reward', '🎁', t('gv_reward_label'), goal.reward));
     panel.appendChild(buildGoalActions(goal));
 }
 
+let visionNotesCache = [];
+function visionGoalNotes(goalId) { return visionNotesCache.filter(n => n.goal_id === goalId); }
+function visionLastReview(goalId) { return visionGoalNotes(goalId).find(n => n.kind === 'review') || null; }
+function visionDaysSince(iso) { return iso ? Math.floor((Date.now() - new Date(iso).getTime()) / 86400000) : Infinity; }
+async function saveVisionGoalNote(row) {
+    if (!supabaseClient || !currentUserId) return null;
+    const { data, error } = await supabaseClient.from('vision_goal_notes').insert({ user_id: currentUserId, ...row }).select('*').maybeSingle();
+    if (error || !data) { showAppToast(t('nm_save_error'), 'error'); return null; }
+    visionNotesCache.unshift(data);
+    return data;
+}
+function buildGoalReviewCard(goal, milestones) {
+    const notes = visionGoalNotes(goal.id);
+    if (goal.is_achieved && !notes.length) return null;
+    const last = visionLastReview(goal.id);
+    const due = !goal.is_achieved && visionJourneyDay(goal) >= 7 && (!last || visionDaysSince(last.created_at) >= 6);
+    if (!due && !notes.length) return null;
+    const card = document.createElement('div');
+    card.className = 'gv-review';
+    const fmt = iso => new Date(iso).toLocaleDateString(currentLang, { day: 'numeric', month: 'short' });
+    const titleOf = id => { const m = (milestones || []).find(x => x.id === id); return m ? m.title : ''; };
+    const past = notes.map(n => (n.kind === 'station'
+        ? `<li><span class="gv-review-when">🏁 ${visionEsc(fmt(n.created_at))}${titleOf(n.milestone_id) ? ` · ${visionEsc(titleOf(n.milestone_id))}` : ''}</span>${visionEsc(n.worked || '')}</li>`
+        : `<li><span class="gv-review-when">📝 ${visionEsc(fmt(n.created_at))}</span>${[['gv_review_q1', n.worked], ['gv_review_q2', n.hard], ['gv_review_q3', n.next_step]].filter(([, v]) => v).map(([k, v]) => `<span class="gv-review-line"><b>${visionEsc(t(k))}</b> ${visionEsc(v)}</span>`).join('')}</li>`)).join('');
+    card.innerHTML = `${due ? `<button type="button" class="gv-review-btn">📝 ${visionEsc(t('gv_review_btn'))}</button>` : ''}${notes.length ? `<details class="gv-review-past"><summary>${visionEsc(t('gv_review_past'))} · ${notes.length}</summary><ul>${past}</ul></details>` : ''}`;
+    const btn = card.querySelector('.gv-review-btn');
+    if (btn) btn.onclick = () => {
+        const form = document.createElement('form');
+        form.className = 'gv-review-form';
+        form.innerHTML = [['worked', 'gv_review_q1'], ['hard', 'gv_review_q2'], ['next_step', 'gv_review_q3']].map(([name, k]) => `<label><span>${visionEsc(t(k))}</span><textarea name="${name}" rows="2" maxlength="400"></textarea></label>`).join('')
+            + `<button type="submit" class="gv-review-save">${visionEsc(t('save_generic'))}</button>`;
+        form.onsubmit = async e => {
+            e.preventDefault();
+            const v = n => form.querySelector(`[name="${n}"]`).value.trim() || null;
+            const row = { goal_id: goal.id, kind: 'review', worked: v('worked'), hard: v('hard'), next_step: v('next_step') };
+            if (!row.worked && !row.hard && !row.next_step) return;
+            form.querySelector('button').disabled = true;
+            if (await saveVisionGoalNote(row)) { showAppToast(t('gv_review_saved')); if (typeof checkLevelUp === 'function') checkLevelUp(true); renderVisionGoalsList(); }
+            else form.querySelector('button').disabled = false;
+        };
+        btn.replaceWith(form);
+        form.querySelector('textarea').focus();
+    };
+    return card;
+}
+function showStationReflection(goalId, milestoneId) {
+    const panel = document.getElementById('gv-goal');
+    const view = document.getElementById('vision-drawer-overlay');
+    if (!panel || !view || !view.classList.contains('open') || panel.querySelector('.gv-station-q')) return;
+    const box = document.createElement('form');
+    box.className = 'gv-station-q';
+    box.innerHTML = `<label><span>💬 ${visionEsc(t('gv_station_q'))}</span><textarea rows="2" maxlength="400"></textarea></label><div class="gv-station-q-actions"><button type="button" class="gv-station-q-skip">${visionEsc(t('nm_review_later'))}</button><button type="submit">${visionEsc(t('save_generic'))}</button></div>`;
+    box.querySelector('.gv-station-q-skip').onclick = () => box.remove();
+    box.onsubmit = async e => {
+        e.preventDefault();
+        const text = box.querySelector('textarea').value.trim();
+        if (!text) { box.remove(); return; }
+        box.querySelectorAll('button').forEach(b => { b.disabled = true; });
+        if (await saveVisionGoalNote({ goal_id: goalId, milestone_id: milestoneId, kind: 'station', worked: text })) { showAppToast(t('gv_review_saved')); renderVisionGoalsList(); }
+    };
+    const head = panel.querySelector('.gv-goal-head');
+    if (head) head.after(box); else panel.prepend(box);
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    box.querySelector('textarea').focus({ preventScroll: true });
+}
+function buildGoalWeekLetter(goal) {
+    if (goal.is_achieved) return null;
+    const week = Math.floor((visionJourneyDay(goal) - 1) / 7) + 1;
+    if (week < 2) return null;
+    const key = `weekwise_goal_letter_${goal.id}_${week}`;
+    try { if (localStorage.getItem(key)) return null; } catch { return null; }
+    const last = visionLastReview(goal.id);
+    const text = last && last.next_step && visionDaysSince(last.created_at) <= 10 ? t('gv_letter_from_review').replace('{next}', last.next_step) : t('gv_letter_generic');
+    const box = document.createElement('div');
+    box.className = 'gv-letter';
+    box.innerHTML = `<span class="gv-letter-icon" aria-hidden="true">✉️</span><span class="gv-letter-text"><b>${visionEsc(t('gv_letter_title').replace('{n}', week))}</b><span>${visionEsc(text)}</span></span><button type="button" class="gv-why-pop-x" aria-label="${visionEsc(t('close_btn'))}">✕</button>`;
+    box.querySelector('.gv-why-pop-x').onclick = () => { try { localStorage.setItem(key, '1'); } catch {} box.remove(); };
+    return box;
+}
 function buildGoalWhyPop(goal) {
     if (!goal || !goal.why || goal.is_achieved || visionJourneyDay(goal) < 4) return null;
     const dates = visionGoalDayDates(goal);
@@ -22986,6 +23074,8 @@ async function toggleVisionMilestoneDone(milestoneId, goalId, checked) {
     await syncStepEventsDone(milestoneId, checked);
     await syncRoutineChecksForMilestone(milestoneId, checked, getLocalDateString());
     await checkAndMarkGoalAchieved(goalId);
+    // 💬 שאלה אחת אחרי תחנה (כמו Reflectly, רעיון 19 שבחרה)
+    if (checked) setTimeout(() => showStationReflection(goalId, milestoneId), 500);
 }
 
 // ✓ על משימה יומית מקושרת → התחנה בלוח החזון מסומנת/מבוטלת בהתאם
