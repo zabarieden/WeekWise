@@ -509,10 +509,14 @@ function homeFocusChosenGoalIds() {
     try { const v = JSON.parse(localStorage.getItem(homeFocusGoalsKey()) || 'null'); return Array.isArray(v) ? v : null; } catch { return null; }
 }
 function homeFocusActiveGoals() { return (typeof visionGoalsCache !== 'undefined' ? visionGoalsCache : []).filter(g => !g.is_achieved); }
+// הבחירה נשמרת כרשימה: מזהה של יעד מ"היעדים שלי", או { t: 'טקסט' } - מטרה שנכתבה ביד (לפי בקשה מפורשת, 2026-11-17:
+// "2 מטרות שאפשר לרשום ידנית - עד 2 מטרות עיקריות"). בסך הכל עד 2
 function homeFocusGoals() {
     const goals = homeFocusActiveGoals();
-    const ids = homeFocusChosenGoalIds();
-    if (ids) return ids.map(id => goals.find(g => g.id === id)).filter(Boolean).slice(0, HOME_FOCUS_GOALS_MAX);
+    const saved = homeFocusChosenGoalIds();
+    if (saved) {
+        return saved.map(x => (x && typeof x === 'object' && x.t ? { own: true, title: String(x.t) } : goals.find(g => g.id === x))).filter(Boolean).slice(0, HOME_FOCUS_GOALS_MAX);
+    }
     if (typeof visionHorizon !== 'function' || typeof visionEffectiveDeadline !== 'function') return [];
     return goals.filter(g => visionHorizon(g) !== 'life')
         .sort((x, y) => String(visionEffectiveDeadline(x)).localeCompare(String(visionEffectiveDeadline(y))))
@@ -529,6 +533,8 @@ function homeFocusGoalsHtml() {
     const head = `<div class="hf-goals-head"><span>🎯 ${myDayEsc(t('home_focus_goals_title'))} <small>· ${myDayEsc(t('home_focus_days_left').replace('{n}', homeFocusDaysTo(yearEnd)))}</small></span><button type="button" class="hf-goals-pick" onclick="openHomeFocusGoalPicker()">${myDayEsc(t(goals.length ? 'home_focus_goals_change' : 'home_focus_goals_choose'))}</button></div>`;
     if (!goals.length) return `<section class="hf-goals is-empty">${head}</section>`;
     const rows = goals.map(g => {
+        // מטרה שנכתבה ביד: השם וכמה ימים עד סוף השנה; נגיעה פותחת את הבחירה
+        if (g.own) return `<button type="button" class="hf-goal is-own" onclick="openHomeFocusGoalPicker()"><span class="hf-goal-top"><span class="hf-goal-icon" aria-hidden="true">✍️</span><span class="hf-goal-title">${myDayEsc(g.title)}</span></span></button>`;
         const p = typeof visionGoalProgress === 'function' ? visionGoalProgress(g) : { pct: 0, label: '' };
         const deadline = typeof visionEffectiveDeadline === 'function' ? visionEffectiveDeadline(g) : null;
         const meta = [p.label || '', deadline && deadline <= yearEnd ? t('home_focus_days_left').replace('{n}', homeFocusDaysTo(deadline)) : ''].filter(Boolean).join(' · ');
@@ -546,43 +552,49 @@ function openHomeFocusGoalPicker() {
     if (!layer) return;
     layer.querySelectorAll('.hf-pick').forEach(x => x.remove());
     const goals = homeFocusActiveGoals();
-    const chosen = new Set(homeFocusGoals().map(g => g.id));
+    const current = homeFocusGoals();
+    const chosen = new Set(current.filter(g => !g.own).map(g => g.id));
+    const own = current.filter(g => g.own).map(g => g.title).concat(['', '']).slice(0, HOME_FOCUS_GOALS_MAX);
     const box = document.createElement('div');
     box.className = 'hf-pick';
     box.setAttribute('role', 'dialog');
     box.setAttribute('aria-modal', 'true');
     box.setAttribute('aria-label', t('home_focus_goals_title'));
     box.innerHTML = `<div class="hf-pick-card"><h3>🎯 ${myDayEsc(t('home_focus_goals_pick_title'))}</h3>
-        ${goals.length ? `<div class="hf-pick-list">${goals.map(g => `<button type="button" class="hf-pick-item${chosen.has(g.id) ? ' is-on' : ''}" data-id="${g.id}" aria-pressed="${chosen.has(g.id)}"><span class="hf-pick-box" aria-hidden="true"></span><span>${myDayEsc((typeof visionGoalIcon === 'function' ? visionGoalIcon(g) + ' ' : '') + g.title)}</span></button>`).join('')}</div>`
-            : `<p class="hf-pick-empty">${myDayEsc(t('home_focus_goals_none'))}</p>`}
-        <div class="hf-pick-actions">${goals.length ? `<button type="button" class="btn-primary hf-pick-save">${myDayEsc(t('home_focus_goals_save'))}</button>` : `<button type="button" class="btn-primary hf-pick-add">${myDayEsc(t('home_focus_goals_add'))}</button>`}<button type="button" class="btn-secondary hf-pick-close">${myDayEsc(t('close_btn'))}</button></div></div>`;
+        ${goals.length ? `<div class="hf-pick-list">${goals.map(g => `<button type="button" class="hf-pick-item${chosen.has(g.id) ? ' is-on' : ''}" data-id="${g.id}" aria-pressed="${chosen.has(g.id)}"><span class="hf-pick-box" aria-hidden="true"></span><span>${myDayEsc((typeof visionGoalIcon === 'function' ? visionGoalIcon(g) + ' ' : '') + g.title)}</span></button>`).join('')}</div>` : ''}
+        <div class="hf-pick-own-head">✍️ ${myDayEsc(t(goals.length ? 'home_focus_goals_own' : 'home_focus_goals_own_only'))}</div>
+        <div class="hf-pick-own">${own.map((v, i) => `<input type="text" class="hf-pick-input" data-i="${i}" maxlength="80" value="${myDayEsc(v)}" placeholder="${myDayEsc(t('home_focus_goal_own_ph'))}" aria-label="${myDayEsc(t('home_focus_goal_own_ph'))}">`).join('')}</div>
+        <div class="hf-pick-actions"><button type="button" class="btn-primary hf-pick-save">${myDayEsc(t('home_focus_goals_save'))}</button><button type="button" class="btn-secondary hf-pick-close">${myDayEsc(t('close_btn'))}</button></div></div>`;
+    const inputs = [...box.querySelectorAll('.hf-pick-input')];
+    // בסך הכל עד 2: כשכבר יש 2 (יעדים מסומנים + מה שנכתב) - השאר ננעלים עד שמורידים אחד
     const sync = () => {
-        const full = chosen.size >= HOME_FOCUS_GOALS_MAX;
+        const written = inputs.filter(x => x.value.trim()).length;
+        const full = chosen.size + written >= HOME_FOCUS_GOALS_MAX;
         box.querySelectorAll('.hf-pick-item').forEach(b => {
             const on = chosen.has(b.dataset.id);
             b.classList.toggle('is-on', on);
             b.setAttribute('aria-pressed', String(on));
             b.disabled = full && !on;
         });
+        inputs.forEach(x => { x.disabled = full && !x.value.trim(); });
     };
     box.querySelectorAll('.hf-pick-item').forEach(b => b.addEventListener('click', () => {
         if (chosen.has(b.dataset.id)) chosen.delete(b.dataset.id);
-        else if (chosen.size < HOME_FOCUS_GOALS_MAX) chosen.add(b.dataset.id);
+        else if (chosen.size + inputs.filter(x => x.value.trim()).length < HOME_FOCUS_GOALS_MAX) chosen.add(b.dataset.id);
         sync();
     }));
+    inputs.forEach(x => x.addEventListener('input', sync));
     sync();
     box.querySelector('.hf-pick-close').onclick = () => box.remove();
     box.addEventListener('click', e => { if (e.target === box) box.remove(); });
-    const save = box.querySelector('.hf-pick-save');
-    if (save) save.onclick = () => {
-        try { localStorage.setItem(homeFocusGoalsKey(), JSON.stringify([...chosen])); } catch {}
+    box.querySelector('.hf-pick-save').onclick = () => {
+        const list = [...chosen].concat(inputs.map(x => x.value.trim()).filter(Boolean).map(text => ({ t: text }))).slice(0, HOME_FOCUS_GOALS_MAX);
+        try { localStorage.setItem(homeFocusGoalsKey(), JSON.stringify(list)); } catch {}
         box.remove();
         renderHomeFocus();
     };
-    const add = box.querySelector('.hf-pick-add');
-    if (add) add.onclick = () => { box.remove(); toggleHomeFocus(false, false); openGoalsVisionDrawer(); };
     layer.appendChild(box);
-    (box.querySelector('.hf-pick-item:not(:disabled)') || box.querySelector('button')).focus();
+    (box.querySelector('.hf-pick-item:not(:disabled)') || inputs.find(x => !x.disabled) || box.querySelector('button')).focus();
 }
 function renderHomeFocus() {
     const body = document.getElementById('home-focus-body');

@@ -12353,3 +12353,10 @@ html[dir="rtl"] .wm-room-nav.next svg, html:not([dir="rtl"]) .wm-room-nav.prev s
 .hf-row.is-plain { padding: 1px 8px; gap: 8px; }
 .hf-row.is-plain .hf-title { font-size: .8rem; font-weight: 500; color: var(--text-secondary); }
 .hf-row.is-plain .hf-time { font-size: .72rem; font-weight: 500; }
+/* ✍️ מטרות שנכתבו ביד בפוקוס (2026-11-17) */
+.hf-goal.is-own .hf-goal-title { font-weight: 700; }
+.hf-pick-own-head { font-size: .85rem; font-weight: 800; color: var(--text-secondary); }
+.hf-pick-own { display: flex; flex-direction: column; gap: 8px; }
+.hf-pick-input { width: 100%; box-sizing: border-box; min-height: 46px; padding: 10px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent); background: color-mix(in srgb, var(--text-primary) 5%, transparent); color: var(--text-primary); font: inherit; }
+.hf-pick-input:disabled { opacity: .45; }
+.hf-pick-input:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
