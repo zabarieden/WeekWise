@@ -125,11 +125,11 @@ function requestPersistentStorage() {
 
 // 🐞 דיווח שגיאות ל-Sentry (לפי בקשה מפורשת, 2026-11-07: "נתחיל בזה Sentry"): כשמשהו נשבר אצל משתמש, השגיאה מגיעה
 // אלינו עם הדפדפן, המכשיר ושורת הקוד - בלי תוכן (פתקים, אוכל, כסף), בלי מייל ובלי IP. רק שגיאות, בלי הקלטת מסך.
-// כבוי כל עוד SENTRY_DSN ריק, וגם בבדיקות מקומיות. ה-DSN ציבורי בכוונה (Sentry > Project Settings > Client Keys)
-const SENTRY_DSN = '';
+// ה-Loader של הפרויקט not10-web (2026-11-17): החשבון באירופה (js-de), וה-DSN בתוכו. ציבורי בכוונה.
+// רק באתר האמיתי - לא בבדיקות מקומיות
+const SENTRY_LOADER = 'https://js-de.sentry-cdn.com/a4dc2b24d20f6326923e6f513c61e85a.min.js';
 function initErrorReporting() {
-    const key = (SENTRY_DSN.match(/^https:\/\/([0-9a-f]+)@/) || [])[1];
-    if (!key || /^(localhost|127\.)/.test(location.hostname)) return;
+    if (!SENTRY_LOADER || location.hostname !== 'app.not10.ai') return;
     const release = (document.querySelector('script[src^="app.js?v="]')?.getAttribute('src') || '').split('v=')[1] || 'dev';
     // כתובת בלי ? ו-# - שם יכולים להיות מפתחות כניסה (קישור איפוס סיסמה, חזרה מגוגל)
     const bare = url => String(url || '').split(/[?#]/)[0];
@@ -154,7 +154,7 @@ function initErrorReporting() {
         },
     }); setErrorReportingUser(currentUserId); };
     const s = document.createElement('script');
-    s.src = `https://js.sentry-cdn.com/${key}.min.js`;
+    s.src = SENTRY_LOADER;
     s.crossOrigin = 'anonymous';
     document.head.appendChild(s);
 }
