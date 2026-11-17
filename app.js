@@ -21983,14 +21983,24 @@ function visionDoneDays(goal) {
     return dates.sort();
 }
 // רצף: ימים רצופים עד היום (אם היום עוד לא הושלם - עד אתמול)
+// 🧊 יום חופש ששומר על הרצף (כמו Duolingo, הבחירה שלה - רעיון 1): יום אחד בלי צעד בכל 7 ימים לא שובר את הרצף
+// (הוא פשוט לא נספר). שני ימים כאלה בתוך שבוע - הרצף נגמר שם
 function visionStreak(goal) {
     const done = new Set(visionGoalDayDates(goal));
     const key = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     if (!done.has(key(d))) d.setDate(d.getDate() - 1);
-    let n = 0;
-    while (done.has(key(d))) { n++; d.setDate(d.getDate() - 1); }
+    let n = 0, steps = 0, lastFreeze = -99;
+    for (;;) {
+        if (done.has(key(d))) n++;
+        else if (n > 0 && steps - lastFreeze >= 7) lastFreeze = steps;
+        else break;
+        steps++;
+        d.setDate(d.getDate() - 1);
+        if (steps > 3660) break;
+    }
+    // a freeze at the very end of the walk (the oldest day) is not part of the streak
     return n;
 }
 function visionCheckedToday(goalId, milestoneId) {
@@ -22692,21 +22702,68 @@ function buildGoalWeek(goal) {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 6);
-    let count = 0;
+    let count = 0, prevDone = false;
     const days = [];
     for (let i = 0; i < 7; i++) {
         const key = getLocalDateString(d);
         const isDone = done.has(key);
         if (isDone) count++;
-        days.push(`<span class="gv-week-day${isDone ? ' is-done' : ''}${i === 6 ? ' is-today' : ''}"><span class="gv-week-dot"></span>${visionEsc(d.toLocaleDateString(currentLang, { weekday: 'narrow' }))}</span>`);
+        // ⛓️ "לא לשבור את השרשרת" (הבחירה שלה, רעיון 22): יום שנעשה אחרי יום שנעשה - מחובר בחוליה לקודם
+        days.push(`<span class="gv-week-day${isDone ? ' is-done' : ''}${isDone && prevDone ? ' is-linked' : ''}${i === 6 ? ' is-today' : ''}"><span class="gv-week-dot"></span>${visionEsc(d.toLocaleDateString(currentLang, { weekday: 'narrow' }))}</span>`);
+        prevDone = isDone;
         d.setDate(d.getDate() + 1);
     }
+    const wrap = document.createElement('div');
+    wrap.className = 'gv-consistency';
     const row = document.createElement('div');
     row.className = 'gv-week';
     row.setAttribute('role', 'img');
     row.setAttribute('aria-label', `${t('gv_week_label')}: ${count} / 7`);
     row.innerHTML = `<span class="gv-week-label" aria-hidden="true">${visionEsc(t('gv_week_label'))}</span><span class="gv-week-days" aria-hidden="true">${days.join('')}</span>`;
-    return row;
+    wrap.appendChild(row);
+    // 💪 כוח ההרגל (כמו Loop, רעיון 2): עולה לאט עם כל יום שנעשה ויורד רק קצת ביום שלא - אף פעם לא מתאפס
+    const strength = visionStrength(goal);
+    const s = document.createElement('div');
+    s.className = 'gv-strength';
+    s.setAttribute('role', 'img');
+    s.setAttribute('aria-label', `${t('gv_strength_label')}: ${strength}%`);
+    s.innerHTML = `<span class="gv-week-label" aria-hidden="true">${visionEsc(t('gv_strength_label'))}</span><span class="gv-strength-bar" aria-hidden="true"><i style="width:${strength}%"></i></span><b aria-hidden="true">${strength}%</b>`;
+    wrap.appendChild(s);
+    // 🟪 12 השבועות האחרונים (כמו מפת החום של GitHub, רעיון 18): ריבוע לכל יום, צבוע כשעשו משהו ליעד
+    const heat = document.createElement('div');
+    heat.className = 'gv-heat';
+    const h = new Date();
+    h.setHours(0, 0, 0, 0);
+    h.setDate(h.getDate() - 83);
+    const cells = [];
+    let heatCount = 0;
+    for (let i = 0; i < 84; i++) {
+        const on = done.has(getLocalDateString(h));
+        if (on) heatCount++;
+        cells.push(`<i class="${on ? 'is-done' : ''}${i === 83 ? ' is-today' : ''}"></i>`);
+        h.setDate(h.getDate() + 1);
+    }
+    heat.setAttribute('role', 'img');
+    heat.setAttribute('aria-label', `${t('gv_heat_label')}: ${heatCount}`);
+    heat.innerHTML = `<span class="gv-week-label" aria-hidden="true">${visionEsc(t('gv_heat_label'))}</span><span class="gv-heat-grid" aria-hidden="true">${cells.join('')}</span>`;
+    wrap.appendChild(heat);
+    return wrap;
+}
+// כוח ההרגל באחוזים: ממוצע נע שבו כל יום שעשו מוסיף ויום שלא - מוריד רק מעט (α = 1/14). היום נספר רק אם כבר נעשה
+function visionStrength(goal) {
+    const done = new Set(visionGoalDayDates(goal));
+    const start = new Date(goal.created_at);
+    start.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const a = 1 / 14;
+    let s = 0;
+    for (const d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+        const on = done.has(getLocalDateString(d));
+        if (d.getTime() === today.getTime() && !on) break;
+        s = s * (1 - a) + (on ? a : 0);
+    }
+    return Math.round(s * 100);
 }
 
 function buildGoalAddRow(placeholder, onAdd) {
