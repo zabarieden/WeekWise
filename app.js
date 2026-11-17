@@ -112,10 +112,39 @@ function initSupabase() {
         // בדפדפן ה-SDK מתאם את החידוש בין כמה לשוניות פתוחות, כך ששתיהן לא "שורפות" את אותו מפתח חידוש ונזרקות החוצה
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storage: window.localStorage },
+            global: { fetch: dbWatchFetch },
         });
         return true;
     }
     return false;
+}
+// 🐞 כל קריאה/שמירה שנכשלת במסד הנתונים מדווחת ל-Sentry (לפי בקשה מפורשת, 2026-11-17: "האם הנתונים נשמרים לכל המשתמשים
+// ללא שגיאות?"): רק סוג הפעולה, שם הטבלה וקוד השגיאה - בלי התוכן, בלי הפרמטרים ובלי פרטי השגיאה (שם יכולים להופיע ערכים).
+// לא מדווחים: בעיות רשת (אין חיבור), "לא נמצאה שורה" של maybeSingle, וכניסה/חידוש כניסה (נורמלי שתפוג)
+function dbWatchFetch(input, init) {
+    return fetch(input, init).then(res => {
+        try {
+            // 401 בלי משתמש מחובר = עוד לא נכנסו (לא תקלה)
+            if (res.status >= 400 && res.status !== 406 && !(res.status === 401 && !currentUserId) && window.Sentry && Sentry.captureMessage) {
+                const url = new URL(typeof input === 'string' ? input : input.url);
+                const path = url.pathname;
+                // פונקציות השרת מחזירות 4xx בכוונה (מכסה של AI, קלט לא תקין) - מהן מדווחים רק תקלות 5xx
+                if (!/\/auth\/v1\//.test(path) && !(/\/functions\/v1\//.test(path) && res.status < 500)) {
+                    const method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+                    const where = path.replace(/^\/(rest|functions|storage)\/v1\//, '$1:').replace(/[0-9a-f]{8}-[0-9a-f-]{27,}/gi, ':id');
+                    res.clone().json().catch(() => ({})).then(body => {
+                        const code = (body && (body.code || body.error_code || body.error)) || '';
+                        Sentry.captureMessage(`DB ${method} ${where} → ${res.status}${code ? ' ' + String(code).slice(0, 40) : ''}`, {
+                            level: res.status >= 500 ? 'error' : 'warning',
+                            tags: { db_table: where, db_status: String(res.status), db_code: String(code).slice(0, 40) },
+                            fingerprint: ['db', method, where, String(res.status), String(code).slice(0, 40)],
+                        });
+                    });
+                }
+            }
+        } catch { /* הדיווח לעולם לא מפריע לשמירה עצמה */ }
+        return res;
+    });
 }
 // מבקשים מהדפדפן לא למחוק את הנתונים של האפליקציה כשחסר מקום בטלפון - בלי זה הכניסה השמורה יכולה להימחק בשקט.
 // באייפון זה עובד בעיקר כשהאפליקציה מותקנת למסך הבית
@@ -207,7 +236,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (supabaseClient) {
         const session = await restoreSessionWithRetry();
-        if (!session) endBootSparkle();
+        if (!session) { endBootSparkle(); if (window.loadCaptcha) window.loadCaptcha(); }
         if (session) initAppAfterAuth(session.user);
         else if (hasStoredAuthSession()) storedSessionRetryTimer = setTimeout(retryStoredSession, 4000);
         document.addEventListener('visibilitychange', () => {
@@ -11019,7 +11048,7 @@ document.addEventListener('touchmove', e => { const touch = e.touches[0]; if (to
 const AI_ICON_OPTIONS = {
     default: { type: 'orb' },
     brain: { type: 'emoji', glyph: '🧠' },
-    robot: { type: 'image', src: 'robot-fab-icon.png?v=1' },
+    robot: { type: 'image', src: 'robot-fab-icon.webp?v=2' },
 };
 const AI_ICON_PREMIUM = ['robot', 'brain'];
 function normalizeAiIconId(iconId) { return AI_ICON_OPTIONS[iconId] ? iconId : 'default'; }

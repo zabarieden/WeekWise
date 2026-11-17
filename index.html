@@ -61,7 +61,19 @@
     </script>
 
     <!-- CAPTCHA (hCaptcha) - מגן על טפסי ההתחברות/הרשמה/שכחתי-סיסמה מבוטים -->
-    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <!-- hCaptcha נטען רק למי שאין לו כניסה שמורה (מי שמחובר/ת לא צריך אותו - חוסך 117KB בכל פתיחה, 2026-11-17).
+         אם הכניסה השמורה לא מתחדשת, app.js קורא ל-loadCaptcha לפני שהטופס מוצג -->
+    <script>
+        window.loadCaptcha = function () {
+            if (window.__captchaLoading) return;
+            window.__captchaLoading = true;
+            var s = document.createElement('script');
+            s.src = 'https://js.hcaptcha.com/1/api.js';
+            s.async = true; s.defer = true;
+            document.head.appendChild(s);
+        };
+        try { if (!Object.keys(localStorage).some(function (k) { return /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k); })) loadCaptcha(); } catch (e) { loadCaptcha(); }
+    </script>
 
     <!-- PWA: הפיכת האתר לאפליקציה שניתן להתקין ממסך הבית -->
     <link rel="manifest" href="manifest.json">
@@ -1344,7 +1356,7 @@
                  טקסט-אימוג'י באותו אלמנט -->
             <button type="button" class="ai-brain-fab" id="btn-ai-brain-fab" data-i18n-tooltip="ai_brain_fab_title" data-i18n-aria-label="ai_brain_fab_title" aria-label="AI Assistant">
                 <span class="ai-orb" id="ai-brain-orb" aria-hidden="true"><span class="ai-orb-cloud"></span></span>
-                <img class="ai-brain-icon hidden" id="ai-brain-icon-img" src="robot-fab-icon.png?v=1" alt="">
+                <img class="ai-brain-icon hidden" id="ai-brain-icon-img" src="robot-fab-icon.webp?v=2" alt="">
                 <span class="ai-brain-icon ai-brain-icon-emoji hidden" id="ai-brain-icon-emoji">🧠</span>
 
                 <!-- לחיצה על התג עצמו (לא כל הכפתור) פותחת את תזכורת "מה חשוב היום" -
@@ -2809,7 +2821,7 @@
                     <div class="theme-picker-grid" id="ai-icon-picker-grid">
                         <button type="button" class="theme-swatch ai-icon-swatch ai-icon-swatch-orb" data-ai-icon="default" onclick="selectAiIcon('default')" data-i18n-title="settings_ai_icon_orb" data-i18n-aria-label="settings_ai_icon_orb" title="Soft bubble" aria-label="Soft bubble"><span class="ai-orb is-mini" aria-hidden="true"><span class="ai-orb-cloud"></span></span></button>
                         <button type="button" class="theme-swatch ai-icon-swatch ai-icon-swatch-brain" data-ai-icon="brain" onclick="selectAiIcon('brain')" data-i18n-title="settings_ai_icon_brain" data-i18n-aria-label="settings_ai_icon_brain" title="Floating brain" aria-label="Floating brain"><span class="ai-swatch-brain-glyph">🧠</span><span class="theme-swatch-lock">🔒</span></button>
-                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="robot" onclick="selectAiIcon('robot')" data-i18n-title="settings_ai_icon_robot" data-i18n-aria-label="settings_ai_icon_robot" title="Robot" aria-label="Robot"><img src="robot-fab-icon.png?v=1" alt=""><span class="theme-swatch-lock">🔒</span></button>
+                        <button type="button" class="theme-swatch ai-icon-swatch" data-ai-icon="robot" onclick="selectAiIcon('robot')" data-i18n-title="settings_ai_icon_robot" data-i18n-aria-label="settings_ai_icon_robot" title="Robot" aria-label="Robot"><img src="robot-fab-icon.webp?v=2" alt=""><span class="theme-swatch-lock">🔒</span></button>
                     </div>
 
                     <!-- גודל כפתור עוזר ה-AI - חופשי לכולם, לא פרימיום, לפי בקשה מפורשת -->
@@ -4555,7 +4567,7 @@
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
     <script src="i18n/core.js?v=550"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=669"></script>
+    <script src="app.js?v=670"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
