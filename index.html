@@ -93,7 +93,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=629">
+    <link rel="stylesheet" href="theme.css?v=630">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
@@ -4298,6 +4298,11 @@
                     <!-- פרס כשמגיעים ליעד - מוצג בחגיגה כשהיעד מושג -->
                     <p class="settings-label" data-i18n="vision_field_reward">A reward for reaching it 🎁 (optional)</p>
                     <input type="text" id="vision-goal-reward-input" maxlength="80">
+                    <!-- 🎁 באיזו תחנה הפרס נפתח (רעיון 4 שבחרה, 2026-11-15) - רק כשיש ליעד תחנות -->
+                    <div id="vision-goal-reward-at-wrap" class="hidden">
+                        <p class="settings-label" data-i18n="gv_reward_at_label">When does the reward open?</p>
+                        <select id="vision-goal-reward-at"></select>
+                    </div>
 
                     <p class="settings-label" data-i18n="vision_goal_category_label">Category</p>
                     <div id="vision-goal-category-chips" class="vision-goal-category-chips"></div>
@@ -4516,9 +4521,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=536"></script>
+    <script src="i18n/core.js?v=537"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=657"></script>
+    <script src="app.js?v=658"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>

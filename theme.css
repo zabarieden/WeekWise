@@ -12087,3 +12087,15 @@ html[dir="rtl"] .gv-heat-grid { transform: scaleX(-1); }
 .gv-heat-grid i { display: block; width: 8px; height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--text-primary) 9%, transparent); }
 .gv-heat-grid i.is-done { background: color-mix(in srgb, var(--accent-pink) 75%, var(--accent-purple)); }
 .gv-heat-grid i.is-today { box-shadow: 0 0 0 1.5px var(--text-primary); }
+
+/* 💭 the "why" comes back after a few days without a step; 🎁 the reward waits on its station */
+.gv-why-pop { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 12px 44px 12px 14px; border-radius: 18px; background: linear-gradient(140deg, color-mix(in srgb, var(--accent-purple) 18%, var(--bg-sheet)), color-mix(in srgb, var(--accent-pink) 12%, var(--bg-sheet))); border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent); animation: gvWhyIn .5s cubic-bezier(.3, 1.3, .5, 1) both; }
+html[dir="rtl"] .gv-why-pop { padding: 12px 14px 12px 44px; }
+@keyframes gvWhyIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } }
+.gv-why-pop-icon { font-size: 1.3rem; line-height: 1.2; }
+.gv-why-pop-text { display: flex; flex-direction: column; gap: 2px; font-size: .92rem; line-height: 1.45; color: var(--text-primary); overflow-wrap: anywhere; }
+.gv-why-pop-text b { font-size: .74rem; font-weight: 800; color: var(--accent-purple-light-text, var(--accent-purple)); }
+.gv-why-pop-x { position: absolute; top: 8px; inset-inline-end: 8px; width: 30px; height: 30px; border-radius: 50%; border: none; background: color-mix(in srgb, var(--text-primary) 8%, transparent); color: var(--text-primary); cursor: pointer; }
+.gv-gift { position: absolute; top: -12px; inset-inline-end: -12px; font-size: 1.05rem; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .25)); animation: gvGift 2.4s ease-in-out infinite; }
+@keyframes gvGift { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg) translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .gv-why-pop, .gv-gift { animation: none; } }

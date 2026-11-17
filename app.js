@@ -22374,6 +22374,11 @@ function renderGoalPanel(goal) {
         <div class="gv-meta"><span>${visionEsc(meta1)}</span>${meta2 ? `<span>${visionEsc(meta2)}</span>` : ''}</div>
         ${visionTagsHtml(goal, prog)}`;
     panel.appendChild(head);
+    // 💭 ה"למה" חוזר ברגע הקשה (כמו Way of Life, רעיון 8 שבחרה): אחרי כמה ימים בלי צעד ליעד הוא עולה לראש היעד
+    const whyPop = buildGoalWhyPop(goal);
+    if (whyPop) panel.appendChild(whyPop);
+    // 🎁 הפרס נפתח בתחנה שנבחרה (רעיון 4) - פעם אחת, בפעם הראשונה שרואים את היעד אחרי שהתחנה הושלמה
+    setTimeout(() => maybeOpenGoalReward(goal, milestones), 600);
 
     panel.appendChild(buildGoalPath(goal, milestones, prog, { animate: visionAnimatePath }));
     visionAnimatePath = false;
@@ -22383,6 +22388,34 @@ function renderGoalPanel(goal) {
     if (goal.why) panel.appendChild(buildGoalNoteRow('gv-why', '💭', t('vision_why_label'), goal.why));
     if (goal.reward) panel.appendChild(buildGoalNoteRow('gv-reward', '🎁', t('gv_reward_label'), goal.reward));
     panel.appendChild(buildGoalActions(goal));
+}
+
+function buildGoalWhyPop(goal) {
+    if (!goal || !goal.why || goal.is_achieved || visionJourneyDay(goal) < 4) return null;
+    const dates = visionGoalDayDates(goal);
+    const today = getLocalDateString();
+    const last = dates.length ? dates[dates.length - 1] : null;
+    const gap = last ? Math.round((new Date(`${today}T12:00:00`) - new Date(`${last}T12:00:00`)) / 86400000) : visionJourneyDay(goal) - 1;
+    if (gap < (goal.reminder_freq === 'weekly' ? 8 : 3)) return null;
+    const key = `weekwise_why_seen_${goal.id}`;
+    try { if (localStorage.getItem(key) === today) return null; } catch {}
+    const box = document.createElement('div');
+    box.className = 'gv-why-pop';
+    box.innerHTML = `<span class="gv-why-pop-icon" aria-hidden="true">💭</span><span class="gv-why-pop-text"><b>${visionEsc(t('vision_why_label'))}</b><span>${visionEsc(goal.why)}</span></span><button type="button" class="gv-why-pop-x" aria-label="${visionEsc(t('close_btn'))}">✕</button>`;
+    box.querySelector('.gv-why-pop-x').onclick = () => { try { localStorage.setItem(key, today); } catch {} box.remove(); };
+    return box;
+}
+function maybeOpenGoalReward(goal, milestones) {
+    if (!goal || !goal.reward || !goal.reward_milestone_id || typeof openGlassAchievement !== 'function') return;
+    const m = (milestones || []).find(x => x.id === goal.reward_milestone_id);
+    if (!m || !m.is_done) return;
+    if (!document.getElementById('vision-drawer-overlay')?.classList.contains('open')) return;
+    const key = `weekwise_reward_open_${goal.id}_${m.id}`;
+    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { return; }
+    openGlassAchievement({
+        eyebrow: t('gv_reward_open'), icon: '🎁', title: goal.reward, desc: goal.title,
+        shareText: `🎁 ${t('gv_reward_open')} ${goal.reward}`, file: 'not10-reward.png', shareLabel: t('nm_share'), okLabel: t('nm_celebrate_ok'),
+    });
 }
 
 function buildGoalNoteRow(cls, icon, label, text) {
@@ -22590,6 +22623,8 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
             node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">🏆</span>`;
             label = model.flag;
         }
+        // 🎁 הפרס מחכה בתחנה הזו
+        if (n.stone && goal.reward && goal.reward_milestone_id === n.stone.id && !n.stone.is_done) node.insertAdjacentHTML('beforeend', '<span class="gv-gift" aria-hidden="true">🎁</span>');
         wrap.appendChild(node);
         if (label) {
             const lab = document.createElement('span');
@@ -23487,6 +23522,15 @@ function openVisionGoalModal(goalId = null, template = null, opts = {}) {
     if (!goal && template && template.weeks) { const d = new Date(); d.setDate(d.getDate() + template.weeks * 7); templateDate = getLocalDateString(d); }
     document.getElementById('vision-goal-why-input').value = goal ? (goal.why || '') : '';
     document.getElementById('vision-goal-reward-input').value = goal ? (goal.reward || '') : '';
+    // 🎁 הפרס נפתח בתחנה שבוחרים (או כשהיעד מושג) - רק ליעד קיים עם תחנות
+    const rewardAtWrap = document.getElementById('vision-goal-reward-at-wrap');
+    const rewardAt = document.getElementById('vision-goal-reward-at');
+    const rewardStations = goal ? visionSortedMilestones(goal.id) : [];
+    if (rewardAtWrap && rewardAt) {
+        rewardAtWrap.classList.toggle('hidden', !rewardStations.length);
+        rewardAt.innerHTML = `<option value="">${visionEsc(t('gv_reward_at_end'))}</option>` + rewardStations.map((m, i) => `<option value="${visionEsc(m.id)}">${visionEsc(`${i + 1}. ${m.title || ''}`)}</option>`).join('');
+        rewardAt.value = goal && goal.reward_milestone_id && rewardStations.some(m => m.id === goal.reward_milestone_id) ? goal.reward_milestone_id : '';
+    }
     document.getElementById('vision-goal-date-input').value = goal ? (goal.target_date || '') : templateDate;
     updateDateFieldDisplay('vision-goal-date-input');
     onVisionGoalDateChange();
@@ -23773,6 +23817,8 @@ async function saveVisionGoal() {
         why: document.getElementById('vision-goal-why-input').value.trim() || null,
         reward: document.getElementById('vision-goal-reward-input').value.trim() || null,
         target_date: document.getElementById('vision-goal-date-input').value || null,
+        ...(existingGoal && document.getElementById('vision-goal-reward-at') && !document.getElementById('vision-goal-reward-at-wrap').classList.contains('hidden')
+            ? { reward_milestone_id: document.getElementById('vision-goal-reward-at').value || null } : {}),
         track_type: track, target_value: null, current_value: null, unit: null,
     };
     if (track === 'number') {
