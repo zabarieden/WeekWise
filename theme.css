@@ -12185,3 +12185,116 @@ html[dir="rtl"] .gv-letter { padding: 12px 14px 12px 44px; }
 .ach-fog { position: absolute; inset: -30%; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 45% 35% at 30% 42%, color-mix(in srgb, var(--text-primary) 16%, transparent), transparent 70%), radial-gradient(ellipse 40% 30% at 72% 62%, color-mix(in srgb, var(--text-primary) 13%, transparent), transparent 70%), radial-gradient(ellipse 35% 25% at 50% 20%, color-mix(in srgb, var(--text-primary) 9%, transparent), transparent 70%); filter: blur(5px); animation: achFog 10s ease-in-out infinite alternate; }
 @keyframes achFog { from { transform: translateX(-9%) translateY(2%); } to { transform: translateX(9%) translateY(-2%); } }
 @media (prefers-reduced-motion: reduce) { .ach-tile.is-glass, .ach-ladder li.is-glass, .ach-shine, .ach-glitter i, .ach-fog { animation: none; } .ach-glitter { display: none; } }
+
+/* 🗺️ NOT10 Nourish+ - המפה המצוירת (world-map.js, 2026-11-17): עמודה אחת של ציורים מלמטה למעלה, אבני אי לכל יום ביעד,
+   ערפל על מה שעוד לפנינו, Sky על האבן האחרונה. מראה לילה אחד מכוון (אין גרסה בהירה) */
+.wm { position: absolute; inset: 0; z-index: 2570; overflow: hidden; background: #0f0919; color: #fff6fb; color-scheme: dark; --wm-gold: #f5c76b; --wm-lav: #c9b2ff; --wm-mist: #efe7ff; --wm-soft: rgba(255, 246, 251, .72); --wm-glass: rgba(255, 255, 255, .12); --wm-line: rgba(255, 255, 255, .26); animation: srFadeIn .3s ease-out; }
+.wm button { font: inherit; color: inherit; }
+.wm button:focus-visible { outline: 2px solid var(--wm-gold); outline-offset: 3px; }
+.wm-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+.wm-world { position: relative; width: var(--w, 100%); max-width: 100%; margin: 0 auto; overflow: hidden; background: radial-gradient(ellipse 120% 40% at 50% 100%, #2a1640, transparent 70%), linear-gradient(0deg, #21123a, #0f0919 70%); }
+.wm-panel { position: absolute; left: 0; width: 100%; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 13%, #000 86%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 13%, #000 86%, transparent 100%); }
+.wm-paint { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter 1.8s ease; }
+.wm .is-locked .wm-paint { filter: blur(3px) saturate(.5) brightness(.72); }
+.wm-fog { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 60% at 50% 55%, rgba(239, 231, 255, .5), rgba(201, 178, 255, .32) 50%, rgba(33, 18, 58, .35) 85%); transition: opacity 1.8s ease; }
+.wm-fog i { position: absolute; border-radius: 50%; background: var(--wm-mist); filter: blur(30px); opacity: .55; animation: wmDrift 22s ease-in-out infinite alternate; }
+.wm-fog i:nth-child(1) { width: 90%; height: 26%; top: 18%; left: -20%; }
+.wm-fog i:nth-child(2) { width: 80%; height: 22%; top: 46%; left: 30%; animation-duration: 27s; animation-delay: -9s; opacity: .45; }
+.wm-fog i:nth-child(3) { width: 70%; height: 20%; top: 70%; left: -5%; animation-duration: 19s; animation-delay: -4s; opacity: .5; }
+@keyframes wmDrift { from { transform: translateX(-12%); } to { transform: translateX(14%); } }
+.wm .is-open .wm-fog { opacity: 0; }
+.wm-porthole { position: absolute; z-index: 2; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 6px #6b4126, 0 0 0 9px #3a2116, 0 0 40px 12px rgba(245, 199, 107, .35), 0 20px 50px rgba(0, 0, 0, .6); }
+.wm-porthole .wm-paint { object-position: 50% 40%; }
+.wm-porthole-glow { position: absolute; border-radius: 50%; background: radial-gradient(circle, rgba(245, 199, 107, .22), rgba(201, 178, 255, .12) 45%, transparent 70%); pointer-events: none; }
+.wm-mist { position: absolute; left: -20%; width: 140%; pointer-events: none; background: radial-gradient(ellipse 50% 50% at 30% 50%, rgba(239, 231, 255, .22), transparent 70%), radial-gradient(ellipse 45% 45% at 72% 55%, rgba(201, 178, 255, .22), transparent 70%); filter: blur(14px); will-change: transform; }
+svg.wm-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.wm-path .base { fill: none; stroke: rgba(255, 246, 251, .45); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 1 11; }
+.wm-path .lit { fill: none; stroke: #f3eaff; stroke-width: 3.5; stroke-linecap: round; filter: drop-shadow(0 0 5px rgba(201, 178, 255, .95)); }
+.wm-station { position: absolute; z-index: 4; width: 48px; height: 48px; margin: -24px 0 0 -24px; border-radius: 50%; border: 1.5px solid var(--wm-line); background: var(--wm-glass); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); display: grid; place-items: center; cursor: pointer; padding: 0; box-shadow: 0 8px 20px -8px rgba(0, 0, 0, .7); }
+.wm-station svg { width: 20px; height: 20px; }
+.wm-station.is-open { border-color: var(--wm-gold); background: rgba(245, 199, 107, .18); box-shadow: 0 0 16px rgba(245, 199, 107, .55); color: var(--wm-gold); }
+.wm-station.is-locked { color: var(--wm-lav); }
+.wm-station.is-here::after { content: ""; position: absolute; inset: -9px; border-radius: 50%; border: 2px solid var(--wm-gold); animation: wmRing 2s ease-out infinite; }
+@keyframes wmRing { from { transform: scale(.8); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+.wm-label { position: absolute; z-index: 4; transform: translate(-50%, 34px); padding: 4px 12px; border-radius: 999px; background: rgba(15, 9, 25, .55); border: 1px solid var(--wm-line); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); font-weight: 700; font-size: .82rem; white-space: nowrap; pointer-events: none; }
+.wm-label.is-locked { color: var(--wm-soft); }
+.wm-left { font-weight: 500; font-size: .72rem; color: var(--wm-soft); }
+.wm-treasure { position: absolute; z-index: 4; width: 36px; height: 36px; margin: -18px 0 0 -18px; padding: 0; border-radius: 12px; display: grid; place-items: center; border: 1.5px solid var(--wm-line); background: rgba(15, 9, 25, .55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: var(--wm-soft); cursor: pointer; transition: border-color .4s ease, background .4s ease, box-shadow .4s ease, color .4s ease; }
+.wm-treasure[hidden] { display: none; }
+.wm-treasure svg { width: 18px; height: 18px; }
+.wm-treasure.is-open { border-color: var(--wm-gold); color: var(--wm-gold); background: rgba(245, 199, 107, .18); box-shadow: 0 0 14px rgba(245, 199, 107, .5); }
+.wm-friend { position: absolute; z-index: 3; pointer-events: none; filter: drop-shadow(0 8px 12px rgba(0, 0, 0, .5)); transition: opacity 1.8s ease; }
+.wm-friend.is-hidden { opacity: 0; }
+/* Sky על האבן האחרונה שנדלקה */
+.wm-sky { position: absolute; z-index: 6; left: 0; top: 0; width: 108px; height: 108px; pointer-events: none; will-change: transform; --lift: 0px; --act: 0px; }
+.wm-sky-shadow { position: absolute; left: 50%; bottom: 14px; width: 52px; height: 13px; margin-left: -26px; border-radius: 50%; background: radial-gradient(closest-side, rgba(10, 4, 20, .5), transparent); transform: scale(var(--sh, 1)); }
+.wm-sky-body { position: absolute; inset: 0; transform: translateY(calc(-1 * var(--lift))); }
+.wm-sky-act { position: absolute; inset: 0; transform: translateY(calc(-14px - var(--act))); }
+.wm-sky-bob { position: absolute; inset: 0; animation: wmBob 2.2s ease-in-out infinite alternate; pointer-events: auto; cursor: pointer; }
+.wm-sky.no-3d img { transform: rotateY(var(--turn, 0deg)); }
+.wm-sky model-viewer { position: absolute; inset: 0; width: 100%; height: 100%; background: transparent; --poster-color: transparent; }
+.wm-sky img { position: absolute; inset: 18% 14% 20%; width: 72%; height: 62%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .45)); transition: opacity .3s ease; }
+.wm-sky.has-3d img { opacity: 0; }
+@keyframes wmBob { from { transform: translateY(0); } to { transform: translateY(-6px); } }
+.wm-burst { position: absolute; z-index: 6; width: 0; height: 0; pointer-events: none; }
+.wm-burst i { position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px 2px var(--c); animation: wmSpark 1.3s cubic-bezier(.2, .7, .3, 1) both; }
+@keyframes wmSpark { 0% { opacity: 0; transform: translate(0, 0); } 12% { opacity: 1; } 100% { opacity: 0; transform: translate(var(--dx), calc(var(--dy) + 20px)) scale(.4); } }
+/* אבני האי: ביעד = בצבע של הציור שהיא עליו + ✓, היום = זהב + ★, מה שלפנינו = אפור עם מנעול */
+.wm-stone { position: absolute; z-index: 4; width: 46px; height: 40px; margin: -20px 0 0 -23px; padding: 0; border: none; background: none; cursor: pointer; transition: transform .35s ease; filter: drop-shadow(0 6px 5px rgba(0, 0, 0, .5)); }
+.wm-stone::before { content: ""; position: absolute; inset: -6px; }
+.wm-stone svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.wm-stone.st-done { --n-main: var(--accent); --n-lip: color-mix(in srgb, var(--accent) 68%, #1b0f2e); --n-ico: #fff; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--accent) 70%, transparent)) drop-shadow(0 6px 5px rgba(0, 0, 0, .45)); }
+.wm-stone.st-current { --n-main: var(--wm-gold); --n-lip: #c48a2a; --n-ico: #fff; z-index: 5; }
+.wm-stone.st-locked { --n-main: #6c6382; --n-lip: #4a4260; --n-ico: #d9d0ec; }
+.wm-stone .m { fill: var(--n-main); stroke: var(--n-main); }
+.wm-stone .l { fill: var(--n-lip); stroke: var(--n-lip); }
+.wm-stone .l2 { fill: color-mix(in srgb, var(--n-lip) 78%, #000); stroke: color-mix(in srgb, var(--n-lip) 78%, #000); }
+.wm-stone .rj { stroke-width: 9; stroke-linejoin: round; }
+.wm-stone .wl { fill: none; stroke: #fff; stroke-opacity: .35; stroke-width: 3; stroke-linecap: round; }
+.wm-stone.st-locked .wl { stroke-opacity: .15; }
+.wm-stone .ico-s { fill: none; stroke: var(--n-ico); stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+.wm-stone .ico-f { fill: var(--n-ico); stroke: var(--n-ico); stroke-width: 3; stroke-linejoin: round; }
+.wm-stone .halo { fill: none; stroke: var(--wm-gold); stroke-width: 4; transform-box: view-box; transform-origin: 50px 40px; animation: wmHalo 2.2s ease-out infinite; opacity: 0; }
+@keyframes wmHalo { 0% { transform: scale(.82); opacity: .8; } 100% { transform: scale(1.25); opacity: 0; } }
+.wm-stone.pop { transform: scale(1.35); }
+.wm-stone:focus-visible { outline: 2px solid var(--wm-gold); outline-offset: 4px; border-radius: 10px; }
+/* הכותרת: מה סופרים, כמה אבנים, מפתחות */
+.wm-top { position: absolute; z-index: 20; top: calc(10px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); width: min(100% - 24px, 456px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 2px 10px; padding: 8px; padding-inline-start: 14px; border-radius: 22px; background: rgba(15, 9, 25, .6); border: 1px solid var(--wm-line); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-sizing: border-box; }
+.wm-top h2 { margin: 0; font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 8px; min-width: 0; color: #fff6fb; }
+.wm-chip { font-size: .7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--wm-glass); color: var(--wm-soft); }
+.wm-chip[hidden] { display: none; }
+.wm-x { flex: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; border: 1px solid var(--wm-line); background: var(--wm-glass); display: grid; place-items: center; cursor: pointer; }
+.wm-rule { flex-basis: 100%; margin: 0; font-size: .74rem; line-height: 1.45; color: var(--wm-soft); }
+.wm-rule b { color: #fff3d4; font-weight: 700; }
+.wm-rule .nw { white-space: nowrap; }
+.wm-toast { position: absolute; z-index: 30; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); box-sizing: border-box; line-height: 1.45; padding: 9px 16px; border-radius: 18px; background: rgba(15, 9, 25, .82); border: 1px solid var(--wm-line); font-size: .88rem; text-align: center; transition: opacity .3s ease; }
+.wm-toast[hidden] { display: block; opacity: 0; pointer-events: none; }
+.wm-btn { flex: 1; min-height: 46px; padding: 0 14px; border-radius: 16px; border: 1px solid var(--wm-line); background: var(--wm-glass); font-weight: 700; font-size: .95rem; cursor: pointer; }
+.wm-btn.primary { border-color: rgba(245, 199, 107, .7); background: linear-gradient(180deg, rgba(245, 199, 107, .35), rgba(245, 199, 107, .15)); color: #fff3d4; }
+/* כניסה למקום: הציור שלם באמצע, על עותק מטושטש שלו */
+.wm-zoom { position: absolute; inset: 0; z-index: 40; background: #0f0919; display: flex; flex-direction: column; transform-origin: var(--ox, 50%) var(--oy, 50%); animation: wmZoomIn .45s cubic-bezier(.2, .8, .2, 1); }
+@keyframes wmZoomIn { from { transform: scale(.15); opacity: 0; border-radius: 40px; } }
+.wm-zoom-art { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.wm-zoom-bg { position: absolute; inset: -60px; background-size: cover; background-position: center; filter: blur(30px) brightness(.55) saturate(1.15); }
+.wm-zoom-frame { position: relative; height: 100%; aspect-ratio: 768 / 1376; max-width: 100%; margin: 0 auto; box-shadow: 0 0 80px rgba(0, 0, 0, .55); }
+.wm-rooms { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.wm-rooms::-webkit-scrollbar { display: none; }
+.wm-room { flex: 0 0 100%; height: 100%; position: relative; scroll-snap-align: center; }
+.wm-room img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wm-room span { position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: rgba(15, 9, 25, .6); font-size: .85rem; white-space: nowrap; }
+.wm-room-nav { position: absolute; top: 50%; z-index: 2; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%; border: 1px solid var(--wm-line); background: rgba(15, 9, 25, .55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); display: grid; place-items: center; padding: 0; cursor: pointer; transition: opacity .2s ease; }
+.wm-room-nav svg { width: 20px; height: 20px; }
+.wm-room-nav.prev { inset-inline-start: 12px; }
+.wm-room-nav.next { inset-inline-end: 12px; }
+html[dir="rtl"] .wm-room-nav.next svg, html:not([dir="rtl"]) .wm-room-nav.prev svg { transform: scaleX(-1); }
+.wm-room-nav:disabled { opacity: 0; pointer-events: none; }
+.wm-zoom-bar { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(100% - 24px, 456px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 10px; padding: 8px; padding-inline-start: 16px; border-radius: 22px; background: rgba(15, 9, 25, .62); border: 1px solid var(--wm-line); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-sizing: border-box; }
+.wm-zoom-bar h3 { margin: 0; font-size: 1.05rem; min-width: 0; overflow-wrap: anywhere; color: #fff6fb; }
+.wm-zoom-btns { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.wm-zoom-btns .wm-btn { flex: none; }
+.wm-finish { position: absolute; inset: 0; z-index: 50; display: grid; place-items: center; padding: 16px; background: rgba(15, 9, 25, .55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+.wm-finish-card { width: min(100%, 380px); box-sizing: border-box; padding: 22px 20px 18px; border-radius: 26px; background: rgba(33, 18, 58, .86); border: 1px solid rgba(245, 199, 107, .55); box-shadow: 0 0 40px rgba(245, 199, 107, .25), 0 20px 50px rgba(0, 0, 0, .6); text-align: center; animation: wmZoomIn .4s cubic-bezier(.2, .8, .2, 1); }
+.wm-finish-card h3 { margin: 0 0 6px; font-size: 1.3rem; color: #fff3d4; }
+.wm-finish-card p { margin: 0 0 16px; color: var(--wm-soft); line-height: 1.5; }
+.wm-row { display: flex; gap: 10px; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .wm-fog i, .wm-sky-bob, .wm-station.is-here::after, .wm-zoom, .wm-finish-card { animation: none; } .wm-stone .halo { animation: none; opacity: .4; } }

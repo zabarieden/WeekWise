@@ -114,7 +114,7 @@
         @keyframes bootTwinkle { from { opacity: 1; transform: scale(1); } to { opacity: .45; transform: scale(.7); } }
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before { animation: none; } .boot-sparkle i { top: var(--y); } }
     </style>
-    <link rel="stylesheet" href="theme.css?v=635">
+    <link rel="stylesheet" href="theme.css?v=636">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -4544,9 +4544,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=544"></script>
+    <script src="i18n/core.js?v=545"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=665"></script>
+    <script src="app.js?v=666"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
@@ -4557,8 +4557,9 @@
     <script src="new-me-challenges.js?v=15"></script>
     <script src="secret-room.js?v=39"></script>
     <script src="secret-places.js?v=33"></script>
-    <script src="new-me-game.js?v=19"></script>
+    <script src="new-me-game.js?v=20"></script>
     <script src="world3d.js?v=16"></script>
+    <script src="world-map.js?v=1"></script>
     <script src="books.js?v=9"></script>
     <script src="home.js?v=36"></script>
     <script src="shop-depts.js?v=2"></script>

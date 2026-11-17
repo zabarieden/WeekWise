@@ -235,6 +235,8 @@ function nmgPlaceOpen(p, keys) {
     return typeof roomUnlockAt === 'function' && keys >= roomUnlockAt(p.id);
 }
 function nmgOpenMap() {
+    // 🗺️ המפה המצוירת עם האבנים (world-map.js, 2026-11-17) - באותו מקום של מפת העולם
+    if (typeof wmOpen === 'function') { wmOpen(); return; }
     nmgCloseBag();
     nmgCloseMap();
     const keys = nmgKeys();
@@ -264,6 +266,7 @@ function nmgOpenMap() {
     if (typeof nmg3dUpgradeMap === 'function') nmg3dUpgradeMap(box, keys);
 }
 function nmgCloseMap() {
+    if (typeof wmClose === 'function' && typeof wm !== 'undefined' && wm) wmClose();
     document.getElementById('nmg-map')?.remove();
     document.querySelector('.phone-wrapper')?.classList.remove('nmg-map-open');
 }
