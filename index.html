@@ -49,6 +49,12 @@
                 if (localStorage.getItem('weekwise_menu_style') === 'tiles') document.documentElement.classList.add('menu-style-tiles');
                 var textColor = localStorage.getItem('weekwise_global_text_color');
                 if (textColor) document.documentElement.style.setProperty('--user-accent', textColor);
+                // ✦ נצנצים נופלים במקום מסך ריק/לוגו עד שהאפליקציה מוכנה (2026-11-17) - רק כשיש כניסה שמורה במכשיר.
+                // endBootSparkle ב-app.js מסיר אותם; 12 שניות לכל היותר בכל מקרה
+                if (Object.keys(localStorage).some(function (k) { return /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k); })) {
+                    document.documentElement.classList.add('booting');
+                    setTimeout(function () { document.documentElement.classList.remove('booting'); }, 12000);
+                }
             } catch (e) { /* localStorage חסום/לא זמין - נשאר על ברירת המחדל */ }
         })();
     </script>
@@ -93,22 +99,33 @@
     <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&display=swap" rel="stylesheet">
 
     <!-- חיבור לקובץ עיצוב מעודכן -->
-    <link rel="stylesheet" href="theme.css?v=634">
+    <style>
+        /* ✦ מסך הכניסה: נצנצים נופלים בצבעי הערכה (לפי בקשה מפורשת, 2026-11-17: "אחליף לכניסה של מלא נצנצים נופלים") */
+        .boot-sparkle { display: none; }
+        html.booting .boot-sparkle { display: block; position: fixed; inset: 0; z-index: 2147483600; overflow: hidden; pointer-events: none; background: radial-gradient(ellipse 70% 45% at 50% 42%, color-mix(in srgb, var(--accent-purple, #a855f7) 26%, transparent), transparent 72%), var(--bg-main, #0d0918); transition: opacity .45s ease; }
+        html.booting .boot-sparkle.is-out { opacity: 0; }
+        .boot-sparkle i { position: absolute; top: -16px; left: var(--x); width: var(--s); height: var(--s); --c: #fff; animation: bootFall var(--t) linear var(--d) infinite; }
+        .boot-sparkle i:nth-child(3n) { --c: var(--accent-pink, #ec4899); }
+        .boot-sparkle i:nth-child(3n+1) { --c: var(--accent-purple, #a855f7); }
+        html.light-mode .boot-sparkle i:nth-child(3n+2) { --c: color-mix(in srgb, var(--accent-purple, #a855f7) 55%, var(--accent-pink, #ec4899)); }
+        .boot-sparkle i::before { content: ""; position: absolute; inset: 0; background: var(--c); clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); animation: bootTwinkle 1.3s ease-in-out var(--d) infinite alternate; }
+        .boot-sparkle i::after { content: ""; position: absolute; inset: -70%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 50%, transparent), transparent 62%); }
+        @keyframes bootFall { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(var(--dx), 108vh, 0) rotate(260deg); } }
+        @keyframes bootTwinkle { from { opacity: 1; transform: scale(1); } to { opacity: .45; transform: scale(.7); } }
+        @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before { animation: none; } .boot-sparkle i { top: var(--y); } }
+    </style>
+    <link rel="stylesheet" href="theme.css?v=635">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Tesseract.js: OCR בצד לקוח, נטען עצלנית ורק בשימוש בפועל (ר' runLocalRecipeOcrFallback
-         ב-app.js) - נופלת בעדינות לזיהוי טקסט מקומי כשסריקת ה-AI האמיתית בענן לא זמינה -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
+         קודם נטענו כאן וחסמו את הציור הראשון בכל פתיחה) -->
     <!-- SortableJS: גרירה-ושחרור למגע במובייל עבור שורות הלו"ז השבועי (ר'
          initScheduleRowDragReorder ב-app.js) - גרסה מוצמדת (לא @latest) כדי
          שהאתר לא "יישבר" בשקט משדרוג עתידי לא-צפוי בספרייה -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-    <!-- SheetJS (xlsx): פענוח קבצי Excel/CSV בצד לקוח לייבוא הוצאות קבועות (ר'
-         handleRecurringImportFileSelected ב-app.js) - גרסה מוצמדת מאותה סיבה. מה-CDN הרשמי של
-         SheetJS, כי ב-npm נשארה רק 0.18.5 הישנה (בגרסאות החדשות תוקנו בעיות אבטחה) -->
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
+    <div id="boot-sparkle" class="boot-sparkle" aria-hidden="true"><i style="--x:11.0%;--s:5px;--t:4.20s;--d:0.00s;--dx:-30px;--y:0vh"></i><i style="--x:48.3%;--s:12px;--t:6.40s;--d:-0.71s;--dx:-7px;--y:53vh"></i><i style="--x:85.6%;--s:9px;--t:8.60s;--d:-1.42s;--dx:16px;--y:10vh"></i><i style="--x:22.9%;--s:6px;--t:5.85s;--d:-2.13s;--dx:-21px;--y:63vh"></i><i style="--x:60.2%;--s:13px;--t:8.05s;--d:-2.84s;--dx:2px;--y:20vh"></i><i style="--x:97.5%;--s:10px;--t:5.30s;--d:-3.55s;--dx:25px;--y:73vh"></i><i style="--x:34.8%;--s:7px;--t:7.50s;--d:-4.26s;--dx:-12px;--y:30vh"></i><i style="--x:72.1%;--s:14px;--t:4.75s;--d:-0.22s;--dx:11px;--y:83vh"></i><i style="--x:9.4%;--s:11px;--t:6.95s;--d:-5.68s;--dx:-26px;--y:40vh"></i><i style="--x:46.7%;--s:8px;--t:4.20s;--d:-2.19s;--dx:-3px;--y:93vh"></i><i style="--x:84.0%;--s:5px;--t:6.40s;--d:-0.70s;--dx:20px;--y:50vh"></i><i style="--x:21.3%;--s:12px;--t:8.60s;--d:-7.81s;--dx:-17px;--y:7vh"></i><i style="--x:58.6%;--s:9px;--t:5.85s;--d:-2.67s;--dx:6px;--y:60vh"></i><i style="--x:95.9%;--s:6px;--t:8.05s;--d:-1.18s;--dx:29px;--y:17vh"></i><i style="--x:33.2%;--s:13px;--t:5.30s;--d:-4.64s;--dx:-8px;--y:70vh"></i><i style="--x:70.5%;--s:10px;--t:7.50s;--d:-3.15s;--dx:15px;--y:27vh"></i><i style="--x:7.8%;--s:7px;--t:4.75s;--d:-1.86s;--dx:-22px;--y:80vh"></i><i style="--x:45.1%;--s:14px;--t:6.95s;--d:-5.12s;--dx:1px;--y:37vh"></i><i style="--x:82.4%;--s:11px;--t:4.20s;--d:-0.18s;--dx:24px;--y:90vh"></i><i style="--x:19.7%;--s:8px;--t:6.40s;--d:-0.69s;--dx:-13px;--y:47vh"></i><i style="--x:57.0%;--s:5px;--t:8.60s;--d:-5.60s;--dx:10px;--y:4vh"></i><i style="--x:94.3%;--s:12px;--t:5.85s;--d:-3.21s;--dx:-27px;--y:57vh"></i><i style="--x:31.6%;--s:9px;--t:8.05s;--d:-7.57s;--dx:-4px;--y:14vh"></i><i style="--x:68.9%;--s:6px;--t:5.30s;--d:-0.43s;--dx:19px;--y:67vh"></i><i style="--x:6.2%;--s:13px;--t:7.50s;--d:-2.04s;--dx:-18px;--y:24vh"></i><i style="--x:43.5%;--s:10px;--t:4.75s;--d:-3.50s;--dx:5px;--y:77vh"></i><i style="--x:80.8%;--s:7px;--t:6.95s;--d:-4.56s;--dx:28px;--y:34vh"></i><i style="--x:18.1%;--s:14px;--t:4.20s;--d:-2.37s;--dx:-9px;--y:87vh"></i><i style="--x:55.4%;--s:11px;--t:6.40s;--d:-0.68s;--dx:14px;--y:44vh"></i><i style="--x:92.7%;--s:8px;--t:8.60s;--d:-3.39s;--dx:-23px;--y:1vh"></i><i style="--x:30.0%;--s:5px;--t:5.85s;--d:-3.75s;--dx:0px;--y:54vh"></i><i style="--x:67.3%;--s:12px;--t:8.05s;--d:-5.91s;--dx:23px;--y:11vh"></i><i style="--x:4.6%;--s:9px;--t:5.30s;--d:-1.52s;--dx:-14px;--y:64vh"></i><i style="--x:41.9%;--s:6px;--t:7.50s;--d:-0.93s;--dx:9px;--y:21vh"></i><i style="--x:79.2%;--s:13px;--t:4.75s;--d:-0.39s;--dx:-28px;--y:74vh"></i><i style="--x:16.5%;--s:10px;--t:6.95s;--d:-4.00s;--dx:-5px;--y:31vh"></i><i style="--x:53.8%;--s:7px;--t:4.20s;--d:-0.36s;--dx:18px;--y:84vh"></i><i style="--x:91.1%;--s:14px;--t:6.40s;--d:-0.67s;--dx:-19px;--y:41vh"></i><i style="--x:28.4%;--s:11px;--t:8.60s;--d:-1.18s;--dx:4px;--y:94vh"></i><i style="--x:65.7%;--s:8px;--t:5.85s;--d:-4.29s;--dx:27px;--y:51vh"></i><i style="--x:3.0%;--s:5px;--t:8.05s;--d:-4.25s;--dx:-10px;--y:8vh"></i><i style="--x:40.3%;--s:12px;--t:5.30s;--d:-2.61s;--dx:13px;--y:61vh"></i><i style="--x:77.6%;--s:9px;--t:7.50s;--d:-7.32s;--dx:-24px;--y:18vh"></i><i style="--x:14.9%;--s:6px;--t:4.75s;--d:-2.03s;--dx:-1px;--y:71vh"></i><i style="--x:52.2%;--s:13px;--t:6.95s;--d:-3.44s;--dx:22px;--y:28vh"></i><i style="--x:89.5%;--s:10px;--t:4.20s;--d:-2.55s;--dx:-15px;--y:81vh"></i><i style="--x:26.8%;--s:7px;--t:6.40s;--d:-0.66s;--dx:8px;--y:38vh"></i><i style="--x:64.1%;--s:14px;--t:8.60s;--d:-7.57s;--dx:-29px;--y:91vh"></i><i style="--x:1.4%;--s:11px;--t:5.85s;--d:-4.83s;--dx:-6px;--y:48vh"></i><i style="--x:38.7%;--s:8px;--t:8.05s;--d:-2.59s;--dx:17px;--y:5vh"></i><i style="--x:76.0%;--s:5px;--t:5.30s;--d:-3.70s;--dx:-20px;--y:58vh"></i><i style="--x:13.3%;--s:12px;--t:7.50s;--d:-6.21s;--dx:3px;--y:15vh"></i><i style="--x:50.6%;--s:9px;--t:4.75s;--d:-3.67s;--dx:26px;--y:68vh"></i><i style="--x:87.9%;--s:6px;--t:6.95s;--d:-2.88s;--dx:-11px;--y:25vh"></i><i style="--x:25.2%;--s:13px;--t:4.20s;--d:-0.54s;--dx:12px;--y:78vh"></i><i style="--x:62.5%;--s:10px;--t:6.40s;--d:-0.65s;--dx:-25px;--y:35vh"></i><i style="--x:99.8%;--s:7px;--t:8.60s;--d:-5.36s;--dx:-2px;--y:88vh"></i><i style="--x:37.1%;--s:14px;--t:5.85s;--d:-5.37s;--dx:21px;--y:45vh"></i><i style="--x:74.4%;--s:11px;--t:8.05s;--d:-0.93s;--dx:-16px;--y:2vh"></i><i style="--x:11.7%;--s:8px;--t:5.30s;--d:-4.79s;--dx:7px;--y:55vh"></i><i style="--x:49.0%;--s:5px;--t:7.50s;--d:-5.10s;--dx:-30px;--y:12vh"></i><i style="--x:86.3%;--s:12px;--t:4.75s;--d:-0.56s;--dx:-7px;--y:65vh"></i><i style="--x:23.6%;--s:9px;--t:6.95s;--d:-2.32s;--dx:16px;--y:22vh"></i><i style="--x:60.9%;--s:6px;--t:4.20s;--d:-2.73s;--dx:-21px;--y:75vh"></i></div>
 
     <!-- מעטפת האפליקציה הנעולה בגודל מובייל קלאסי -->
     <div class="phone-wrapper">
@@ -1410,7 +1427,7 @@
                         <h3 data-i18n="hamburger_menu_title">Menu</h3>
                         <div class="hamburger-drawer-header-actions">
                             <!-- מעבר לתצוגת קוביות - בחירה בין ☰ לבין ▦ (רק אחד מהם מוצג למעלה) -->
-                            <button type="button" class="menu-style-switch js-night-btn" onclick="toggleNightFromMenu()" aria-pressed="false" title="Night mode" aria-label="Night mode"><svg class="hn-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="hn-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
+                            <button type="button" class="menu-style-switch js-night-btn" onclick="toggleNightFromMenu(this)" aria-pressed="false" title="Night mode" aria-label="Night mode"><svg class="hn-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="hn-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
                             <button type="button" class="hamburger-drawer-close" onclick="closeHamburgerMenu()" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
                         </div>
                     </div>
@@ -3660,7 +3677,7 @@
                     <h3 id="categories-menu-title" data-i18n="categories_menu_title">All Categories</h3>
                     <!-- מעבר לתצוגת רשימה (☰), והגדרות - שאחרת לא נגישות בתצוגת קוביות -->
                     <div class="categories-header-actions">
-                        <button type="button" class="menu-style-switch js-night-btn" onclick="toggleNightFromMenu()" aria-pressed="false" title="Night mode" aria-label="Night mode"><svg class="hn-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="hn-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
+                        <button type="button" class="menu-style-switch js-night-btn" onclick="toggleNightFromMenu(this)" aria-pressed="false" title="Night mode" aria-label="Night mode"><svg class="hn-moon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg><svg class="hn-sun" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg></button>
                         <button type="button" class="menu-style-switch" onclick="closeModal('modal-categories'); openSettingsDrawer();" data-i18n-title="settings_title" data-i18n-aria-label="settings_title" title="Settings" aria-label="Settings">⚙️</button>
                         <button type="button" class="menu-style-switch" onclick="switchMenuStyle('list')" data-i18n-title="menu_switch_to_list" data-i18n-aria-label="menu_switch_to_list" title="Switch to list view" aria-label="Switch to list view">☰</button>
                         <button type="button" class="hamburger-drawer-close" onclick="closeModal('modal-categories')" data-i18n-aria-label="close_btn" aria-label="Close">✕</button>
@@ -4527,9 +4544,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=543"></script>
+    <script src="i18n/core.js?v=544"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=664"></script>
+    <script src="app.js?v=665"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>

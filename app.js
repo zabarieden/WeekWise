@@ -41,6 +41,15 @@ function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
 // שהתעורר, מעבר בין Wi-Fi לסלולר) getSession מחזיר רגע בלי session - וזה הציג את מסך הכניסה, כאילו היה ניתוק. עכשיו: כל
 // עוד יש כניסה שמורה במכשיר מנסים שוב (עם הפסקות קצרות, ושוב כשהרשת חוזרת), ובינתיים במקום הטופס - "מתחברים...".
 // מסך הכניסה מופיע רק כשבאמת אין כניסה (יציאה, או כניסה ש-Supabase ביטל)
+// ✦ מסך הכניסה: נצנצים נופלים במקום הלוגו (לפי בקשה מפורשת, 2026-11-17), רק למי שכבר מחובר/ת - נעלם ברגע שהאפליקציה מוכנה
+function endBootSparkle() {
+    const root = document.documentElement;
+    const el = document.getElementById('boot-sparkle');
+    if (!root.classList.contains('booting') || !el) { root.classList.remove('booting'); if (el) el.remove(); return; }
+    if (el.classList.contains('is-out')) return;
+    el.classList.add('is-out');
+    setTimeout(() => { root.classList.remove('booting'); el.remove(); }, 460);
+}
 function hasStoredAuthSession() {
     try { return Object.keys(localStorage).some(k => /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k)); } catch { return false; }
 }
@@ -198,6 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (supabaseClient) {
         const session = await restoreSessionWithRetry();
+        if (!session) endBootSparkle();
         if (session) initAppAfterAuth(session.user);
         else if (hasStoredAuthSession()) storedSessionRetryTimer = setTimeout(retryStoredSession, 4000);
         document.addEventListener('visibilitychange', () => {
@@ -692,6 +702,20 @@ async function toggleNoteUrgent(id, cur, type) {
 // expanded על ה-li של המפריד עצמו - נשלט לגמרי ב-CSS (ר' .center-list-
 // divider:not(.expanded) ~ li) כדי שלא צריך לגעת בכל פתק בנפרד ב-JS
 // count - כמה פתקים יש ב"להגיע לזה", כדי שגם כשהקטע מקופל רואים שיש שם משהו (0 = בלי מספר)
+function refreshNoteSomedayCount(listUl) {
+    const divider = listUl && listUl.querySelector('.center-list-divider');
+    if (!divider) return;
+    let count = 0, after = false;
+    Array.from(listUl.children).forEach(child => { if (child === divider) after = true; else if (after && child.hasAttribute('data-item-id')) count++; });
+    let badge = divider.querySelector('.center-list-divider-count');
+    if (!count) { if (badge) badge.remove(); return; }
+    if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'center-list-divider-count';
+        divider.insertBefore(badge, divider.querySelector('.center-list-divider-chevron'));
+    }
+    badge.textContent = count;
+}
 function buildNoteSomedayDivider(count) {
     const li = document.createElement('li');
     li.className = 'center-list-divider';
@@ -788,6 +812,8 @@ function initNoteTriageDragDrop(type) {
                 if (type === 'weekly') payload.is_someday = isSomeday;
                 updates.push(supabaseClient.from('my_center_tasks').update(payload).eq('id', id));
             });
+            // המספר ליד "להגיע לזה" מתעדכן מיד (לפי בקשה מפורשת, 2026-11-17: "יש 7 פתקים ועדיין רשום 6 עד רענון")
+            if (type === 'weekly') refreshNoteSomedayCount(evt.from);
             Promise.all(updates);
         },
     });
@@ -1970,6 +1996,7 @@ function openOnboarding(user) {
     onboardingStep = 0;
     onboardingPendingPhone = null;
     onboardingPendingGoalTitle = null;
+    endBootSparkle();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     requestAnimationFrame(repositionPeekTabStack);
@@ -2130,7 +2157,14 @@ const APP_TOUR_STEPS = [
     { id: 'ai_money', ch: 'ai', ctx: 'ai', tab: 'money', target: '#ai-chat .ai-chat-tool[data-tool="money"]', titleKey: 'ai_chat_tool_money', text: 'apptour_ai_money_text' },
     { id: 'menu', ch: 'menu', ctx: 'home', icon: '☰', target: () => appTourVisible('#btn-hamburger-menu') || appTourVisible('#btn-categories-menu'), titleKey: 'hamburger_menu_title', text: 'apptour_menu_text' },
     // התפריט - כל פריט, לפי הסדר שבו הוא מופיע: למעלה מצב לילה, רשימה/אריחים וחיפוש, ואז הפריטים מלמעלה למטה
-    { id: 'm_night', ch: 'menu', ctx: 'menu', icon: '🌙', target: '#hamburger-drawer-overlay .js-night-btn', titleKey: 'menu_night_mode', text: 'apptour_night_text' },
+    // 🌙 צריך לגעת בכפתור באמת (לפי בקשה מפורשת, 2026-11-17): כל האפליקציה עוברת ללילה (או ליום) בעיגול שמתפשט, ואז הסיור ממשיך
+    { id: 'm_night', ch: 'menu', ctx: 'menu', icon: '🌙', target: '#hamburger-drawer-overlay .js-night-btn', titleKey: 'menu_night_mode', text: 'apptour_night_text',
+        tap: btn => toggleNightFromMenu(btn),
+        dyn: done => {
+            const night = !document.documentElement.classList.contains('light-mode');
+            if (done) return { titleKey: night ? 'menu_night_mode' : 'menu_day_mode', icon: night ? '🌙' : '☀️', text: night ? 'apptour_night_done' : 'apptour_day_done' };
+            return { titleKey: night ? 'menu_day_mode' : 'menu_night_mode', icon: night ? '☀️' : '🌙', text: night ? 'apptour_day_tap' : 'apptour_night_tap' };
+        } },
     // (the ▦ tiles-view step was removed together with the tiles view, 2026-10-20)
     { id: 'm_search', ch: 'menu', ctx: 'menu', icon: '🔎', target: '#hamburger-drawer-overlay .hamburger-search', titleKey: 'home_search_aria', text: 'apptour_search_text' },
     { id: 'm_newme', ch: 'menu', ctx: 'menu', target: '[data-tour="m-newme"]', text: 'apptour_m_newme_text', link: 'apptour_m_newme_link' },
@@ -2222,6 +2256,7 @@ let appTourLastRect = '';
 let appTourDir = 0;          // כיוון המעבר האחרון (1 קדימה, ‎-1 אחורה, 0 קפיצה) - להנפשה של הכרטיס
 let appTourFinished = false; // הגיעו עד הסוף (אז אין "להמשיך מאיפה שעצרתי")
 let appTourStartId = null;   // להתחיל משלב מסוים (סיור של New Me שנקטע באמצע - Me1 שואל "נמשיך?")
+const appTourTapped = new Set(); // שלבים של "לגעת באמת" שכבר נגעו בהם בסיור הזה
 
 function appTourPartOf(step) { return APP_TOUR_PART_OF[step.ch] || step.ch; }
 function appTourPartIcon(key) { return key === 'newme' ? NM_ICON_SVG : (APP_TOUR_PART_ICONS[key] || ''); }
@@ -2344,6 +2379,7 @@ function appTourBuildLayer() {
     layer.innerHTML = `
         <div class="app-tour-block"></div>
         <div class="app-tour-spot is-empty"></div>
+        <button type="button" class="app-tour-tap hidden" onclick="appTourDoTap()"></button>
         <span class="app-tour-caret hidden" aria-hidden="true"></span>
         <div class="app-tour-card" tabindex="-1">
             <div class="app-tour-top">
@@ -2533,9 +2569,17 @@ function appTourRender(step) {
     const layer = appTourLayer;
     if (!layer) return;
     const card = layer.querySelector('.app-tour-card');
+    const tapDone = !!step.tap && appTourTapped.has(step.id);
+    const dyn = step.dyn ? step.dyn(tapDone) : null;
     const fromTarget = !step.titleKey && appTourTarget ? appTourLabelFromTarget(appTourTarget) : null;
-    const title = step.titleKey ? t(step.titleKey) : (fromTarget ? fromTarget.label : '');
-    const icon = step.icon || (fromTarget ? fromTarget.icon : '');
+    const title = dyn ? t(dyn.titleKey) : step.titleKey ? t(step.titleKey) : (fromTarget ? fromTarget.label : '');
+    const icon = (dyn && dyn.icon) || step.icon || (fromTarget ? fromTarget.icon : '');
+    const tapWait = !!step.tap && !tapDone;
+    layer.classList.toggle('is-tap-wait', tapWait);
+    layer.classList.toggle('is-reveal', tapDone);
+    const tapEl = layer.querySelector('.app-tour-tap');
+    tapEl.classList.toggle('hidden', !step.tap || !appTourTarget);
+    tapEl.setAttribute('aria-label', title);
     const isCenter = !appTourTarget;
     const chapterLabel = t(APP_TOUR_CHAPTERS[step.ch] || 'apptour_ch_home');
     layer.querySelector('.app-tour-chapter').textContent = chapterLabel;
@@ -2556,7 +2600,7 @@ function appTourRender(step) {
     if (step.demo === 'goal') demoEl.appendChild(buildTourDemoGoalPath());
     const titleEl = layer.querySelector('.app-tour-title');
     titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourIconHtml(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
-    layer.querySelector('.app-tour-text').textContent = t(step.text);
+    layer.querySelector('.app-tour-text').textContent = t(dyn ? dyn.text : step.text);
     const agendaEl = layer.querySelector('.app-tour-agenda');
     agendaEl.innerHTML = step.agenda ? appTourAgendaHtml() : '';
     agendaEl.classList.toggle('hidden', !step.agenda);
@@ -2592,6 +2636,7 @@ function appTourRender(step) {
     const isLast = appTourPos === total - 1;
     const nextBtn = layer.querySelector('.app-tour-next');
     nextBtn.innerHTML = `<span>${appTourEsc(step.agenda ? t('apptour_start') : isLast ? t('apptour_finish') : t('apptour_next'))}</span>${isLast ? '' : APP_TOUR_CHEVRON_NEXT}`;
+    nextBtn.classList.toggle('invisible', tapWait);
     // "לדלג על החלק הזה" - כשנשארו בחלק לפחות עוד שני שלבים ויש חלק אחריו
     const nextPart = current ? parts[parts.indexOf(current) + 1] : null;
     const skipPart = layer.querySelector('.app-tour-skip-part');
@@ -2680,6 +2725,8 @@ function appTourPosition() {
     const sh = Math.min(vh - 4, r.bottom + pad) - st;
     const radius = parseFloat(getComputedStyle(target).borderTopLeftRadius) || 0;
     spot.classList.remove('is-empty');
+    const tapEl = layer.querySelector('.app-tour-tap');
+    if (tapEl) { tapEl.style.left = `${sl}px`; tapEl.style.top = `${st}px`; tapEl.style.width = `${sw}px`; tapEl.style.height = `${sh}px`; }
     spot.style.left = `${sl}px`;
     spot.style.top = `${st}px`;
     spot.style.width = `${sw}px`;
@@ -2716,10 +2763,36 @@ function appTourPosition() {
 
 function appTourNext() {
     if (!appTourActive) return;
+    const cur = appTourSteps[appTourPlan[appTourPos]];
+    if (cur && cur.tap && !appTourTapped.has(cur.id) && appTourTarget) {
+        const spot = appTourLayer && appTourLayer.querySelector('.app-tour-spot');
+        if (spot) { spot.classList.remove('nudge'); void spot.offsetWidth; spot.classList.add('nudge'); }
+        return;
+    }
     if (appTourPos >= appTourPlan.length - 1) { appTourFinished = true; closeAppTour(); return; }
     appTourDir = 1;
     appTourPos++;
     appTourShow();
+}
+// נגיעה אמיתית בכפתור שבזרקור (למשל הירח): עושה את הפעולה, מראה את התוצאה, ואחרי רגע ממשיך לבד
+function appTourDoTap() {
+    if (!appTourActive) return;
+    const step = appTourSteps[appTourPlan[appTourPos]];
+    if (!step || !step.tap || appTourTapped.has(step.id)) return;
+    const token = appTourToken;
+    const wasLight = document.documentElement.classList.contains('light-mode');
+    step.tap(appTourTarget);
+    appTourTapped.add(step.id);
+    appTourDir = 0;
+    // המעבר מונפש (עיגול שמתפשט) - המצב מתחלף רק בפריים הבא, אז הכרטיס מתעדכן אחרי שהוא באמת התחלף
+    const started = Date.now();
+    const settle = () => {
+        if (!appTourActive || token !== appTourToken) return;
+        if (document.documentElement.classList.contains('light-mode') === wasLight && Date.now() - started < 1200) { requestAnimationFrame(settle); return; }
+        appTourRender(step);
+    };
+    requestAnimationFrame(settle);
+    setTimeout(() => { if (appTourActive && token === appTourToken) appTourNext(); }, 3600);
 }
 function appTourBack() {
     if (!appTourActive) return;
@@ -2760,7 +2833,7 @@ function appTourKeydown(e) {
         // המיקוד נשאר בתוך הסיור (חלון מודאלי): הכרטיס ואז הפס הקבוע של הכפתורים
         const card = appTourLayer && appTourLayer.querySelector('.app-tour-card');
         if (!card) return;
-        const items = [...appTourLayer.querySelectorAll('.app-tour-card button, .app-tour-dock button')].filter(b => b.offsetParent !== null && !b.classList.contains('invisible'));
+        const items = [...appTourLayer.querySelectorAll('.app-tour-tap, .app-tour-card button, .app-tour-dock button')].filter(b => b.offsetParent !== null && !b.classList.contains('invisible'));
         if (!items.length) return;
         const first = items[0];
         const last = items[items.length - 1];
@@ -2871,6 +2944,7 @@ async function initAppAfterAuth(user) {
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     requestAnimationFrame(repositionPeekTabStack);
+    requestAnimationFrame(() => requestAnimationFrame(endBootSparkle));
 
     // כאן הוספתי את מילוי התאריך האוטומטי גם למשקל וגם לארוחות להיום
     const today = getLocalDateString();
@@ -6394,7 +6468,7 @@ async function openAchievements() {
     document.querySelectorAll('.ach-overlay').forEach(x => x.remove());
     const ov = document.createElement('div');
     ov.className = 'ach-overlay';
-    ov.innerHTML = `<div class="ach-sheet" role="dialog" aria-modal="true" aria-label="${glassAchEsc(t('ach_title'))}"><div class="ach-head"><h2>🏅 ${glassAchEsc(t('ach_title'))}</h2><button type="button" class="ach-x" aria-label="${glassAchEsc(t('close_btn'))}">✕</button></div><div class="ach-body"><div class="ach-loading" aria-hidden="true"></div></div></div>`;
+    ov.innerHTML = `<div class="ach-sheet" role="dialog" aria-modal="true" aria-label="${glassAchEsc(t('ach_title'))}"><div class="ach-head"><h2>🏅 ${glassAchEsc(t('ach_title'))}</h2><button type="button" class="ach-x" aria-label="${glassAchEsc(t('close_btn'))}">${ACH_X_SVG}</button></div><div class="ach-body"><div class="ach-loading" aria-hidden="true"></div></div></div>`;
     const close = () => ov.remove();
     ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.ach-x')) close(); });
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
@@ -6436,14 +6510,33 @@ async function openAchievements() {
         </div>
         <div class="ach-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>
         <p class="ach-next">${glassAchEsc(next ? t('ach_next').replace('{n}', next.at - p).replace('{name}', achLevelName(i + 1)) : t('ach_max'))}</p>
-        <ol class="ach-ladder">${ACH_LEVELS.map((l, j) => `<li class="${j < i ? 'is-done' : j === i ? 'is-now' : ''}"><span aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small></li>`).join('')}</ol>
+        <ol class="ach-ladder">${ACH_LEVELS.map((l, j) => j <= i
+            ? `<li class="is-glass${j === i ? ' is-now' : ''}" style="--d:${(-j * 0.9).toFixed(1)}s"><button type="button" class="ach-lvl" data-j="${j}">${achGlassBits(j)}<span class="ach-lvl-icon" aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small></button></li>`
+            : `<li class="is-fog"><span class="ach-lvl-icon" aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small><span class="ach-fog" aria-hidden="true"></span></li>`).join('')}</ol>
         <h3 class="ach-sub">${glassAchEsc(t('ach_badges'))}</h3>
-        <div class="ach-tiles">${tiles.map((b, k) => goalTiles.includes(k) ? '' : `<button type="button" class="ach-tile${b.on ? '' : ' is-locked'}" data-k="${k}"${b.on ? '' : ' disabled'}><span class="ach-tile-icon" aria-hidden="true">${b.on ? b.icon : '🔒'}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${b.on ? '' : `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>`}</button>`).join('')}</div>
-        ${goalTiles.length ? `<h3 class="ach-sub">${glassAchEsc(t('ach_goals'))}</h3><div class="ach-tiles">${goalTiles.map(k => `<button type="button" class="ach-tile is-goal" data-k="${k}"><span class="ach-tile-icon" aria-hidden="true">${tiles[k].icon}</span><span class="ach-tile-title">${glassAchEsc(tiles[k].title)}</span><span class="ach-tile-desc">${glassAchEsc(tiles[k].desc)}</span></button>`).join('')}</div>` : ''}`;
-    body.querySelectorAll('.ach-tile:not(.is-locked)').forEach(btn => btn.addEventListener('click', () => {
+        <div class="ach-tiles">${tiles.map((b, k) => goalTiles.includes(k) ? '' : achTileHtml(b, k)).join('')}</div>
+        ${goalTiles.length ? `<h3 class="ach-sub">${glassAchEsc(t('ach_goals'))}</h3><div class="ach-tiles">${goalTiles.map(k => achTileHtml(tiles[k], k, true)).join('')}</div>` : ''}`;
+    body.querySelectorAll('.ach-tile').forEach(btn => btn.addEventListener('click', () => {
         const b = tiles[Number(btn.dataset.k)];
+        // מה שעוד לא הושג כמעט לא נראה (ערפל) - נגיעה מראה איך מקבלים אותו
+        if (!b.on) { if (b.desc) showAppToast(`${b.title}: ${b.desc}`); return; }
         openGlassAchievement({ icon: b.icon, title: b.title, desc: b.desc, shareText: b.share, file: 'not10-achievement.png', shareLabel: t('nm_share'), okLabel: t('close_btn') });
     }));
+    body.querySelectorAll('.ach-lvl').forEach(btn => btn.addEventListener('click', () => {
+        const j = Number(btn.dataset.j);
+        const title = achLevelLabel(j);
+        openGlassAchievement({ icon: ACH_LEVELS[j].icon, title, desc: t('ach_points').replace('{n}', ACH_LEVELS[j].at), shareText: `🏅 ${title}`, file: 'not10-level.png', shareLabel: t('nm_share'), okLabel: t('close_btn') });
+    }));
+}
+const ACH_X_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg>';
+// אותו כרטיס זכוכית כמו כשפותחים הישג (לפי בקשה מפורשת, 2026-11-17): נטייה איטית, ברק שעובר ונצנצים שנופלים בפנים
+function achGlassBits(seed) {
+    const glitter = Array.from({ length: 7 }, (_, n) => `<i style="left:${(n * 29 + seed * 17 + 7) % 92}%;animation-delay:${(-((n * 0.53 + seed * 0.37) % 3)).toFixed(2)}s;animation-duration:${(2.3 + ((n + seed) % 4) * 0.45).toFixed(2)}s"></i>`).join('');
+    return `<span class="ach-glitter" aria-hidden="true">${glitter}</span><span class="ach-shine" aria-hidden="true"></span>`;
+}
+function achTileHtml(b, k, isGoal) {
+    if (!b.on) return `<button type="button" class="ach-tile is-locked" data-k="${k}" aria-disabled="true" aria-label="${glassAchEsc(b.desc ? `${b.title}: ${b.desc}` : b.title)}"><span class="ach-tile-icon" aria-hidden="true">${b.icon}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span><span class="ach-fog" aria-hidden="true"></span></button>`;
+    return `<button type="button" class="ach-tile is-glass${isGoal ? ' is-goal' : ''}" data-k="${k}" style="--d:${(-k * 0.8).toFixed(1)}s">${achGlassBits(k + 3)}<span class="ach-tile-icon" aria-hidden="true">${b.icon}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${isGoal && b.desc ? `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>` : ''}</button>`;
 }
 
 async function loadTodayTasks() {
@@ -10071,12 +10164,32 @@ function syncNightMenuButtons() {
         if (label) { btn.title = label; btn.setAttribute('aria-label', label); }
     });
 }
-function toggleNightFromMenu() {
+function toggleNightFromMenu(btn) {
     const toggle = document.getElementById('light-mode-toggle');
     const light = !document.documentElement.classList.contains('light-mode');
-    if (toggle) { toggle.checked = light; toggleLightMode(); return; }
+    if (toggle) { toggle.checked = light; toggleLightMode(btn); return; }
     localStorage.setItem('weekwise_light_mode', light ? 'true' : 'false');
-    applyLightMode(light);
+    animateThemeSwitch(btn, () => applyLightMode(light));
+}
+// 🌓 מעבר יום/לילה כמו בטלגרם (לפי בקשה מפורשת, 2026-11-17): המצב החדש מתפשט בעיגול מהכפתור שנלחץ עד שמכסה את כל המסך.
+// View Transitions - איפה שאין תמיכה (או "פחות תנועה") המעבר מיידי כמו קודם
+function animateThemeSwitch(origin, apply) {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!document.startViewTransition || reduce || document.visibilityState !== 'visible') { apply(); return; }
+    let el = origin && origin.getBoundingClientRect ? origin : null;
+    if (el && el.getBoundingClientRect().width < 2) el = el.parentElement;
+    const r = el ? el.getBoundingClientRect() : null;
+    const x = r && r.width ? r.left + r.width / 2 : window.innerWidth / 2;
+    const y = r && r.height ? r.top + r.height / 2 : 0;
+    const end = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const root = document.documentElement;
+    root.classList.add('theme-switching');
+    let vt;
+    try { vt = document.startViewTransition(() => apply()); } catch { root.classList.remove('theme-switching'); apply(); return; }
+    vt.ready.then(() => {
+        root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${end}px at ${x}px ${y}px)`] }, { duration: 680, easing: 'cubic-bezier(.45, 0, .2, 1)', pseudoElement: '::view-transition-new(root)' });
+    }).catch(() => {});
+    vt.finished.finally(() => root.classList.remove('theme-switching'));
 }
 
 async function loadLightModeSetting() {
@@ -10087,10 +10200,11 @@ async function loadLightModeSetting() {
     applyLightMode(magicFallbackLight !== null && isMagicColorTheme(localStorage.getItem(colorThemeKey())) ? magicFallbackLight : data.light_mode);
 }
 
-async function toggleLightMode() {
-    const enabled = document.getElementById('light-mode-toggle').checked;
+async function toggleLightMode(origin) {
+    const toggleEl = document.getElementById('light-mode-toggle');
+    const enabled = toggleEl.checked;
     localStorage.setItem('weekwise_light_mode', enabled ? 'true' : 'false');
-    applyLightMode(enabled);
+    animateThemeSwitch(origin && origin.getBoundingClientRect ? origin : toggleEl, () => applyLightMode(enabled));
     // upsert אחד אטומי, לא select-ואז-insert/update - הגרסה הקודמת הייתה
     // תחרותית מול שמירות אחרות לאותה שורת user_premium (למשל בחירת ערכת
     // נושא כמעט באותו רגע): שתי קריאות "אין שורה קיימת עדיין" יכולות
@@ -12904,6 +13018,25 @@ function decodeSpreadsheetText(bytes) {
     try { return new TextDecoder(IMPORT_LEGACY_ENCODINGS[currentLang] || 'windows-1252').decode(bytes); } catch {}
     return new TextDecoder('windows-1252').decode(bytes);
 }
+// ספריות כבדות נטענות רק כשצריך אותן (לפי בקשה מפורשת, 2026-11-17: "שהכניסה לאפליקציה תהיה הרבה יותר מהירה") -
+// קודם הן נטענו ב-<head> וחסמו את הציור הראשון של המסך בכל פתיחה
+const LAZY_SCRIPTS = {
+    xlsx: 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+    tesseract: 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',
+};
+const lazyScriptLoads = {};
+function loadLazyScript(key) {
+    if (!lazyScriptLoads[key]) {
+        lazyScriptLoads[key] = new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = LAZY_SCRIPTS[key];
+            s.onload = resolve;
+            s.onerror = () => { delete lazyScriptLoads[key]; s.remove(); reject(new Error('load ' + key)); };
+            document.head.appendChild(s);
+        });
+    }
+    return lazyScriptLoads[key];
+}
 function readSpreadsheetFile(buffer) {
     const bytes = new Uint8Array(buffer);
     const isZip = bytes[0] === 0x50 && bytes[1] === 0x4B;
@@ -12918,6 +13051,7 @@ async function handleRecurringImportFileSelected(event) {
     if (!file) return;
     try {
         const data = await file.arrayBuffer();
+        if (typeof XLSX === 'undefined') await loadLazyScript('xlsx');
         const workbook = readSpreadsheetFile(data);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true });
@@ -13852,7 +13986,8 @@ function looksLikeGarbledOcrBody(text) {
 
 async function runLocalRecipeOcrFallback(files) {
     const images = [].concat(files).filter(f => f && f.type.startsWith('image/'));
-    if (!images.length || typeof Tesseract === 'undefined') return false;
+    if (!images.length) return false;
+    if (typeof Tesseract === 'undefined') { try { await loadLazyScript('tesseract'); } catch { return false; } }
     try {
         showRecipeScanLoading();
         // כמה תמונות: כל אחת בתורה, והטקסטים מחוברים לפי הסדר

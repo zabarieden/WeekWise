@@ -6562,7 +6562,7 @@ html[dir="rtl"] .app-tour-layer { --tour-slide: -18px; }
 .app-tour-layer.open { opacity: 1; }
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) .app-tour-layer { --tour-card-bg: #ffffff; --tour-card-fg: #1f1830; --tour-muted: rgba(31, 24, 48, .62); --tour-line: rgba(31, 24, 48, .09); --tour-tint: rgba(124, 58, 237, .08); --tour-accent: #7c3aed; --tour-shadow: 0 24px 60px rgba(31, 24, 48, .24), 0 2px 8px rgba(31, 24, 48, .1); }
 .app-tour-block { position: absolute; inset: 0; }
-.app-tour-spot { position: absolute; border-radius: 14px; box-shadow: 0 0 0 200vmax rgba(12, 8, 26, .66); pointer-events: none; transition: left .38s cubic-bezier(.22, .8, .25, 1), top .38s cubic-bezier(.22, .8, .25, 1), width .38s cubic-bezier(.22, .8, .25, 1), height .38s cubic-bezier(.22, .8, .25, 1), border-radius .38s ease; }
+.app-tour-spot { position: absolute; border-radius: 14px; box-shadow: 0 0 0 200vmax rgba(12, 8, 26, .66); pointer-events: none; transition: left .38s cubic-bezier(.22, .8, .25, 1), top .38s cubic-bezier(.22, .8, .25, 1), width .38s cubic-bezier(.22, .8, .25, 1), height .38s cubic-bezier(.22, .8, .25, 1), border-radius .38s ease, box-shadow .6s ease; }
 .app-tour-spot::after { content: ''; position: absolute; inset: -3px; border-radius: inherit; border: 2px solid rgba(255, 255, 255, .92); box-shadow: 0 0 0 5px rgba(168, 85, 247, .28), 0 0 24px rgba(168, 85, 247, .5); animation: appTourPulse 2.2s ease-in-out infinite; }
 .app-tour-spot.is-empty::after { display: none; }
 @keyframes appTourPulse { 0%, 100% { box-shadow: 0 0 0 5px rgba(168, 85, 247, .28), 0 0 24px rgba(168, 85, 247, .5); } 50% { box-shadow: 0 0 0 9px rgba(168, 85, 247, .12), 0 0 30px rgba(168, 85, 247, .32); } }
@@ -12047,7 +12047,8 @@ html[lang="ko"] body { word-break: keep-all; overflow-wrap: break-word; }
 .ach-sheet { width: 100%; max-width: 520px; max-height: 88%; display: flex; flex-direction: column; border-radius: 24px 24px 0 0; background: var(--bg-sheet); color: var(--text-primary); box-shadow: 0 -10px 30px rgba(0, 0, 0, .3); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .ach-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px 18px 8px; }
 .ach-head h2 { margin: 0; font-size: 1.15rem; font-weight: 800; }
-.ach-x { width: 40px; height: 40px; border-radius: 50%; border: none; background: color-mix(in srgb, var(--text-primary) 8%, transparent); color: var(--text-primary); font-size: 1rem; cursor: pointer; }
+.ach-x { width: 40px; height: 40px; flex: none; padding: 0; display: grid; place-items: center; line-height: 1; border-radius: 50%; border: none; background: color-mix(in srgb, var(--text-primary) 8%, transparent); color: var(--text-primary); font-size: 1rem; cursor: pointer; }
+.ach-x svg { display: block; }
 .ach-body { overflow-y: auto; padding: 4px 18px 22px; display: flex; flex-direction: column; gap: 12px; }
 .ach-loading { height: 160px; }
 .ach-level { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 20px; background: linear-gradient(140deg, color-mix(in srgb, var(--accent-purple) 22%, var(--bg-sheet)), color-mix(in srgb, var(--accent-pink) 16%, var(--bg-sheet))); border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent); }
@@ -12143,3 +12144,44 @@ html[dir="rtl"] .gv-letter { padding: 12px 14px 12px 44px; }
 .gv-friend-again, .gv-friend-stop { min-height: 48px; border-radius: 16px; font: inherit; font-size: .95rem; font-weight: 800; cursor: pointer; }
 .gv-friend-again { border: none; background: var(--accent-purple); color: #fff; }
 .gv-friend-stop { border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); }
+
+/* 🌙 בסיור: צריך לגעת באמת בירח (2026-11-17) - שכבת נגיעה שקופה מעל הזרקור, דופק מודגש, ואחרי הנגיעה העמעום כמעט נעלם כדי לראות הכל בלילה */
+.app-tour-tap { position: absolute; z-index: 3; margin: 0; padding: 0; border: none; border-radius: 999px; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.app-tour-tap.hidden { display: none; }
+.app-tour-tap:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.app-tour-layer.is-tap-wait .app-tour-spot::after { animation: appTourTapPulse 1.3s ease-in-out infinite; }
+@keyframes appTourTapPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 5px rgba(168, 85, 247, .35), 0 0 24px rgba(168, 85, 247, .55); } 50% { transform: scale(1.14); box-shadow: 0 0 0 12px rgba(168, 85, 247, .1), 0 0 34px rgba(168, 85, 247, .35); } }
+.app-tour-spot.nudge { animation: appTourNudge .42s ease; }
+@keyframes appTourNudge { 0%, 100% { translate: 0; } 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+.app-tour-layer.is-reveal .app-tour-spot { box-shadow: 0 0 0 200vmax rgba(12, 8, 26, .12); }
+/* 🌓 מעבר יום/לילה כמו בטלגרם: עיגול שמתפשט מהכפתור (animateThemeSwitch ב-app.js) */
+:root.theme-switching::view-transition-old(root), :root.theme-switching::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+:root.theme-switching::view-transition-new(root) { z-index: 2; }
+:root.theme-switching *, :root.theme-switching *::before, :root.theme-switching *::after { transition: none !important; }
+@media (prefers-reduced-motion: reduce) { .app-tour-layer.is-tap-wait .app-tour-spot::after, .app-tour-spot.nudge { animation: none; } }
+
+/* 🏅 ההישגים שלי (2026-11-17): כל מה שהושג נראה כמו כרטיס הזכוכית שנפתח בנגיעה - נטייה איטית, ברק ונצנצים שנופלים בפנים;
+   מה שעוד לא הושג אפור, דהוי ובערפל קטן שזז */
+.ach-tile.is-glass, .ach-ladder li.is-glass { position: relative; overflow: hidden; isolation: isolate; opacity: 1; color: #fff; border: 1px solid rgba(255, 255, 255, .5); background: radial-gradient(ellipse 95% 70% at 18% 12%, color-mix(in srgb, var(--accent-purple) 78%, transparent), transparent 72%), radial-gradient(ellipse 95% 80% at 88% 96%, color-mix(in srgb, var(--accent-pink) 68%, transparent), transparent 72%), #1b1230; box-shadow: 0 12px 24px -14px color-mix(in srgb, var(--accent-purple) 85%, transparent), inset 0 0 18px rgba(255, 255, 255, .14); transform-style: preserve-3d; animation: achTileTilt 7s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.ach-tile.is-glass::before, .ach-ladder li.is-glass::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(140deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .04) 60%); }
+@keyframes achTileTilt { 0%, 100% { transform: perspective(520px) rotateY(-11deg) rotateX(3deg); } 50% { transform: perspective(520px) rotateY(11deg) rotateX(-3deg); } }
+.ach-shine { position: absolute; inset: -40% -80%; z-index: -1; pointer-events: none; background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .34) 50%, transparent 58%); animation: glassAchShine 5s ease-in-out infinite; animation-delay: var(--d, 0s); }
+.ach-glitter { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.ach-glitter i { position: absolute; top: -6px; width: 4px; height: 4px; border-radius: 1px; background: #fff; box-shadow: 0 0 5px 1px color-mix(in srgb, var(--accent-pink) 70%, #fff); opacity: 0; animation: achGlitterFall 3s linear infinite; }
+.ach-glitter i:nth-child(3n) { width: 3px; height: 3px; border-radius: 50%; }
+.ach-glitter i:nth-child(4n) { box-shadow: 0 0 5px 1px color-mix(in srgb, var(--accent-purple) 70%, #fff); }
+@keyframes achGlitterFall { 0% { transform: translateY(0) rotate(0); opacity: 0; } 15% { opacity: .95; } 100% { transform: translateY(170px) rotate(200deg); opacity: .1; } }
+.ach-tile.is-glass .ach-tile-icon, .ach-ladder li.is-glass .ach-lvl-icon { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; font-size: 1.5rem; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .5); box-shadow: 0 0 16px rgba(255, 255, 255, .22); }
+.ach-tile.is-glass .ach-tile-title, .ach-ladder li.is-glass b { color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, .35); }
+.ach-tile.is-glass .ach-tile-desc, .ach-ladder li.is-glass small { color: rgba(255, 255, 255, .8); }
+.ach-tile.is-glass:focus-visible, .ach-lvl:focus-visible { outline: 3px solid #fff; outline-offset: -4px; }
+.ach-ladder li.is-glass { padding: 0; }
+.ach-lvl { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px 8px; border: none; background: none; color: inherit; font: inherit; cursor: pointer; }
+.ach-ladder li.is-glass .ach-lvl-icon { width: 38px; height: 38px; font-size: 1.2rem; }
+.ach-ladder li.is-glass.is-now { box-shadow: inset 0 0 0 2px #fff, 0 0 0 3px color-mix(in srgb, var(--accent-purple) 55%, transparent), 0 12px 24px -12px color-mix(in srgb, var(--accent-purple) 85%, transparent); }
+.ach-tile.is-locked, .ach-ladder li.is-fog { position: relative; overflow: hidden; isolation: isolate; opacity: 1; cursor: pointer; border-color: transparent; background: color-mix(in srgb, var(--text-primary) 5%, transparent); }
+.ach-ladder li.is-fog { cursor: default; }
+.ach-tile.is-locked > :not(.ach-fog), .ach-ladder li.is-fog > :not(.ach-fog) { filter: grayscale(1) blur(.7px); opacity: .26; }
+.ach-fog { position: absolute; inset: -30%; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 45% 35% at 30% 42%, color-mix(in srgb, var(--text-primary) 16%, transparent), transparent 70%), radial-gradient(ellipse 40% 30% at 72% 62%, color-mix(in srgb, var(--text-primary) 13%, transparent), transparent 70%), radial-gradient(ellipse 35% 25% at 50% 20%, color-mix(in srgb, var(--text-primary) 9%, transparent), transparent 70%); filter: blur(5px); animation: achFog 10s ease-in-out infinite alternate; }
+@keyframes achFog { from { transform: translateX(-9%) translateY(2%); } to { transform: translateX(9%) translateY(-2%); } }
+@media (prefers-reduced-motion: reduce) { .ach-tile.is-glass, .ach-ladder li.is-glass, .ach-shine, .ach-glitter i, .ach-fog { animation: none; } .ach-glitter { display: none; } }
