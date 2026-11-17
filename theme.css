@@ -12360,3 +12360,22 @@ html[dir="rtl"] .wm-room-nav.next svg, html:not([dir="rtl"]) .wm-room-nav.prev s
 .hf-pick-input { width: 100%; box-sizing: border-box; min-height: 46px; padding: 10px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent); background: color-mix(in srgb, var(--text-primary) 5%, transparent); color: var(--text-primary); font: inherit; }
 .hf-pick-input:disabled { opacity: .45; }
 .hf-pick-input:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+
+/* ✂️ בדיקת טקסט חתוך, 33 שפות ב-360px (2026-11-17): מה שנחתך בשפות עם מילים ארוכות - יורד שורה במקום להיחתך */
+/* כפתורי סוג האירוע (משימה/אירוע/פגישה) ו"עד שעונים" בהתראות: שורה שנייה כשלא נכנסים, בלי "..." */
+:where(div, span):has(> .calendar-kind-chip) { flex-wrap: wrap; }
+.calendar-kind-chip { flex: 1 1 auto; min-width: min-content; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.25; }
+/* "יום מסוים / חודש מסוים" ו"חד-פעמי": אותו דבר */
+:where(div):has(> .ai-schedule-mode-btn) { flex-wrap: wrap; }
+.ai-schedule-mode-btn { flex: 1 1 auto; min-width: min-content; white-space: normal; line-height: 1.25; }
+/* שמות האריחים (תזונה, קבלות): מילה ארוכה נשברת עם מקף, לפי חוקי השפה (lang ב-html) */
+.cube-title, .sub-tile-title, .recipe-category-label { hyphens: auto; -webkit-hyphens: auto; }
+/* בחירת המטרה לספורט: עוברת לשורה הבאה */
+#sport-motivation-picker { flex-wrap: wrap; }
+#sport-motivation-picker .color-filter-option { flex: 1 1 auto; }
+/* לשוניות סוג האימון ופס הכפתורים של הפתק המהיר: יורדים שורה */
+#modal-sport-quick-add .ai-brain-tabs { flex-wrap: wrap; }
+#modal-sport-quick-add .ai-brain-tab { flex: 1 1 auto; }
+#modal-ai-quick-add .action-buttons-wrap { flex-wrap: wrap; }
+/* תפריט נפתח (למשל סוג הארוחה): השם המלא, בשתי שורות אם צריך */
+.custom-select-trigger span { white-space: normal; overflow: visible; text-overflow: clip; }

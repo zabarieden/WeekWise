@@ -2010,7 +2010,7 @@ async function submitAuthForm() {
 // התחברות רגילה - גם משתמשת ותיקה עם onboarding_completed=false ברשומה
 // עדיין לא מקבלת אותו, כי submitAuthForm בכלל לא קורא ל-openOnboarding
 // מהענף של login) - לפי בקשה מפורשת ("רק משתמשות חדשות מעכשיו").
-// כל שלב הוא רשומה קטנה ב-ONBOARDING_STEPS; renderOnboardingStep מציירת
+// כל שלב הוא רשומה קטנה ב-onboardingSteps; renderOnboardingStep מציירת
 // לתוך onboarding-step-body לפי step.key, כדי שהוספת/שינוי שלב יהיה שינוי
 // מקומי אחד ב-JS בלבד, בלי לגעת ב-HTML. אפשר לדלג בכל שלב (הקישור הקבוע
 // למעלה) - קופץ ישר לסיום, כמו "לא תודה" בשלב האחרון
@@ -2019,13 +2019,29 @@ let onboardingUser = null;
 let onboardingPendingPhone = null;
 let onboardingPendingGoalTitle = null;
 // הסיור באפליקציה כבר לא שלב בחירה כאן - הוא נפתח אוטומטית פעם אחת אחרי הכניסה (maybeAutoStartAppTour)
-const ONBOARDING_STEPS = ['welcome', 'country', 'phone', 'goal'];
+// בלי שאלת טלפון, ושאלת המדינה רק כשאי אפשר לזהות אותה מהמכשיר (לפי בקשה מפורשת, 2026-11-17)
+let onboardingSteps = ['welcome', 'country', 'goal'];
+// המדינה מהמכשיר: האזור בשפת הדפדפן (he-IL → il), ואם אין - אזור הזמן של ישראל
+function detectDeviceCountry() {
+    try {
+        const known = typeof COUNTRY_FLAGS !== 'undefined' ? COUNTRY_FLAGS : {};
+        for (const tag of (navigator.languages || [navigator.language || ''])) {
+            const m = String(tag).match(/[-_]([A-Za-z]{2})\b/);
+            if (m && known[m[1].toLowerCase()]) return m[1].toLowerCase();
+        }
+        if (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Jerusalem') return 'il';
+    } catch { /* אין זיהוי - שואלים */ }
+    return null;
+}
 
 function openOnboarding(user) {
     onboardingUser = user;
     onboardingStep = 0;
     onboardingPendingPhone = null;
     onboardingPendingGoalTitle = null;
+    const detected = detectDeviceCountry();
+    if (detected) setUserCountry(detected);
+    onboardingSteps = ['welcome'].concat(detected ? [] : ['country'], ['goal']);
     endBootSparkle();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
@@ -2041,10 +2057,10 @@ function renderOnboardingDots(containerId, total, current) {
 }
 
 function renderOnboardingStep() {
-    const key = ONBOARDING_STEPS[onboardingStep];
+    const key = onboardingSteps[onboardingStep];
     const body = document.getElementById('onboarding-step-body');
     const nextBtn = document.getElementById('btn-onboarding-next');
-    renderOnboardingDots('onboarding-dots', ONBOARDING_STEPS.length, onboardingStep);
+    renderOnboardingDots('onboarding-dots', onboardingSteps.length, onboardingStep);
     nextBtn.classList.remove('hidden');
     if (key === 'welcome') {
         body.innerHTML = `
@@ -2096,13 +2112,13 @@ function refreshOnboardingCountryDisplay() {
 }
 
 function nextOnboardingStep() {
-    const key = ONBOARDING_STEPS[onboardingStep];
+    const key = onboardingSteps[onboardingStep];
     if (key === 'phone') {
         onboardingPendingPhone = document.getElementById('onboarding-phone-input').value.trim() || null;
     } else if (key === 'goal') {
         onboardingPendingGoalTitle = document.getElementById('onboarding-goal-input').value.trim() || null;
     }
-    if (onboardingStep < ONBOARDING_STEPS.length - 1) {
+    if (onboardingStep < onboardingSteps.length - 1) {
         onboardingStep++;
         renderOnboardingStep();
     } else {
@@ -2285,6 +2301,7 @@ let appTourTrackTimer = 0;
 let appTourLastRect = '';
 let appTourDir = 0;          // כיוון המעבר האחרון (1 קדימה, ‎-1 אחורה, 0 קפיצה) - להנפשה של הכרטיס
 let appTourFinished = false; // הגיעו עד הסוף (אז אין "להמשיך מאיפה שעצרתי")
+let appTourQuick = false;      // הסיור הקצר של הכניסה הראשונה
 let appTourStartId = null;   // להתחיל משלב מסוים (סיור של New Me שנקטע באמצע - Me1 שואל "נמשיך?")
 const appTourTapped = new Set(); // שלבים של "לגעת באמת" שכבר נגעו בהם בסיור הזה
 
@@ -2363,6 +2380,8 @@ function openAppTour(fromSettings, onFinish, opts = {}) {
     appTourSteps = opts.steps || APP_TOUR_STEPS;
     appTourKeepScreen = !!opts.keepScreen;
     appTourStartId = opts.startId || null;
+    appTourQuick = !!opts.quick;
+    if (opts.quick) appTourSteps = appTourQuickSteps();
     if (!opts.steps) markAppTourSeen();
     // מתחילים ממסך בית נקי - סוגרים כל חלון/מגירה שפתוחים
     document.querySelectorAll('.apple-modal.open').forEach(m => closeModal(m.id));
@@ -2592,7 +2611,7 @@ async function appTourShow() {
     if (token !== appTourToken || !appTourActive) return;
     appTourTarget = appTourResolveTarget(step);
     appTourRender(step);
-    if (appTourSteps !== APP_TOUR_STEPS && typeof nmTourTrack === 'function') nmTourTrack(step);
+    if (appTourSteps !== APP_TOUR_STEPS && !appTourQuick && typeof nmTourTrack === 'function') nmTourTrack(step);
 }
 
 function appTourRender(step) {
@@ -2647,6 +2666,7 @@ function appTourRender(step) {
     const resumePos = step.agenda ? appTourResumePos() : -1;
     if (resumePos > 0) extraHtml = `<button type="button" class="app-tour-extra-btn" onclick="appTourJump(${resumePos})">${appTourEsc(t('apptour_resume'))}</button>`;
     else if (step.faq) extraHtml = `<button type="button" class="app-tour-extra-btn" onclick="appTourOpenFaq()">${appTourEsc(t('settings_help_faq_btn'))}</button>`;
+    else if (step.fullTour) extraHtml = `<button type="button" class="app-tour-extra-btn" onclick="appTourOpenFull()">${appTourEsc(t('apptour_full_btn'))}</button>`;
     extraEl.innerHTML = extraHtml;
     extraEl.classList.toggle('hidden', !extraHtml);
     // פס התקדמות מחולק לפי חלקים, ומונה שלא סופר את מסך הפתיחה
@@ -2941,6 +2961,17 @@ async function markAppTourSeen() {
 
 // פעם אחת אוטומטית: מחכים למסך בית רגוע (בלי חלון/מגירה פתוחים) ורק אז מתחילים.
 // אם המשתמש/ת כבר עבר/ה למסך אחר - לא מפריעים; ננסה שוב בכניסה הבאה
+// 🚀 הסיור הקצר: 5 דברים שהכי חשוב להכיר (ירח הלילה עם הנגיעה האמיתית ביניהם), וכרטיס סיום עם "לסיור המלא"
+const APP_TOUR_QUICK_IDS = ['focus', 'peek', 'ai', 'menu', 'm_night'];
+function appTourQuickSteps() {
+    return APP_TOUR_QUICK_IDS.map(id => APP_TOUR_STEPS.find(st => st.id === id)).filter(Boolean)
+        .concat([{ id: 'quick_done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_quick_done_title', text: 'apptour_quick_done_text', fullTour: true }]);
+}
+function appTourOpenFull() {
+    appTourFinished = true;
+    closeAppTour();
+    setTimeout(() => openAppTour(true), 350);
+}
 async function maybeAutoStartAppTour() {
     let seen = 0;
     try { seen = parseInt(localStorage.getItem('weekwise_app_tour_version'), 10) || 0; } catch {}
@@ -2959,7 +2990,7 @@ async function maybeAutoStartAppTour() {
             || (loginOverlay && loginOverlay.style.display !== 'none');
         const homePanel = document.querySelector('.home-hero-panel');
         const onHome = homePanel && !homePanel.classList.contains('hidden') && !document.querySelector('.tab-content.active-tab');
-        if (!busy && onHome && document.visibilityState === 'visible') { openAppTour(false); return; }
+        if (!busy && onHome && document.visibilityState === 'visible') { openAppTour(false, null, { quick: true }); return; }
         await appTourWait(600);
     }
 }
@@ -10616,7 +10647,7 @@ function selectCountryFromPicker(code) {
     // openModal (שקורא לו openCountryPicker) סוגר כל מודל אחר פתוח, כולל
     // אשף ההרשמה אם המדינה נבחרה מתוכו - פותחים אותו מחדש עם התצוגה
     // המעודכנת, כדי שהאשף לא "ייעלם" באמצע
-    if (onboardingUser && ONBOARDING_STEPS[onboardingStep] === 'country') {
+    if (onboardingUser && onboardingSteps[onboardingStep] === 'country') {
         refreshOnboardingCountryDisplay();
         openModal('modal-onboarding');
     }
