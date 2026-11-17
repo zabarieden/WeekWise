@@ -6399,10 +6399,12 @@ async function openAchievements() {
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     (document.querySelector('.phone-wrapper') || document.body).appendChild(ov);
     const body = ov.querySelector('.ach-body');
-    const [p, { data: mine }, { data: nm }] = await Promise.all([
+    const [p, { data: mine }, { data: nm }, { data: reached }] = await Promise.all([
         loadAchPoints(),
         supabaseClient.from('user_badges').select('badge, earned_at').eq('user_id', currentUserId),
         supabaseClient.from('new_me_achievements').select('badge, earned_at').eq('user_id', currentUserId),
+        // 🏆 יעדים שהושגו (כולל אתגרי ימים - "אתגרי זמן", רעיון 15 שבחרה) - כל אחד הוא תג
+        supabaseClient.from('vision_goals').select('id, title, icon, category, achieved_at').eq('user_id', currentUserId).eq('is_achieved', true).order('achieved_at', { ascending: false }),
     ]);
     if (!ov.isConnected) return;
     renderAchChip();
@@ -6420,6 +6422,12 @@ async function openAchievements() {
             tiles.push({ on: true, icon: b.icon, title, desc: typeof nmBadgeDesc === 'function' ? nmBadgeDesc(b) : '', share: `🏅 ${t('nm_share_badge_text')}\n\n${b.icon} ${title}` });
         });
     }
+    const goalTiles = [];
+    (reached || []).forEach(g => {
+        const date = g.achieved_at ? new Date(g.achieved_at).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        goalTiles.push(tiles.length);
+        tiles.push({ on: true, icon: typeof visionGoalIcon === 'function' ? visionGoalIcon(g) : '🏆', title: g.title, desc: date, share: `🏆 ${t('gv_achieved_on').replace('{date}', date)}\n${g.title}` });
+    });
     body.innerHTML = `
         <div class="ach-level">
             <span class="ach-level-icon" aria-hidden="true">${ACH_LEVELS[i].icon}</span>
@@ -6429,7 +6437,8 @@ async function openAchievements() {
         <p class="ach-next">${glassAchEsc(next ? t('ach_next').replace('{n}', next.at - p).replace('{name}', achLevelName(i + 1)) : t('ach_max'))}</p>
         <ol class="ach-ladder">${ACH_LEVELS.map((l, j) => `<li class="${j < i ? 'is-done' : j === i ? 'is-now' : ''}"><span aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small></li>`).join('')}</ol>
         <h3 class="ach-sub">${glassAchEsc(t('ach_badges'))}</h3>
-        <div class="ach-tiles">${tiles.map((b, k) => `<button type="button" class="ach-tile${b.on ? '' : ' is-locked'}" data-k="${k}"${b.on ? '' : ' disabled'}><span class="ach-tile-icon" aria-hidden="true">${b.on ? b.icon : '🔒'}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${b.on ? '' : `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>`}</button>`).join('')}</div>`;
+        <div class="ach-tiles">${tiles.map((b, k) => goalTiles.includes(k) ? '' : `<button type="button" class="ach-tile${b.on ? '' : ' is-locked'}" data-k="${k}"${b.on ? '' : ' disabled'}><span class="ach-tile-icon" aria-hidden="true">${b.on ? b.icon : '🔒'}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${b.on ? '' : `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>`}</button>`).join('')}</div>
+        ${goalTiles.length ? `<h3 class="ach-sub">${glassAchEsc(t('ach_goals'))}</h3><div class="ach-tiles">${goalTiles.map(k => `<button type="button" class="ach-tile is-goal" data-k="${k}"><span class="ach-tile-icon" aria-hidden="true">${tiles[k].icon}</span><span class="ach-tile-title">${glassAchEsc(tiles[k].title)}</span><span class="ach-tile-desc">${glassAchEsc(tiles[k].desc)}</span></button>`).join('')}</div>` : ''}`;
     body.querySelectorAll('.ach-tile:not(.is-locked)').forEach(btn => btn.addEventListener('click', () => {
         const b = tiles[Number(btn.dataset.k)];
         openGlassAchievement({ icon: b.icon, title: b.title, desc: b.desc, shareText: b.share, file: 'not10-achievement.png', shareLabel: t('nm_share'), okLabel: t('close_btn') });
@@ -22963,6 +22972,28 @@ function buildGoalAddRow(placeholder, onAdd) {
 }
 
 // התוכנית: תחנות (עם 🔁 לשגרה ו-📅 ליומן) / מונה −/+ / משקל עם שקילה מהירה
+function visionIsMoneyGoal(goal) {
+    if (goal.category === 'finance') return true;
+    return /[₪$€£¥]|ש["״]ח|שקל|nis|ils|usd|eur|dollar|euro|pound|money|כסף/i.test(String(goal.unit || ''));
+}
+const visionJarLastPct = new Map();
+function buildGoalMoneyJar(goal, prog) {
+    const pct = Math.max(0, Math.min(100, Number(prog.pct) || 0));
+    const coins = Math.round(pct / 6.7);
+    const prev = visionJarLastPct.has(goal.id) ? visionJarLastPct.get(goal.id) : pct;
+    visionJarLastPct.set(goal.id, pct);
+    const jar = document.createElement('div');
+    jar.className = 'gv-jar';
+    jar.setAttribute('role', 'img');
+    jar.setAttribute('aria-label', `${pct}%`);
+    const rows = [];
+    for (let i = 0; i < coins; i++) {
+        const drop = pct > prev && i === coins - 1;
+        rows.push(`<i class="gv-coin${drop ? ' is-new' : ''}" style="bottom:${6 + Math.floor(i / 3) * 9}px;left:${18 + (i % 3) * 18 + (Math.floor(i / 3) % 2) * 9}px"></i>`);
+    }
+    jar.innerHTML = `<div class="gv-jar-glass" aria-hidden="true"><span class="gv-jar-lid"></span>${rows.join('')}<span class="gv-jar-shine"></span></div><b class="gv-jar-pct">${pct}%</b>`;
+    return jar;
+}
 function buildGoalPlan(goal, milestones, prog) {
     const track = goal.track_type || 'steps';
     if (track === 'days') return null;
@@ -23001,6 +23032,8 @@ function buildGoalPlan(goal, milestones, prog) {
         row.appendChild(value);
         row.appendChild(plus);
         wrap.appendChild(row);
+        // 🫙 צנצנת מטבעות ליעד של כסף (כמו חיסכון ב-YNAB, רעיון 21 שבחרה): מתמלאת לפי ההתקדמות, ומטבע נופל כשמוסיפים
+        if (visionIsMoneyGoal(goal)) wrap.appendChild(buildGoalMoneyJar(goal, prog));
     } else if (track === 'weight') {
         title.textContent = t('gv_progress_title');
         wrap.insertAdjacentHTML('beforeend', `<div class="gv-weigh-info">⚖️ ${visionEsc(prog.label)}</div><p class="vision-goal-field-hint">${visionEsc(t(visionLatestWeight === null ? 'vision_weight_no_data' : 'vision_weight_hint'))}</p>`);

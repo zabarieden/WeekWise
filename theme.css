@@ -12125,3 +12125,14 @@ html[dir="rtl"] .gv-letter { padding: 12px 14px 12px 44px; }
 .gv-letter-text { display: flex; flex-direction: column; gap: 2px; font-size: .92rem; line-height: 1.45; color: var(--text-primary); overflow-wrap: anywhere; }
 .gv-letter-text b { font-size: .8rem; font-weight: 800; }
 @media (prefers-reduced-motion: reduce) { .gv-letter { animation: none; } }
+
+/* 🫙 a coin jar for money goals */
+.gv-jar { display: flex; align-items: flex-end; gap: 12px; margin-top: 10px; }
+.gv-jar-glass { position: relative; width: 96px; height: 84px; box-sizing: border-box; border: 2.5px solid color-mix(in srgb, var(--accent-purple) 55%, transparent); border-top-width: 0; border-radius: 10px 10px 22px 22px; background: linear-gradient(90deg, rgba(255, 255, 255, .35), rgba(255, 255, 255, 0) 40%), color-mix(in srgb, var(--accent-purple) 6%, transparent); overflow: hidden; }
+.gv-jar-lid { position: absolute; top: 0; left: -3px; right: -3px; height: 9px; border-radius: 4px; background: color-mix(in srgb, var(--accent-purple) 55%, #fff); }
+.gv-jar-shine { position: absolute; top: 14px; left: 8px; width: 6px; height: 46px; border-radius: 4px; background: rgba(255, 255, 255, .45); }
+.gv-coin { position: absolute; width: 18px; height: 8px; border-radius: 50%; background: radial-gradient(ellipse at 40% 35%, color-mix(in srgb, var(--accent-pink) 25%, #fff), var(--accent-pink) 60%, color-mix(in srgb, var(--accent-pink) 70%, #000)); box-shadow: 0 1px 0 color-mix(in srgb, var(--accent-pink) 60%, #000); }
+.gv-coin.is-new { animation: gvCoinDrop .7s cubic-bezier(.3, 1.4, .5, 1) both; }
+@keyframes gvCoinDrop { from { transform: translateY(-80px) rotate(-30deg); opacity: 0; } 60% { opacity: 1; } }
+.gv-jar-pct { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .gv-coin.is-new { animation: none; } }
