@@ -2589,6 +2589,7 @@ translations.vi = {
     routine_tpl_home_office_items: "07:00 Thức dậy + thay đồ (không mặc đồ ngủ)\n08:00 Bữa sáng + cà phê\n09:00 Thời gian tập trung\n11:00 Giãn cơ + uống nước\n13:00 Ăn trưa\n14:00 Họp và gọi điện\n16:00 Đi bộ ngắn bên ngoài\n17:00 Gập máy tính",
     routine_tpl_home_office: "Làm việc tại nhà",
     routine_tpl_workday_items: "07:00 Thức dậy + uống nước\n08:00 Bữa sáng\n09:00 Làm việc tập trung – việc quan trọng nhất\n11:00 Nghỉ ngắn + uống nước\n13:00 Ăn trưa xa màn hình\n15:00 Email và cuộc gọi\n17:00 Tổng kết + lên kế hoạch ngày mai\n19:00 Thời gian rảnh",
+    routine_tpl_work_sport: "Ngày làm việc + thể thao", routine_tpl_work_sport_items: "07:00 Thức dậy và dọn giường\n07:10 Vệ sinh, đánh răng, rửa mặt\n07:15 Nhật ký: suy nghĩ và mục tiêu hôm nay\n07:20 Thái cực quyền\n07:35 Đi bộ 45 phút\n08:20 Đi làm\n08:30 Email và làm việc trên máy tính\n10:30 Hôm qua: điều gì hiệu quả, điều gì cần cải thiện\n11:00 Ăn\n12:00 Nghỉ ngơi + thời gian với mọi người\n13:00 Quay lại máy tính đến 16:00\n16:10 Dự án cá nhân hoặc giao dịch\n17:30 Tập sức mạnh – phòng tập hoặc ở nhà\n18:00 Thời gian rảnh: đọc sách hoặc chơi nhạc",
     routine_tpl_workday: "Ngày làm việc",
     routine_tpl_evening_items: "19:00 Bữa tối nhẹ\n20:00 Dọn dẹp 10 phút + chuẩn bị cho ngày mai\n21:00 Tắt màn hình + tắm\n22:00 Đọc sách trên giường rồi ngủ",
     routine_tpl_evening: "Buổi tối & ngủ ngon",

@@ -2589,6 +2589,7 @@ translations.yo = {
     routine_tpl_home_office_items: "07:00 Jíjí + wíwọṣọ (kì í ṣe aṣọ oorun)\n08:00 Oúnjẹ àárọ̀ + kọfí\n09:00 Àkókò àfojúsùn\n11:00 Nínà ara + omi\n13:00 Oúnjẹ ọ̀sán\n14:00 Ìpàdé àti ìpè\n16:00 Ìrìn kúkúrú níta\n17:00 Pa kọ̀ǹpútà mọ́",
     routine_tpl_home_office: "Iṣẹ́ láti ilé",
     routine_tpl_workday_items: "07:00 Jíjí + omi\n08:00 Oúnjẹ àárọ̀\n09:00 Iṣẹ́ pẹ̀lú àfojúsùn – iṣẹ́ tí ó ṣe pàtàkì jù\n11:00 Ìsinmi kúkúrú + omi\n13:00 Oúnjẹ ọ̀sán jìnnà sí ìbòjú\n15:00 Ímeèlì àti ìpè\n17:00 Parí ọjọ́ + ṣètò ọ̀la\n19:00 Àkókò ọ̀fẹ́",
+    routine_tpl_work_sport: "Ọjọ́ iṣẹ́ + eré-ìdárayá", routine_tpl_work_sport_items: "07:00 Jí kí o tún ibùsùn ṣe\n07:10 Ilé ìwẹ̀, eyín àti fífọ ojú\n07:15 Ìwé-ìrántí: èrò àti àfojúsùn òní\n07:20 Tai chi\n07:35 Rírìn ìṣẹ́jú 45\n08:20 Lílọ sí ibi iṣẹ́\n08:30 Ímeèlì àti iṣẹ́ kọ̀ǹpútà\n10:30 Àná: ohun tó ṣiṣẹ́ àti ohun láti tún ṣe\n11:00 Oúnjẹ\n12:00 Ìsinmi + àkókò pẹ̀lú àwọn ènìyàn\n13:00 Padà sí kọ̀ǹpútà títí di 16:00\n16:10 Iṣẹ́ àdáni tàbí ìṣòwò\n17:30 Ìdárayá agbára – sítúdíò tàbí ilé\n18:00 Àkókò òmìnira: ìwé tàbí orin",
     routine_tpl_workday: "Ọjọ́ iṣẹ́",
     routine_tpl_evening_items: "19:00 Oúnjẹ alẹ́ fúyẹ́\n20:00 Títún ilé ṣe fún ìṣẹ́jú 10 + ìmúrasílẹ̀ fún ọ̀la\n21:00 Kò sí ìbòjú + wíwẹ̀\n22:00 Kíkàwé lórí ibùsùn àti sísùn",
     routine_tpl_evening: "Ìrọ̀lẹ́ àti oorun dáradára",

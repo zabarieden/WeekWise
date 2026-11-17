@@ -2589,6 +2589,7 @@ translations.pt = {
     routine_tpl_home_office_items: "07:00 Acordar + se vestir (sem pijama)\n08:00 Café da manhã + café\n09:00 Tempo de foco\n11:00 Alongamento + água\n13:00 Almoço\n14:00 Reuniões e ligações\n16:00 Caminhada curta lá fora\n17:00 Fechar o notebook",
     routine_tpl_home_office: "Trabalho em casa",
     routine_tpl_workday_items: "07:00 Acordar + água\n08:00 Café da manhã\n09:00 Trabalho focado – a tarefa mais importante\n11:00 Pausa curta + água\n13:00 Almoço longe da tela\n15:00 E-mails e ligações\n17:00 Fechar o dia + planejar amanhã\n19:00 Tempo livre",
+    routine_tpl_work_sport: "Dia de trabalho + esporte", routine_tpl_work_sport_items: "07:00 Levantar e arrumar a cama\n07:10 Banheiro, dentes e lavar o rosto\n07:15 Diário: pensamentos e metas de hoje\n07:20 Tai chi\n07:35 Caminhada de 45 minutos\n08:20 Ir para o trabalho\n08:30 E-mails e trabalho no computador\n10:30 Ontem: o que deu certo e o que melhorar\n11:00 Refeição\n12:00 Pausa + tempo com pessoas\n13:00 De volta ao computador até 16:00\n16:10 Projeto pessoal ou trading\n17:30 Treino de força – estúdio ou casa\n18:00 Tempo livre: um livro ou música",
     routine_tpl_workday: "Dia de trabalho",
     routine_tpl_evening_items: "19:00 Jantar leve\n20:00 Arrumar 10 minutos + preparar o amanhã\n21:00 Sem telas + banho\n22:00 Leitura na cama e dormir",
     routine_tpl_evening: "Noite e bom sono",

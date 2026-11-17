@@ -2592,6 +2592,7 @@ translations.ro = {
     routine_tpl_home_office_items: "07:00 Trezire + îmbrăcare (nu în pijama)\n08:00 Mic dejun + cafea\n09:00 Timp de concentrare\n11:00 Stretching + apă\n13:00 Prânz\n14:00 Ședințe și apeluri\n16:00 Plimbare scurtă afară\n17:00 Închiderea laptopului",
     routine_tpl_home_office: "Lucru de acasă",
     routine_tpl_workday_items: "07:00 Trezire + apă\n08:00 Mic dejun\n09:00 Lucru concentrat – cea mai importantă sarcină\n11:00 Pauză scurtă + apă\n13:00 Prânz departe de ecran\n15:00 E-mailuri și apeluri\n17:00 Încheierea zilei + plan pentru mâine\n19:00 Timp liber",
+    routine_tpl_work_sport: "Zi de lucru + sport", routine_tpl_work_sport_items: "07:00 Trezire și făcut patul\n07:10 Baie, dinți, spălat pe față\n07:15 Jurnal: gânduri și obiective pentru azi\n07:20 Tai chi\n07:35 Plimbare de 45 de minute\n08:20 Drumul spre muncă\n08:30 E-mailuri și lucru la calculator\n10:30 Ieri: ce a mers și ce de îmbunătățit\n11:00 Masă\n12:00 Pauză + timp cu oamenii\n13:00 Înapoi la calculator până la 16:00\n16:10 Proiect personal sau trading\n17:30 Antrenament de forță – studio sau acasă\n18:00 Timp liber: o carte sau muzică",
     routine_tpl_workday: "Zi de lucru",
     routine_tpl_evening_items: "19:00 Cină ușoară\n20:00 10 minute de ordine + pregătire pentru mâine\n21:00 Fără ecrane + duș\n22:00 Citit în pat și somn",
     routine_tpl_evening: "Seară și somn bun",

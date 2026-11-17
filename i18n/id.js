@@ -2589,6 +2589,7 @@ translations.id = {
     routine_tpl_home_office_items: "07:00 Bangun + berpakaian (bukan piama)\n08:00 Sarapan + kopi\n09:00 Waktu fokus\n11:00 Peregangan + air\n13:00 Makan siang\n14:00 Rapat dan telepon\n16:00 Jalan singkat di luar\n17:00 Tutup laptop",
     routine_tpl_home_office: "Kerja dari rumah",
     routine_tpl_workday_items: "07:00 Bangun + air\n08:00 Sarapan\n09:00 Kerja fokus – tugas terpenting\n11:00 Istirahat singkat + air\n13:00 Makan siang jauh dari layar\n15:00 Email dan telepon\n17:00 Rangkum hari + rencanakan besok\n19:00 Waktu bebas",
+    routine_tpl_work_sport: "Hari kerja + olahraga", routine_tpl_work_sport_items: "07:00 Bangun dan merapikan tempat tidur\n07:10 Kamar mandi, gosok gigi, cuci muka\n07:15 Jurnal: pikiran dan tujuan hari ini\n07:20 Tai chi\n07:35 Jalan kaki 45 menit\n08:20 Berangkat kerja\n08:30 Email dan kerja di komputer\n10:30 Kemarin: apa yang berhasil dan apa yang diperbaiki\n11:00 Makan\n12:00 Istirahat + waktu bersama orang\n13:00 Kembali ke komputer sampai 16:00\n16:10 Proyek pribadi atau trading\n17:30 Latihan kekuatan – studio atau rumah\n18:00 Waktu luang: buku atau musik",
     routine_tpl_workday: "Hari kerja",
     routine_tpl_evening_items: "19:00 Makan malam ringan\n20:00 Beres-beres 10 menit + siapkan besok\n21:00 Tanpa layar + mandi\n22:00 Membaca di tempat tidur lalu tidur",
     routine_tpl_evening: "Malam & tidur nyenyak",

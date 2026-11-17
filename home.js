@@ -1093,7 +1093,7 @@ function renderHomeDevWx() {
     }));
     bar.querySelector('[data-mode]').addEventListener('click', () => { applyLightMode(document.documentElement.classList.contains('light-mode') ? false : true); renderHomeDevWx(); });
     bar.querySelector('[data-reset]').addEventListener('click', () => {
-        try { applyColorTheme(localStorage.getItem(colorThemeKey()) || 'default'); applyLightMode(localStorage.getItem('weekwise_light_mode') !== 'false'); } catch {}
+        try { applyColorTheme(localStorage.getItem(colorThemeKey()) || 'blue_teal'); applyLightMode(localStorage.getItem('weekwise_light_mode') === 'true'); } catch {}
         homeDevWxDay = true;
         previewHomeWeather(null);
         renderHomeDevWx();

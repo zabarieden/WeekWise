@@ -2589,6 +2589,7 @@ translations.tr = {
     routine_tpl_home_office_items: "07:00 Kalkış + giyinmek (pijamayla değil)\n08:00 Kahvaltı + kahve\n09:00 Odak zamanı\n11:00 Esneme + su\n13:00 Öğle yemeği\n14:00 Toplantılar ve aramalar\n16:00 Dışarıda kısa yürüyüş\n17:00 Bilgisayarı kapatmak",
     routine_tpl_home_office: "Evden çalışma",
     routine_tpl_workday_items: "07:00 Kalkış + su\n08:00 Kahvaltı\n09:00 Odaklı çalışma – en önemli iş\n11:00 Kısa mola + su\n13:00 Ekrandan uzakta öğle yemeği\n15:00 E-postalar ve aramalar\n17:00 Günü toparla + yarını planla\n19:00 Serbest zaman",
+    routine_tpl_work_sport: "İş günü + spor", routine_tpl_work_sport_items: "07:00 Kalk ve yatağı topla\n07:10 Banyo, dişler, yüz yıkama\n07:15 Günlük: bugünün düşünceleri ve hedefleri\n07:20 Tai chi\n07:35 45 dakikalık yürüyüş\n08:20 İşe gidiş\n08:30 E-postalar ve bilgisayar işi\n10:30 Dün: ne işe yaradı, ne geliştirilmeli\n11:00 Yemek\n12:00 Mola + insanlarla vakit\n13:00 16:00'ya kadar yeniden bilgisayar\n16:10 Kişisel proje ya da trading\n17:30 Kuvvet antrenmanı – stüdyo ya da ev\n18:00 Serbest zaman: kitap ya da müzik",
     routine_tpl_workday: "İş günü",
     routine_tpl_evening_items: "19:00 Hafif akşam yemeği\n20:00 10 dakika toparlanma + yarına hazırlık\n21:00 Ekran yok + duş\n22:00 Yatakta okuma ve uyku",
     routine_tpl_evening: "Akşam ve iyi uyku",

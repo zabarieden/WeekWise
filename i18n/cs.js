@@ -2593,6 +2593,7 @@ translations.cs = {
     routine_tpl_home_office_items: "07:00 Vstávání + obléknout se (ne v pyžamu)\n08:00 Snídaně + káva\n09:00 Čas na soustředění\n11:00 Protažení + voda\n13:00 Oběd\n14:00 Schůzky a hovory\n16:00 Krátká procházka venku\n17:00 Zavřít notebook",
     routine_tpl_home_office: "Práce z domova",
     routine_tpl_workday_items: "07:00 Vstávání + voda\n08:00 Snídaně\n09:00 Soustředěná práce – nejdůležitější úkol\n11:00 Krátká pauza + voda\n13:00 Oběd mimo obrazovku\n15:00 E-maily a hovory\n17:00 Shrnutí dne + plán na zítřek\n19:00 Volný čas",
+    routine_tpl_work_sport: "Pracovní den + sport", routine_tpl_work_sport_items: "07:00 Vstát a ustlat postel\n07:10 Koupelna, zuby, umýt obličej\n07:15 Deník: myšlenky a cíle na dnešek\n07:20 Tai-či\n07:35 Procházka 45 minut\n08:20 Cesta do práce\n08:30 E-maily a práce na počítači\n10:30 Včera: co fungovalo a co zlepšit\n11:00 Jídlo\n12:00 Pauza + čas s lidmi\n13:00 Zpět k počítači do 16:00\n16:10 Vlastní projekt nebo obchodování\n17:30 Silový trénink – studio nebo doma\n18:00 Volný čas: kniha nebo hudba",
     routine_tpl_workday: "Pracovní den",
     routine_tpl_evening_items: "19:00 Lehká večeře\n20:00 10 minut úklidu + příprava na zítřek\n21:00 Bez obrazovek + sprcha\n22:00 Čtení v posteli a spánek",
     routine_tpl_evening: "Večer a dobrý spánek",

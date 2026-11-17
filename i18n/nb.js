@@ -2589,6 +2589,7 @@ translations.nb = {
     routine_tpl_home_office_items: "07:00 Stå opp + kle på seg (ikke pyjamas)\n08:00 Frokost + kaffe\n09:00 Fokustid\n11:00 Tøying + vann\n13:00 Lunsj\n14:00 Møter og telefoner\n16:00 Kort tur ute\n17:00 Lukke laptopen",
     routine_tpl_home_office: "Hjemmekontor",
     routine_tpl_workday_items: "07:00 Stå opp + vann\n08:00 Frokost\n09:00 Fokusert arbeid – den viktigste oppgaven\n11:00 Kort pause + vann\n13:00 Lunsj borte fra skjermen\n15:00 E-post og telefoner\n17:00 Avslutte dagen + planlegge i morgen\n19:00 Fritid",
+    routine_tpl_work_sport: "Arbeidsdag + trening", routine_tpl_work_sport_items: "07:00 Stå opp og re sengen\n07:10 Bad, tenner, vaske ansiktet\n07:15 Dagbok: tanker og mål for i dag\n07:20 Tai chi\n07:35 Gåtur 45 minutter\n08:20 Reise til jobb\n08:30 E-post og arbeid på datamaskinen\n10:30 I går: hva fungerte og hva kan bli bedre\n11:00 Måltid\n12:00 Pause + tid med andre\n13:00 Tilbake til datamaskinen til 16:00\n16:10 Eget prosjekt eller trading\n17:30 Styrketrening – studio eller hjemme\n18:00 Fritid: en bok eller musikk",
     routine_tpl_workday: "Arbeidsdag",
     routine_tpl_evening_items: "19:00 Lett middag\n20:00 Rydde 10 minutter + gjøre klart til i morgen\n21:00 Skjermene av + dusj\n22:00 Lese i sengen og sove",
     routine_tpl_evening: "Kveld & god søvn",

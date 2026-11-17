@@ -2589,6 +2589,7 @@ translations.sw = {
     routine_tpl_home_office_items: "07:00 Kuamka + kuvaa (si nguo za kulala)\n08:00 Kifungua kinywa + kahawa\n09:00 Muda wa umakini\n11:00 Kunyoosha mwili + maji\n13:00 Chakula cha mchana\n14:00 Mikutano na simu\n16:00 Matembezi mafupi nje\n17:00 Kufunga kompyuta",
     routine_tpl_home_office: "Kufanya kazi nyumbani",
     routine_tpl_workday_items: "07:00 Kuamka + maji\n08:00 Kifungua kinywa\n09:00 Kazi ya umakini – kazi muhimu zaidi\n11:00 Mapumziko mafupi + maji\n13:00 Chakula cha mchana mbali na skrini\n15:00 Barua pepe na simu\n17:00 Kufunga siku + kupanga kesho\n19:00 Muda huru",
+    routine_tpl_work_sport: "Siku ya kazi + michezo", routine_tpl_work_sport_items: "07:00 Kuamka na kutandika kitanda\n07:10 Bafuni, meno na kunawa uso\n07:15 Shajara: mawazo na malengo ya leo\n07:20 Tai chi\n07:35 Matembezi ya dakika 45\n08:20 Kwenda kazini\n08:30 Barua pepe na kazi ya kompyuta\n10:30 Jana: kilichofanya kazi na cha kuboresha\n11:00 Mlo\n12:00 Mapumziko + muda na watu\n13:00 Kurudi kwenye kompyuta hadi 16:00\n16:10 Mradi binafsi au biashara\n17:30 Mazoezi ya nguvu – studio au nyumbani\n18:00 Muda huru: kitabu au muziki",
     routine_tpl_workday: "Siku ya kazi",
     routine_tpl_evening_items: "19:00 Chakula cha jioni chepesi\n20:00 Kupanga vitu dakika 10 + kujiandaa kwa kesho\n21:00 Bila skrini + kuoga\n22:00 Kusoma kitandani na kulala",
     routine_tpl_evening: "Jioni na usingizi mzuri",

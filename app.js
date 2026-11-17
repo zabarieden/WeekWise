@@ -1953,8 +1953,9 @@ async function submitAuthForm() {
             // בחורות ישתמשו וגברים יכולים לשנות בקלות"; עד אז מנטה), רובוט קטן, תג קלוריות בהצצה, פתק ורוד,
             // צליל תזכורת wind_chime
             await supabaseClient.from('user_premium').insert({
-                user_id: data.user.id, username: email, light_mode: true, onboarding_completed: false,
-                theme: 'default', ai_fab_compact: true, home_calorie_badge_enabled: true,
+                // מאז 2026-11-17 (לפי בקשה מפורשת): הכחול הראשון (blue_teal) במצב כהה - והסיור מזמין לגעת בשמש ולראות את היום
+                user_id: data.user.id, username: email, light_mode: false, onboarding_completed: false,
+                theme: 'blue_teal', ai_fab_compact: true, home_calorie_badge_enabled: true,
                 reminder_chime_id: 'wind_chime', routine_goals_enabled: true,
                 // השפה = מה שנבחר במסך ההרשמה (ברירת מחדל: אנגלית) - לא העברית של המפתחת
                 language: currentLang || 'en',
@@ -10145,7 +10146,7 @@ function closePremiumUnlockCeremony() {
 // false במפורש ל-user_premium כבר ברגע ההרשמה - לפי בקשה מפורשת שמשתמשות
 // חדשות יתחילו בערכת הנושא הראשונה על רקע כהה, ואז ישנו איך שבא להן
 function isLightModeOn() {
-    return localStorage.getItem('weekwise_light_mode') !== 'false';
+    return localStorage.getItem('weekwise_light_mode') === 'true';
 }
 
 function applyLightMode(enabled) {
@@ -10695,7 +10696,7 @@ async function loadColorTheme() {
         if (data) themeSyncSeen = `${data.theme || ''}|${data.light_mode}`;
     }
     if (!themeName) {
-        themeName = localStorage.getItem(colorThemeKey()) || 'default';
+        themeName = localStorage.getItem(colorThemeKey()) || 'blue_teal';
     }
     // ערכה שהוצאה - עוברים לקרובה ושומרים, כדי שגם במכשיר הבא זו תהיה הבחירה
     const mapped = normalizeColorTheme(themeName);
@@ -18856,6 +18857,8 @@ const ROUTINE_READY_TEMPLATES = [
     { id: 'morning', icon: '🌅' },
     { id: 'evening', icon: '🌙' },
     { id: 'workday', icon: '💼' },
+    // 🏃 יום עבודה + ספורט - השגרה שלה מ-15.11 (הטאב 'התמדה' שנמחק בטעות), עם נסיעה לעבודה מיד אחרי ההליכה (2026-11-17)
+    { id: 'work_sport', icon: '🏃' },
     { id: 'home_office', icon: '🏠' },
     { id: 'study', icon: '📚' },
     { id: 'workout', icon: '💪' },
@@ -18894,15 +18897,19 @@ function routineDayTemplateLabel(tpl) {
     return `${routineWeekdayName(tpl.days[0], 'short')}–${routineWeekdayName(tpl.days[tpl.days.length - 1], 'short')}`;
 }
 
+// שורה = "HH:MM מה עושים". שעה מדויקת נשמרת כמו שהיא (07:15 נשאר 07:15), ומותרים כמה פריטים באותה שעה עגולה
+// (לפי בקשה מפורשת, 2026-11-17 - התבנית "יום עבודה + ספורט" עם 07:00, 07:10, 07:15, 07:20)
 function parseRoutineTemplateItems(text) {
-    const seenHours = new Set();
+    const seen = new Set();
     return String(text || '').split('\n').map(line => {
-        const m = line.match(/^\s*(\d{1,2})(?:[:.]\d{2})?\s*[-–—]?\s*(.+?)\s*$/);
+        const m = line.match(/^\s*(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]?\s*(.+?)\s*$/);
         if (!m) return null;
-        const hour = Number(m[1]);
-        if (!(hour >= 0 && hour <= 23) || seenHours.has(hour)) return null;
-        seenHours.add(hour);
-        return { hour, title: m[2] };
+        const hour = Number(m[1]), min = m[2] ? Number(m[2]) : 0;
+        if (!(hour >= 0 && hour <= 23) || min > 59) return null;
+        const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+        if (seen.has(time)) return null;
+        seen.add(time);
+        return { hour, time, title: m[3] };
     }).filter(Boolean);
 }
 
@@ -19034,16 +19041,14 @@ async function applyRoutineReadyTemplate(templateId) {
     if (!isPremiumUser && !tpl.free) { closeModal('modal-routine-add-choice'); openPremiumUpgradeModal(); return; }
     const items = parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).filter(it => routineBucketOfHour(it.hour));
     if (!items.length) return;
-    const hours = { morning: [], noon: [], afternoon: [], evening: [] };
-    items.forEach(it => hours[routineBucketOfHour(it.hour)].push(it.hour));
-    Object.keys(hours).forEach(b => hours[b].sort((x, y) => x - y));
+    const hours = routineHoursForItems(items);
     const name = uniqueRoutineTabName(`${tpl.icon} ${t('routine_tpl_' + tpl.id)}`);
     const { data, error } = await supabaseClient.from('routine_tabs').insert({
         user_id: currentUserId, username: currentUsername, name, sort_order: nextRoutineTabSortOrder(), custom_hours: hours,
     }).select('*').single();
     if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
     dailyBoardTabs.push(data);
-    const rows = items.map(it => ({ tab_id: data.id, user_id: currentUserId, title: it.title, time: `${String(it.hour).padStart(2, '0')}:00`, kind: 'scheduled' }));
+    const rows = items.map(it => ({ tab_id: data.id, user_id: currentUserId, title: it.title, time: routineItemTime(it), kind: 'scheduled' }));
     const { error: itemsError } = await supabaseClient.from('routine_items').insert(rows);
     if (itemsError) showAppToast(t('error_adding_item') + itemsError.message, 'error');
     closeModal('modal-routine-add-choice');
@@ -19297,7 +19302,7 @@ function routineStarterCard() {
     card.className = 'routine-starter';
     const items = parseRoutineTemplateItems(t('routine_tpl_starter_items'));
     card.innerHTML = `<div class="routine-starter-head"><span aria-hidden="true">🌱</span>${escapeHtmlForReport(t('routine_tpl_starter'))}</div>
-        <ul class="routine-starter-list">${items.map(it => `<li><span class="routine-starter-time">${String(it.hour).padStart(2, '0')}:00</span><span>${escapeHtmlForReport(it.title)}</span></li>`).join('')}</ul>
+        <ul class="routine-starter-list">${items.map(it => `<li><span class="routine-starter-time">${it.time}</span><span>${escapeHtmlForReport(it.title)}</span></li>`).join('')}</ul>
         <button type="button" class="btn-primary routine-starter-btn" onclick="routineAddStarterToTab()">${escapeHtmlForReport(t('routine_starter_add'))}</button>`;
     return card;
 }

@@ -2589,6 +2589,7 @@ translations.en = {
     routine_tpl_home_office_items: "07:00 Wake up + get dressed (not pajamas)\n08:00 Breakfast + coffee\n09:00 Focus time\n11:00 Stretch + water\n13:00 Lunch\n14:00 Meetings and calls\n16:00 Short walk outside\n17:00 Close the laptop",
     routine_tpl_home_office: "Work from home",
     routine_tpl_workday_items: "07:00 Wake up + water\n08:00 Breakfast\n09:00 Deep work – the most important task\n11:00 Short break + water\n13:00 Lunch away from the screen\n15:00 Emails and calls\n17:00 Wrap up + plan tomorrow\n19:00 Free time",
+    routine_tpl_work_sport: "Work day + sport", routine_tpl_work_sport_items: "07:00 Get up and make the bed\n07:10 Bathroom, teeth and face wash\n07:15 Journal: thoughts and goals for today\n07:20 Tai chi\n07:35 A 45-minute walk\n08:20 Travel to work\n08:30 Emails and computer work\n10:30 Yesterday: what worked and what to improve\n11:00 Meal\n12:00 Break + time with people\n13:00 Back to the computer until 16:00\n16:10 Personal project or trading\n17:30 Strength workout – studio or home\n18:00 Free time: a book or music",
     routine_tpl_workday: "Workday",
     routine_tpl_evening_items: "19:00 Light dinner\n20:00 Tidy up 10 minutes + get ready for tomorrow\n21:00 Screens off + shower\n22:00 Reading in bed and sleep",
     routine_tpl_evening: "Evening & good sleep",

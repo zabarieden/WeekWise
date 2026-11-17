@@ -22,7 +22,8 @@
                 var theme = localStorage.getItem('weekwise_last_color_theme');
                 // ברירת המחדל האמיתית (מי שעדיין לא בחר/ה בכלל, כולל חשבון חדש)
                 // היא "ברירת מחדל" (default, הוורוד-סגול) במצב בהיר - לפי בקשה מפורשת, 2026-11-07 (עד אז מנטה)
-                if (!theme) theme = 'default';
+                // מאז 2026-11-17: הכחול הראשון (blue_teal) במצב כהה (לפי בקשה מפורשת)
+                if (!theme) theme = 'blue_teal';
                 // ערכות שהוצאו (סבב 2) - כמו COLOR_THEME_ALIASES ב-app.js
                 var themeAliases = { sherbet_sky: 'cotton_candy', aurora_pastel: 'rainbow_mist', neon_glass: 'default', ocean_teal: 'blue_teal', arctic_frost: 'blue_teal', volcanic_ember: 'gold_red', royal_amethyst: 'lavender_dream', graphite_steel: 'bg_dark_grey', copper_bronze: 'gold_red', silver_sparkle: 'gold_sparkle', starlight_glam: 'star_map', diamond_sparkle: 'gold_sparkle', blueprint_draft: 'star_map', vaporwave_neon: 'pink_sparkle', neon_trading_chart: 'bull_run', market_data_glow: 'bull_run', bear_crash: 'bull_run', rocket_ship: 'space_rocket' };
                 if (themeAliases[theme]) theme = themeAliases[theme];
@@ -32,7 +33,7 @@
                 // האתר תמיד מתחיל כהה בכל רענון/פתיחה ורק "קופץ" לבהיר כשההבטחה
                 // מתמלאת - בדיוק התסמין שדווח ("שמרתי לבהיר, ואחרי רענון זה כהה")
                 // גם אם בפועל ה-DB/localStorage כבר שמרו בהיר נכון
-                if (localStorage.getItem('weekwise_light_mode') !== 'false') document.documentElement.classList.add('light-mode');
+                if (localStorage.getItem('weekwise_light_mode') === 'true') document.documentElement.classList.add('light-mode');
                 // פונט וצבע-טקסט מותאמים אישית - אותה בעיה בדיוק ("לשבריר שנייה רואים את
                 // הפונט הקודם"): מיושמים כאן מהמטמון, לפני כל ציור. נטען רק הפונט שנבחר
                 // (לא כל הרשימה), עם display=block כדי שלא יוצג קודם בפונט אחר ואז יתחלף
@@ -4544,9 +4545,9 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=545"></script>
+    <script src="i18n/core.js?v=546"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="app.js?v=666"></script>
+    <script src="app.js?v=667"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
@@ -4561,7 +4562,7 @@
     <script src="world3d.js?v=16"></script>
     <script src="world-map.js?v=1"></script>
     <script src="books.js?v=9"></script>
-    <script src="home.js?v=36"></script>
+    <script src="home.js?v=37"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=7"></script>

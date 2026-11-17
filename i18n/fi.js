@@ -2589,6 +2589,7 @@ translations.fi = {
     routine_tpl_home_office_items: "07:00 Herätys + pukeutuminen (ei pyjamassa)\n08:00 Aamiainen + kahvi\n09:00 Keskittymisaika\n11:00 Venyttely + vettä\n13:00 Lounas\n14:00 Palaverit ja puhelut\n16:00 Lyhyt kävely ulkona\n17:00 Läppäri kiinni",
     routine_tpl_home_office: "Etätyö",
     routine_tpl_workday_items: "07:00 Herätys + vettä\n08:00 Aamiainen\n09:00 Keskittynyt työ – tärkein tehtävä\n11:00 Lyhyt tauko + vettä\n13:00 Lounas poissa ruudulta\n15:00 Sähköpostit ja puhelut\n17:00 Päivän päätös + huomisen suunnittelu\n19:00 Vapaa-aikaa",
+    routine_tpl_work_sport: "Työpäivä + liikunta", routine_tpl_work_sport_items: "07:00 Nouse ja pedaa sänky\n07:10 Kylpyhuone, hampaat, kasvojen pesu\n07:15 Päiväkirja: päivän ajatukset ja tavoitteet\n07:20 Tai chi\n07:35 45 minuutin kävely\n08:20 Matka töihin\n08:30 Sähköpostit ja työ tietokoneella\n10:30 Eilen: mikä toimi ja mitä parantaa\n11:00 Ateria\n12:00 Tauko + aikaa ihmisten kanssa\n13:00 Takaisin koneelle klo 16:00 asti\n16:10 Oma projekti tai kaupankäynti\n17:30 Voimaharjoitus – studiolla tai kotona\n18:00 Vapaa-aika: kirja tai musiikki",
     routine_tpl_workday: "Työpäivä",
     routine_tpl_evening_items: "19:00 Kevyt iltaruoka\n20:00 10 minuuttia siivousta + huomisen valmistelu\n21:00 Ruudut pois + suihku\n22:00 Lukemista sängyssä ja nukkumaan",
     routine_tpl_evening: "Ilta ja hyvä uni",

@@ -2589,6 +2589,7 @@ translations.hu = {
     routine_tpl_home_office_items: "07:00 Felkelés + felöltözés (nem pizsamában)\n08:00 Reggeli + kávé\n09:00 Fókuszidő\n11:00 Nyújtás + víz\n13:00 Ebéd\n14:00 Megbeszélések és hívások\n16:00 Rövid séta a szabadban\n17:00 A laptop lecsukása",
     routine_tpl_home_office: "Otthoni munka",
     routine_tpl_workday_items: "07:00 Felkelés + víz\n08:00 Reggeli\n09:00 Fókuszált munka – a legfontosabb feladat\n11:00 Rövid szünet + víz\n13:00 Ebéd a képernyőtől távol\n15:00 E-mailek és hívások\n17:00 A nap lezárása + holnap tervezése\n19:00 Szabadidő",
+    routine_tpl_work_sport: "Munkanap + sport", routine_tpl_work_sport_items: "07:00 Felkelés és ágyazás\n07:10 Fürdőszoba, fogmosás, arcmosás\n07:15 Napló: a mai gondolatok és célok\n07:20 Tajcsi\n07:35 45 perces séta\n08:20 Út a munkába\n08:30 E-mailek és munka a gépen\n10:30 Tegnap: mi működött, min javítani\n11:00 Étkezés\n12:00 Szünet + idő másokkal\n13:00 Vissza a géphez 16:00-ig\n16:10 Saját projekt vagy kereskedés\n17:30 Erősítő edzés – stúdióban vagy otthon\n18:00 Szabadidő: könyv vagy zene",
     routine_tpl_workday: "Munkanap",
     routine_tpl_evening_items: "19:00 Könnyű vacsora\n20:00 10 perc rendrakás + felkészülés holnapra\n21:00 Képernyők kikapcsolva + zuhany\n22:00 Olvasás az ágyban és alvás",
     routine_tpl_evening: "Este és jó alvás",

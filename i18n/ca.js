@@ -2589,6 +2589,7 @@ translations.ca = {
     routine_tpl_home_office_items: "07:00 Llevar-se + vestir-se (sense pijama)\n08:00 Esmorzar + cafè\n09:00 Temps de concentració\n11:00 Estiraments + aigua\n13:00 Dinar\n14:00 Reunions i trucades\n16:00 Passeig curt a fora\n17:00 Tancar l'ordinador",
     routine_tpl_home_office: "Feina des de casa",
     routine_tpl_workday_items: "07:00 Llevar-se + aigua\n08:00 Esmorzar\n09:00 Feina concentrada: la tasca més important\n11:00 Pausa curta + aigua\n13:00 Dinar lluny de la pantalla\n15:00 Correus i trucades\n17:00 Tancar el dia + planificar demà\n19:00 Temps lliure",
+    routine_tpl_work_sport: "Dia de feina + esport", routine_tpl_work_sport_items: "07:00 Llevar-se i fer el llit\n07:10 Bany, dents i rentar-se la cara\n07:15 Diari: pensaments i objectius d'avui\n07:20 Taitxi\n07:35 Caminada de 45 minuts\n08:20 Anar a la feina\n08:30 Correus i feina a l'ordinador\n10:30 Ahir: què va funcionar i què millorar\n11:00 Àpat\n12:00 Pausa + temps amb gent\n13:00 Tornar a l'ordinador fins a les 16:00\n16:10 Projecte personal o trading\n17:30 Entrenament de força – estudi o casa\n18:00 Temps lliure: un llibre o música",
     routine_tpl_workday: "Dia de feina",
     routine_tpl_evening_items: "19:00 Sopar lleuger\n20:00 Endreçar 10 minuts + preparar demà\n21:00 Sense pantalles + dutxa\n22:00 Llegir al llit i dormir",
     routine_tpl_evening: "Vespre i bon descans",

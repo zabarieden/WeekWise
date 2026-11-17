@@ -2589,6 +2589,7 @@ translations.nl = {
     routine_tpl_home_office_items: "07:00 Opstaan + aankleden (geen pyjama)\n08:00 Ontbijt + koffie\n09:00 Focustijd\n11:00 Rekken + water\n13:00 Lunch\n14:00 Overleg en telefoontjes\n16:00 Kort wandelingetje buiten\n17:00 Laptop dichtklappen",
     routine_tpl_home_office: "Thuiswerken",
     routine_tpl_workday_items: "07:00 Opstaan + water\n08:00 Ontbijt\n09:00 Geconcentreerd werken – de belangrijkste taak\n11:00 Korte pauze + water\n13:00 Lunch weg van het scherm\n15:00 Mails en telefoontjes\n17:00 Afronden + morgen plannen\n19:00 Vrije tijd",
+    routine_tpl_work_sport: "Werkdag + sport", routine_tpl_work_sport_items: "07:00 Opstaan en bed opmaken\n07:10 Badkamer, tanden, gezicht wassen\n07:15 Dagboek: gedachten en doelen voor vandaag\n07:20 Tai chi\n07:35 45 minuten wandelen\n08:20 Naar het werk\n08:30 Mails en werk achter de computer\n10:30 Gisteren: wat werkte en wat beter kan\n11:00 Eten\n12:00 Pauze + tijd met mensen\n13:00 Terug achter de computer tot 16:00\n16:10 Eigen project of trading\n17:30 Krachttraining – studio of thuis\n18:00 Vrije tijd: een boek of muziek",
     routine_tpl_workday: "Werkdag",
     routine_tpl_evening_items: "19:00 Licht avondeten\n20:00 10 minuten opruimen + morgen klaarzetten\n21:00 Schermen uit + douchen\n22:00 Lezen in bed en slapen",
     routine_tpl_evening: "Avond & goed slapen",
