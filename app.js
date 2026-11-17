@@ -3004,6 +3004,7 @@ async function initAppAfterAuth(user) {
     currentUserCreatedAt = user.created_at;
     requestPersistentStorage();
     setErrorReportingUser(user.id);
+    nourishPreloadIfOwner();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app-container').style.display = 'flex';
     requestAnimationFrame(repositionPeekTabStack);
@@ -4176,6 +4177,8 @@ function guardShellSideScroll() {
 
 function switchToTab(targetId) {
     showTabSection(targetId);
+    // NOT10 Nourish+ נטען רק כשצריך (nourish-loader.js) - אם הגיעו אליו בדרך אחרת (קישור, חזרה למסך), טוענים ומציירים
+    if (targetId === 'new-me-section' && !nourishLoaded()) ensureNourish().then(ok => { if (ok && typeof renderNewMe === 'function') renderNewMe(); });
     // הפתקים ורשימת הקניות בלי מסך ביניים (2026-10-20) - בלי בחירה נפתחים הפתקים
     if (targetId === 'my-center-section') {
         const section = document.getElementById(targetId);
@@ -4374,6 +4377,11 @@ new MutationObserver(records => {
 // מהקטגוריות/ההמבורגר - תמיד המסך הראשי של New Me (לא התצוגה האחרונה שהייתה
 // פתוחה); רק הקיצור של New Me (💎) פותח ישר את "התפריט שלי היום" (openNewMeMenuToday)
 function openNewMe(view = 'home') {
+    if (!nourishLoaded()) {
+        switchToTab('new-me-section');
+        ensureNourish().then(ok => { if (ok) openNewMe(view); });
+        return;
+    }
     if (typeof nmView !== 'undefined') nmView = view;
     switchToTab('new-me-section');
     if (typeof renderNewMe === 'function') renderNewMe();
@@ -9251,7 +9259,7 @@ function devSimBuyNewMe() {
     showAppToast(t('nm_unlocking'));
     setTimeout(() => {
         // כמו קונה חדש: השאלון מההצהרה, ובסוף הוא נשמר (ר' nmStartQuizFresh)
-        if (typeof nmStartQuizFresh === 'function') nmStartQuizFresh();
+        nourishCall('nmStartQuizFresh');
         setNmDevLockedPreview(false);
         celebrateNewMeUnlock();
     }, 1200);
@@ -9416,6 +9424,7 @@ async function loadPremiumStatus() {
         premiumTierFromDb = null;
         newMeBilling = null;
         if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
+        nourishAfterStatus();
         updateHomePremiumBadgeVisibility();
         updateThemeSwatchLocks();
         renderSettingsSubscriptionSection();
@@ -9436,6 +9445,7 @@ async function loadPremiumStatus() {
     premiumTierFromDb = (data && data.tier) || null;
     newMeBilling = data ? { plan: data.new_me_plan || (data.new_me_purchased ? 'lifetime' : null), status: data.new_me_subscription_status || null, renewsAt: data.new_me_renews_at || null, endsAt: data.new_me_ends_at || null } : null;
     if (typeof updateNewMeShortcut === 'function') updateNewMeShortcut();
+    nourishAfterStatus();
     updateHomePremiumBadgeVisibility();
     updateThemeSwatchLocks();
     renderSettingsSubscriptionSection();
@@ -9623,7 +9633,7 @@ function handleNotificationDeepLink() {
     window.history.replaceState({}, '', newUrl);
     if (open === 'peek') openTodayPeekPanel();
     // תזכורת ארוחה של New Me - נפתח ברגע שמצב הרכישה נטען (ר' updateNewMeShortcut)
-    else if (open === 'newme' && typeof nmPendingDeepLink !== 'undefined') nmPendingDeepLink = true;
+    else if (open === 'newme') { if (typeof nmPendingDeepLink !== 'undefined') nmPendingDeepLink = true; else window.__nmDeepLink = true; }
 }
 
 // מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל

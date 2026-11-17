@@ -622,58 +622,7 @@ async function nmSetRoutineSync(on) {
 }
 
 // ---------- בורר שעה מעוצב ----------
-// לפי בקשה מפורשת ("יש חלון בלי עיצוב בכלל של השעות"): במקום בורר השעה של הדפדפן - כפתור עם השעה, ונגיעה פותחת
-// מתחת לשורה את השעות (00–23) ואת הדקות (כל 5 דקות, ו"אחר" לדקה מדויקת). כל בחירה נכנסת מיד; דקות - וזה נסגר
-const nmTimePickHandlers = {};
-function nmTimeBtnHtml(id, value, label, onPick, disabled) {
-    nmTimePickHandlers[id] = onPick;
-    return `<button type="button" class="nm-time-btn" data-time-id="${nmEsc(id)}" aria-expanded="false" aria-label="${nmEsc(label)}" ${disabled ? 'disabled' : ''} onclick="nmToggleTimePicker(this)"><bdi dir="ltr">${nmEsc(value)}</bdi></button>`;
-}
-function nmCloseTimePickers() {
-    document.querySelectorAll('.nm-time-picker').forEach(p => p.remove());
-    document.querySelectorAll('.nm-time-btn.is-open').forEach(b => { b.classList.remove('is-open'); b.setAttribute('aria-expanded', 'false'); });
-}
-function nmToggleTimePicker(btn) {
-    const wasOpen = btn.classList.contains('is-open');
-    nmCloseTimePickers();
-    if (wasOpen || btn.disabled) return;
-    const pad = n => String(n).padStart(2, '0');
-    let [h, m] = (btn.textContent.trim().match(/^\d{2}:\d{2}$/) ? btn.textContent.trim() : '12:00').split(':');
-    const picker = document.createElement('div');
-    picker.className = 'nm-time-picker';
-    picker.innerHTML = `
-        <span class="nm-time-label">${nmEsc(t('nm_time_hour'))}</span>
-        <div class="nm-time-grid" role="group" aria-label="${nmEsc(t('nm_time_hour'))}">${Array.from({ length: 24 }, (_, i) => pad(i)).map(v => `<button type="button" class="nm-time-chip" data-h="${v}"><bdi dir="ltr">${v}</bdi></button>`).join('')}</div>
-        <span class="nm-time-label">${nmEsc(t('nm_time_minutes'))}</span>
-        <div class="nm-time-grid" role="group" aria-label="${nmEsc(t('nm_time_minutes'))}">${Array.from({ length: 12 }, (_, i) => pad(i * 5)).map(v => `<button type="button" class="nm-time-chip" data-m="${v}"><bdi dir="ltr">:${v}</bdi></button>`).join('')}<button type="button" class="nm-time-chip nm-time-other" data-other>${nmEsc(t('nm_other'))}</button></div>
-        <div class="nm-time-exact hidden"><input type="text" inputmode="numeric" maxlength="2" class="nm-time-exact-input" aria-label="${nmEsc(t('nm_time_minutes'))}"><button type="button" class="nm-time-chip on" data-exact>✓</button></div>`;
-    (btn.closest('.nm-rem-row') || btn.parentElement).after(picker);
-    btn.classList.add('is-open');
-    btn.setAttribute('aria-expanded', 'true');
-    const mark = () => {
-        picker.querySelectorAll('[data-h]').forEach(x => { const on = x.dataset.h === h; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-        picker.querySelectorAll('[data-m]').forEach(x => { const on = x.dataset.m === m; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
-        picker.querySelector('[data-other]').classList.toggle('on', Number(m) % 5 !== 0);
-    };
-    const apply = close => {
-        const v = `${h}:${m}`;
-        btn.querySelector('bdi').textContent = v;
-        const fn = nmTimePickHandlers[btn.dataset.timeId];
-        if (fn) fn(v);
-        mark();
-        if (close) { nmCloseTimePickers(); btn.focus({ preventScroll: true }); }
-    };
-    mark();
-    picker.querySelectorAll('[data-h]').forEach(x => x.addEventListener('click', () => { h = x.dataset.h; apply(false); }));
-    picker.querySelectorAll('[data-m]').forEach(x => x.addEventListener('click', () => { m = x.dataset.m; apply(true); }));
-    const exactBox = picker.querySelector('.nm-time-exact'), exactIn = picker.querySelector('.nm-time-exact-input');
-    picker.querySelector('[data-other]').addEventListener('click', () => { exactBox.classList.remove('hidden'); exactIn.value = m; exactIn.focus(); exactIn.select(); });
-    const exactOk = () => { const v = parseInt(exactIn.value, 10); if (!(v >= 0 && v <= 59)) { exactIn.focus(); return; } m = pad(v); apply(true); };
-    picker.querySelector('[data-exact]').addEventListener('click', exactOk);
-    exactIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); exactOk(); } });
-    const on = picker.querySelector('[data-h].on');
-    if (on) on.focus({ preventScroll: true });
-}
+// עבר ל-nourish-loader.js (2026-11-17) - כל האפליקציה משתמשת בו, ו-Nourish+ נטען עכשיו רק כשצריך
 // בתזכורות כל שעה נשמרת לבד - שעה ואז דקות = שמירה אחת (לא שתיים)
 const nmRemTimeTimers = {};
 function nmQueueReminderTime(i, value) {

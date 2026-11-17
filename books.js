@@ -40,7 +40,9 @@ function bookHomeChipHtml() {
 }
 function openBookPageQuick(id) {
     const b = bookHomeBooks().find(x => x.id === id) || bookHomeBooks()[0];
-    if (!b || typeof nmOpenSheet !== 'function') return;
+    if (!b) return;
+    // the sheet comes with NOT10 Nourish+, which loads only when needed (nourish-loader.js)
+    if (typeof nmOpenSheet !== 'function') { if (typeof ensureNourish === 'function') ensureNourish().then(ok => { if (ok) openBookPageQuick(id); }); return; }
     const total = Number(b.total_pages) || 0;
     const ov = nmOpenSheet(`
         <h4>📖 ${bookEsc(b.title)}</h4>
