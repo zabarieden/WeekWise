@@ -22079,9 +22079,20 @@ function visionJourneyDay(goal) {
 function visionSmallStepText(goal) { return (goal.reminder_text || '').trim() || null; }
 function visionSmallStepFreqText(goal) {
     if (goal.reminder_freq === 'daily') return t('vision_reminder_daily');
+    if (goal.reminder_freq === 'xweek') { const n = Number(goal.reminder_times) || 3; return `${t('vision_xweek_freq').replace('{n}', n)} · ${Math.min(n, visionWeekCount(goal))}/${n}`; }
     if (goal.reminder_freq === 'weekly') return t('vision_step_schedule_weekly_on').replace('{day}', new Date(2026, 9, 4 + (Number(goal.reminder_weekday) || 0)).toLocaleDateString(currentLang, { weekday: 'long' }));
     return '';
 }
+// כמה ימים עם צעד היו השבוע (שבוע שמתחיל בראשון בעברית ובערבית, ובשני בשאר השפות)
+function visionWeekCount(goal) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    const startDay = ['he', 'ar'].includes(currentLang) ? 0 : 1;
+    d.setDate(d.getDate() - ((d.getDay() - startDay + 7) % 7));
+    const from = getLocalDateString(d);
+    return visionGoalDayDates(goal).filter(x => x >= from).length;
+}
+function visionXweekMet(goal) { return visionWeekCount(goal) >= (Number(goal.reminder_times) || 3); }
 function visionSortedMilestones(goalId) {
     return visionMilestonesCache.filter(m => m.goal_id === goalId).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 }
@@ -23087,6 +23098,7 @@ function getPeekGoalTaskItems() {
         } else if (goal.reminder_freq) {
             // 👣 הצעד הקטן של כל יעד אחר (תחנות / ספירה / משקל) - כל יום, או בשבוע ביום שנבחר
             if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== weekday) return;
+            if (goal.reminder_freq === 'xweek' && visionXweekMet(goal) && !visionCheckedToday(goal.id, null)) return;
             const text = visionSmallStepText(goal) || goal.title;
             items.push({ goalId: goal.id, icon, text, tag: text === goal.title ? null : goal.title, done: visionCheckedToday(goal.id, null), toggle: checked => toggleGoalReminderCheck(goal.id, checked) });
         }
@@ -23151,6 +23163,7 @@ async function toggleGoalReminderCheck(goalId, checked) {
 function autoCheckGoalReminder(goal) {
     if (!goal || goal.is_achieved || !goal.reminder_freq) return;
     if (goal.reminder_freq === 'weekly' && Number(goal.reminder_weekday) !== new Date().getDay()) return;
+    if (goal.reminder_freq === 'xweek' && visionXweekMet(goal)) return;
     if (goal.track_type === 'weight' && (visionSmallStepText(goal) || '') !== t('vision_reminder_weigh_default')) return;
     if (!visionCheckedToday(goal.id, null)) toggleGoalReminderCheck(goal.id, true);
 }
@@ -23547,6 +23560,7 @@ function openVisionGoalModal(goalId = null, template = null, opts = {}) {
     document.getElementById('vision-goal-focus-toggle').checked = !!(goal && goal.focus_month === currentMonthKey() && !goal.is_achieved);
     // 👣 הצעד הקטן: ביעד חדש - כל יום כברירת מחדל ("רק קצת כל יום"), או מה שבתוכנית; בעריכה - מה שנשמר
     selectedVisionReminderFreq = goal ? (goal.reminder_freq || null) : ((template && template.freq) || 'daily');
+    selectedVisionReminderTimes = goal && Number(goal.reminder_times) >= 2 ? Number(goal.reminder_times) : 3;
     if (goal && opts.focusSmallStep && !selectedVisionReminderFreq) selectedVisionReminderFreq = 'daily';
     selectedVisionReminderWeekday = goal && goal.reminder_weekday != null ? Number(goal.reminder_weekday) : new Date().getDay();
     document.getElementById('vision-goal-reminder-text').value = goal ? (goal.reminder_text || '') : ((template && template.daily) || '');
@@ -23630,7 +23644,10 @@ const VISION_REMINDER_OPTIONS = [
     { freq: null, key: 'vision_reminder_off' },
     { freq: 'daily', key: 'vision_reminder_daily' },
     { freq: 'weekly', key: 'vision_reminder_weekly' },
+    // "N פעמים בשבוע" (כמו Google Fit, רעיון 11 שבחרה): מופיע כל יום עד שנעשה N פעמים השבוע
+    { freq: 'xweek', key: 'vision_reminder_xweek' },
 ];
+let selectedVisionReminderTimes = 3;
 function renderVisionReminderFields() {
     const wrap = document.getElementById('vision-goal-reminder-fields');
     if (!wrap) return;
@@ -23649,8 +23666,18 @@ function renderVisionReminderFields() {
         chips.appendChild(chip);
     });
     const days = document.getElementById('vision-goal-reminder-weekdays');
-    days.classList.toggle('hidden', selectedVisionReminderFreq !== 'weekly');
+    days.classList.toggle('hidden', selectedVisionReminderFreq !== 'weekly' && selectedVisionReminderFreq !== 'xweek');
     days.innerHTML = '';
+    if (selectedVisionReminderFreq === 'xweek') {
+        for (let n = 2; n <= 6; n++) {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'vision-goal-category-chip' + (selectedVisionReminderTimes === n ? ' selected' : '');
+            chip.textContent = t('vision_xweek_n').replace('{n}', n);
+            chip.onclick = () => { selectedVisionReminderTimes = n; renderVisionReminderFields(); };
+            days.appendChild(chip);
+        }
+    }
     if (selectedVisionReminderFreq === 'weekly') {
         // שמות הימים בשפה הנוכחית - 4.10.2026 היה יום ראשון, כך ש-i תואם ל-getDay()
         for (let i = 0; i < 7; i++) {
@@ -23845,6 +23872,7 @@ async function saveVisionGoal() {
     const reminderFreq = track !== 'days' ? selectedVisionReminderFreq : null;
     payload.reminder_freq = reminderFreq;
     payload.reminder_weekday = reminderFreq === 'weekly' ? selectedVisionReminderWeekday : null;
+    payload.reminder_times = reminderFreq === 'xweek' ? selectedVisionReminderTimes : null;
     payload.reminder_text = reminderFreq ? (document.getElementById('vision-goal-reminder-text').value.trim().slice(0, 60) || null) : null;
     const month = currentMonthKey();
     const wantsFocus = document.getElementById('vision-goal-focus-toggle').checked && isPremiumUser;
