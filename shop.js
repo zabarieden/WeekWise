@@ -23,6 +23,9 @@ function shopEsc(s) { return escapeHtmlForReport(String(s ?? '')); }
 function shopIsAgain(it) { return !!it.is_completed; }
 function shopIsTransit(it) { return !it.is_completed && it.shop_state === 'transit'; }
 function shopIsActive(it) { return !it.is_completed && it.shop_state !== 'transit'; }
+// ✓ בעגלה - קו על הפריט, והוא נשאר ברשימה (לפי בקשה מפורשת, 2026-11-18: "לעשות קו כאילו את זה קניתי כבר אבל כן
+// רוצים להשאיר ברשימה"). "לנקות את מה שנקנה" מעביר את כולם ל"קונים שוב"
+function shopIsCart(it) { return !it.is_completed && it.shop_state === 'cart'; }
 function shopQtyOf(it) { return Math.max(1, Math.min(99, Number(it.quantity) || 1)); }
 
 // ---------- המחלקות (shop-depts.js) ----------
@@ -113,6 +116,14 @@ function renderShoppingList(data) {
         }
         g.items.forEach(it => ul.appendChild(shopRow(it)));
     });
+    // מה שכבר בעגלה: כפתור אחד שמעביר את כולם ל"קונים שוב" (כמו ↺ לכל אחד)
+    const inCart = active.filter(shopIsCart);
+    if (inCart.length) {
+        const li = document.createElement('li');
+        li.className = 'shop-cart-clear';
+        li.innerHTML = `<button type="button" onclick="shopClearCart()">${shopEsc(t('shop_cart_clear').replace('{n}', inCart.length.toLocaleString(currentLang)))}</button>`;
+        ul.appendChild(li);
+    }
     renderShopHoliday();
     renderShopTransit();
     renderShopAgain();
@@ -130,7 +141,8 @@ function renderShoppingList(data) {
 }
 function shopRow(it) {
     const li = document.createElement('li');
-    li.className = 'shop-row';
+    const cart = shopIsCart(it);
+    li.className = 'shop-row' + (cart ? ' is-cart' : '');
     li.setAttribute('data-item-id', it.id);
     li.setAttribute('data-written-at', it.content_updated_at || it.created_at || '');
     // רק צבע טקסט אחד (לפי בקשה מפורשת, 2026-10-20: "שלא יהיה את כל הצבעים והזוהר והכל רק צבעים אחד השורה הראשונה")
@@ -138,7 +150,9 @@ function shopRow(it) {
     const style = [];
     if (it.text_color) style.push(`color: ${it.text_color}`);
     const q = shopQtyOf(it);
+    const cartCheck = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     li.innerHTML = `
+        <button type="button" class="shop-cart-btn${cart ? ' on' : ''}" onclick="shopToggleCart('${it.id}')" aria-pressed="${cart}" aria-label="${shopEsc(t(cart ? 'shop_cart_undo' : 'shop_cart_mark'))}: ${shopEsc(it.content)}">${cart ? cartCheck : ''}</button>
         <span class="center-list-item-text shop-text"${style.length ? ` style="${style.join('; ')};"` : ''} onclick="openCenterItemEditor(this, 'general')" role="button" tabindex="0">${shopEsc(it.content)}</span>
         <span class="shop-qty${q > 1 ? ' is-many' : ''}">
             ${q > 1 ? `<button type="button" class="shop-qty-btn" onclick="shopQty('${it.id}', -1)" aria-label="${shopEsc(t('shop_qty_less'))}">−</button><b class="shop-qty-n"><bdi dir="ltr">×${q.toLocaleString(currentLang)}</bdi></b>` : ''}
@@ -249,6 +263,23 @@ async function shopMarkAgain(id) {
     const it = shopFind(id);
     shopRowOut(id);
     if (await shopUpdate(id, shopBoughtPatch(it))) await syncShopItemToTable(id, true);
+    loadCenterItems('general');
+}
+// ✓ בעגלה / לבטל - הקו נשאר עד שמנקים (מיד על המסך, ואם השמירה נכשלה - חוזר)
+async function shopToggleCart(id) {
+    const it = shopFind(id);
+    if (!it) return;
+    const on = !shopIsCart(it);
+    it.shop_state = on ? 'cart' : null;
+    renderShoppingList(shopItemsCache);
+    if (!(await shopUpdate(id, { shop_state: on ? 'cart' : null }))) { it.shop_state = on ? null : 'cart'; renderShoppingList(shopItemsCache); }
+}
+// לנקות את מה שבעגלה: כולם נקנו - ל"קונים שוב", כל אחד עם הספירה שלו
+async function shopClearCart() {
+    const items = shopItemsCache.filter(shopIsCart);
+    if (!items.length) return;
+    items.forEach(it => shopRowOut(it.id));
+    await Promise.all(items.map(it => shopUpdate(it.id, shopBoughtPatch(it)).then(ok => (ok ? syncShopItemToTable(it.id, true) : null))));
     loadCenterItems('general');
 }
 // ✕ נקנה - למחוק (לארכיון, כמו מחיקה רגילה - למקרה של טעות)
@@ -502,7 +533,7 @@ function shareShoppingList() {
     groups.forEach(g => {
         lines.push('');
         if (heads) lines.push(`${SHOP_DEPT_EMOJI[g.dept] || SHOP_DEPT_EMOJI.other} ${shareBold(shopDeptName(g.dept))}`);
-        g.items.forEach(it => lines.push(`   ◦ ${it.content}${qty(it)}`));
+        g.items.forEach(it => lines.push(shopIsCart(it) ? `   ◦ ~${it.content}${qty(it)}~` : `   ◦ ${it.content}${qty(it)}`));
     });
     if (transit.length) {
         lines.push('', `🚚 ${shareBold(t('shop_share_transit'))}`);
