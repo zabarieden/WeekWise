@@ -702,7 +702,9 @@ function homeFocusGoalsHtml() {
     if (!goals.length) return `<section class="hf-goals is-empty">${head}</section>`;
     const rows = goals.map(g => {
         // מטרה שנכתבה ביד: השם וכמה ימים עד סוף השנה; נגיעה פותחת את הבחירה
-        if (g.own) return `<button type="button" class="hf-goal is-own" onclick="openHomeFocusGoalPicker()"><span class="hf-goal-top"><span class="hf-goal-icon" aria-hidden="true">✍️</span><span class="hf-goal-title">${myDayEsc(g.title)}</span></span></button>`;
+        // 🏮 "פנס" (בחירה 2026-11-18, רעיון 12: "תזכורת המטרה - פנס"): בלי יד ובלי קופסה - רק המילים עם הילה רכה
+        // מאחוריהן, בצבע של הערכה (אף פעם לא צהוב קבוע ביעדים)
+        if (g.own) return `<button type="button" class="hf-goal is-own is-lantern" onclick="openHomeFocusGoalPicker()"><span class="hf-goal-title">${myDayEsc(g.title)}</span></button>`;
         const p = typeof visionGoalProgress === 'function' ? visionGoalProgress(g) : { pct: 0, label: '' };
         const deadline = typeof visionEffectiveDeadline === 'function' ? visionEffectiveDeadline(g) : null;
         const meta = [p.label || '', deadline && deadline <= yearEnd ? t('home_focus_days_left').replace('{n}', homeFocusDaysTo(deadline)) : ''].filter(Boolean).join(' · ');

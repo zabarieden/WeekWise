@@ -12494,3 +12494,6 @@ html.light-mode { --bin-stroke: #7c3aed; --bin-a: #c4b5fd; --bin-b: #6d28d9; }
 .routine-pickbar span { flex: 1; min-width: 0; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
 .routine-pickbar button { flex: none; padding: 8px 14px; }
 .routine-pickbar button:disabled { opacity: .5; }
+/* 🏮 מטרה שנכתבה ביד בפוקוס = "פנס" (בחירה 2026-11-18, רעיון 12): הילה רכה בצבע הערכה מאחורי המילים, בלי מסגרת */
+.hf-goal.is-lantern { align-items: center; padding: 16px 14px; border: none; background: radial-gradient(ellipse 70% 85% at center, color-mix(in srgb, var(--focus-neon) 24%, transparent), transparent 72%); -webkit-backdrop-filter: none; backdrop-filter: none; text-align: center; }
+.hf-goal.is-lantern .hf-goal-title { flex: none; font-size: 1rem; font-weight: 700; line-height: 1.5; text-align: center; text-shadow: 0 0 18px color-mix(in srgb, var(--focus-neon) 50%, transparent); }
