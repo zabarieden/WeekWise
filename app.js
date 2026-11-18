@@ -2654,13 +2654,13 @@ function appTourRender(step) {
     if (step.demo === 'goal') demoEl.appendChild(buildTourDemoGoalPath());
     const titleEl = layer.querySelector('.app-tour-title');
     titleEl.innerHTML = (!isCenter && icon ? `<span class="app-tour-title-icon" aria-hidden="true">${appTourIconHtml(icon)}</span>` : '') + `<span>${appTourEsc(title)}</span>`;
-    layer.querySelector('.app-tour-text').textContent = t(dyn ? dyn.text : step.text);
+    setTextWithBins(layer.querySelector('.app-tour-text'), t(dyn ? dyn.text : step.text));
     const agendaEl = layer.querySelector('.app-tour-agenda');
     agendaEl.innerHTML = step.agenda ? appTourAgendaHtml() : '';
     agendaEl.classList.toggle('hidden', !step.agenda);
     const linkEl = layer.querySelector('.app-tour-link');
     const linkText = step.link ? t(step.link) : '';
-    linkEl.innerHTML = linkText ? `<span class="app-tour-link-icon" aria-hidden="true">${APP_TOUR_PART_ICONS.summary}</span><span>${appTourEsc(linkText)}</span>` : '';
+    linkEl.innerHTML = linkText ? `<span class="app-tour-link-icon" aria-hidden="true">${APP_TOUR_PART_ICONS.summary}</span><span>${binHtml(linkText)}</span>` : '';
     linkEl.classList.toggle('hidden', !linkText);
     const flowsEl = layer.querySelector('.app-tour-flows');
     flowsEl.innerHTML = step.flows ? appTourFlowsHtml() : '';
@@ -10414,6 +10414,14 @@ const HELP_FAQ_TABS = ['general', 'premium', 'new_me', 'settings'];
 // head = מפתח הכותרת הקטנה (null = הקבוצה הראשונה של לשונית שהשם שלה כבר אומר הכול: הכותרת שלה
 // היא שם הלשונית, והיא מופיעה רק בחיפוש, כשתוצאות מכל הלשוניות מוצגות יחד).
 // בלשונית ההגדרות הכותרות הן שמות הקבוצות של מסך ההגדרות עצמו
+// 🗑️ פח הזכוכית (בחירה 2026-11-18): המקומות הקבועים ב-index.html מקבלים אותו, והמכסה נפתח לרגע בנגיעה בכפתור שלו
+document.querySelectorAll('.bin-slot').forEach(s => { s.innerHTML = BIN_SVG; });
+document.addEventListener('pointerdown', e => {
+    const host = e.target && e.target.closest ? e.target.closest('button, a, [role="button"]') : null;
+    if (!host || !host.querySelector('.ic-bin')) return;
+    host.classList.add('bin-open');
+    setTimeout(() => host.classList.remove('bin-open'), 650);
+}, { passive: true });
 const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
@@ -10499,7 +10507,7 @@ function renderHelpFaqList() {
             qBtn.onclick = () => item.classList.toggle('open');
             const answer = document.createElement('div');
             answer.className = 'help-faq-answer';
-            answer.textContent = t(`faq_a_${id}`);
+            setTextWithBins(answer, t(`faq_a_${id}`));
             item.appendChild(qBtn);
             item.appendChild(answer);
             list.appendChild(item);
@@ -19629,7 +19637,7 @@ function renderRoutineNudge() {
                 <div class="routine-nudge-row">
                     <span class="routine-nudge-row-text"><b>${esc(g.title)}</b><small>${g.time ? `${esc(g.time)} · ` : ''}${esc(whereOf(g))}</small></span>
                     <button type="button" class="routine-nudge-icon" onclick="routineNudgeEditGroup(${i})" title="${esc(t('routine_nudge_change'))}" aria-label="${esc(`${t('routine_nudge_change')}: ${g.title}`)}">✏️</button>
-                    <button type="button" class="routine-nudge-icon" onclick="routineNudgeRemoveGroup(${i})" title="${esc(t('routine_nudge_remove'))}" aria-label="${esc(`${t('routine_nudge_remove')}: ${g.title}`)}">🗑️</button>
+                    <button type="button" class="routine-nudge-icon" onclick="routineNudgeRemoveGroup(${i})" title="${esc(t('routine_nudge_remove'))}" aria-label="${esc(`${t('routine_nudge_remove')}: ${g.title}`)}">${BIN_SVG}</button>
                 </div>`).join('')}</div>` : ''}
             <div class="routine-nudge-actions">
                 <button type="button" class="routine-nudge-btn primary" onclick="routineNudgeKeep()">✓ ${esc(t('routine_nudge_general_keep'))}</button>
@@ -19648,7 +19656,7 @@ function renderRoutineNudge() {
             <div class="routine-nudge-actions">
                 <button type="button" class="routine-nudge-btn primary" onclick="routineNudgeKeep()">✓ ${escapeHtmlForReport(t('routine_nudge_keep'))}</button>
                 <button type="button" class="routine-nudge-btn" onclick="routineNudgeChange()">✏️ ${escapeHtmlForReport(t('routine_nudge_change'))}</button>
-                <button type="button" class="routine-nudge-btn" onclick="routineNudgeRemove()">🗑️ ${escapeHtmlForReport(t('routine_nudge_remove'))}</button>
+                <button type="button" class="routine-nudge-btn" onclick="routineNudgeRemove()">${BIN_SVG} ${escapeHtmlForReport(t('routine_nudge_remove'))}</button>
             </div>
         </div>`;
 }
@@ -21274,7 +21282,7 @@ function openNotebookActions() {
     const options = [{ icon: '🎨', key: 'nb_cover_edit_title', desc: 'nb_action_cover_desc', run: () => openNotebookCoverModal(nb.id) }];
     if (page) options.push({ icon: '✏️', key: 'notebook_page_rename_title', desc: 'nb_action_rename_desc', run: () => openRenamePageModal() });
     if (isCanvas) options.push({ icon: '🧽', key: 'notebook_canvas_clear_title', desc: 'nb_action_clear_desc', run: () => clearCanvas() });
-    if (page) options.push({ icon: '🗑️', key: 'nb_action_delete_page', desc: 'nb_action_delete_page_desc', danger: true, run: () => deleteNotebookPage(page.id) });
+    if (page) options.push({ icon: BIN_SVG, key: 'nb_action_delete_page', desc: 'nb_action_delete_page_desc', danger: true, run: () => deleteNotebookPage(page.id) });
     options.forEach(o => {
         const b = document.createElement('button');
         b.type = 'button';
@@ -23343,7 +23351,7 @@ function buildGoalActions(goal) {
     // 👥 חבר מלווה (כמו Coach.me, רעיון 14 שבחרה): קישור לצפייה בלבד בשביל של היעד
     const shared = visionGoalShare(goal.id);
     add(shared ? 'is-friend-on' : 'is-friend', `<span aria-hidden="true">👥</span><span>${visionEsc(t(shared ? 'gv_friend_on' : 'gv_friend_btn'))}</span>`, () => openGoalFriend(goal));
-    add('is-delete', '<span aria-hidden="true">🗑️</span>', () => deleteVisionGoal(goal.id), t('vision_goal_delete_btn_title'));
+    add('is-delete', BIN_SVG, () => deleteVisionGoal(goal.id), t('vision_goal_delete_btn_title'));
     return row;
 }
 let visionSharesCache = [];

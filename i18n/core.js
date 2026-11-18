@@ -113,9 +113,23 @@ function loadSavedLanguage() {
     return setLanguage(saved && SUPPORTED_LANGUAGES.includes(saved) ? saved : 'en');
 }
 
+// 🗑️ באפליקציה = פח הזכוכית הסגול המצויר, שהמכסה שלו נפתח בנגיעה (בחירה 2026-11-18: "סמל הפח החדש - 3 + מכסה שנפתח").
+// כל טקסט עם 🗑️ (כפתורים, שאלות נפוצות, הסיור) מציג אותו במקום האימוג'י. הצבעים והגרדיאנט - ב-theme.css (.ic-bin)
+// ו-#bin-glass ב-index.html
+const BIN_SVG = '<svg class="ic-bin" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="bin-body" d="M6 7.4l1 11.6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-11.6z"/><path class="bin-shine" d="M8.3 9.8l.6 7.6"/><g class="bin-lid"><rect x="3.5" y="5.4" width="17" height="2.4" rx="1.2"/><path d="M9.3 5.4v-.8c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1v.8"/></g></svg>';
+function binHtml(text) {
+    const esc = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return esc.replace(/🗑️?/g, BIN_SVG);
+}
+// טקסט רגיל לאלמנט - ואם יש בו 🗑️, עם הפח המצויר
+function setTextWithBins(el, text) {
+    if (String(text).indexOf('🗑') === -1) el.textContent = text;
+    else el.innerHTML = binHtml(text);
+}
+
 function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
-        el.textContent = t(el.getAttribute('data-i18n'));
+        setTextWithBins(el, t(el.getAttribute('data-i18n')));
     });
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
@@ -137,7 +151,7 @@ function applyTranslations() {
     if (langSelect) langSelect.value = currentLang;
 }
 
-const I18N_V = '554';
+const I18N_V = '555';
 const I18N_CROSS = {
     nm_pos_1: { en: "Breakfast", he: "ארוחת בוקר", es: "Desayuno", fr: "Petit-déjeuner", ar: "الفطور", ru: "Завтрак", de: "Frühstück", pt: "Café da manhã", ja: "朝食", zh: "早餐", hi: "नाश्ता", ko: "아침 식사", tr: "Kahvaltı", id: "Sarapan", it: "Colazione", vi: "Bữa sáng", pl: "Śniadanie", th: "มื้อเช้า", ur: "ناشتہ", bn: "সকালের নাশতা", sw: "Kifungua kinywa", uk: "Сніданок", el: "Πρωινό", nl: "Ontbijt", ca: "Esmorzar", ro: "Mic dejun", yo: "Oúnjẹ àárọ̀", sv: "Frukost", nb: "Frokost", da: "Morgenmad", cs: "Snídaně", hu: "Reggeli", fi: "Aamiainen" },
     nm_pos_2: { en: "Snack", he: "נשנוש", es: "Tentempié", fr: "Collation", ar: "وجبة خفيفة", ru: "Перекус", de: "Snack", pt: "Lanche", ja: "間食", zh: "加餐", hi: "स्नैक", ko: "간식", tr: "Ara öğün", id: "Camilan", it: "Spuntino", vi: "Bữa phụ", pl: "Przekąska", th: "ของว่าง", ur: "اسنیک", bn: "নাশতা", sw: "Kitafunio", uk: "Перекус", el: "Σνακ", nl: "Tussendoortje", ca: "Refrigeri", ro: "Gustare", yo: "Ìpanu", sv: "Mellanmål", nb: "Mellommåltid", da: "Mellemmåltid", cs: "Svačina", hu: "Nasi", fi: "Välipala" },

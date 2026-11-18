@@ -4459,7 +4459,7 @@ function nmPhotoActions(id) {
         <h4>${nmEsc(t('nm_tile_photos'))}</h4>
         <button type="button" class="nm-row-btn" data-act="before">⬅️ ${nmEsc(t('nm_photo_set_before'))}</button>
         <button type="button" class="nm-row-btn" data-act="after">➡️ ${nmEsc(t('nm_photo_set_after'))}</button>
-        <button type="button" class="nm-row-btn nm-danger" data-act="delete">🗑️ ${nmEsc(t('nm_photo_delete'))}</button>
+        <button type="button" class="nm-row-btn nm-danger" data-act="delete">${BIN_SVG} ${nmEsc(t('nm_photo_delete'))}</button>
         <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`);
     ov.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', () => {
         ov.remove();

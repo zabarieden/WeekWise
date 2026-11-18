@@ -811,7 +811,7 @@ function openTableActions() {
     [
         { icon: '☰', key: 'table_manage_columns_btn', desc: 'tbl_actions_columns_desc', run: () => openColumnManager() },
         { icon: '✏️', key: 'tbl_actions_edit', desc: 'tbl_actions_edit_desc', run: () => openEditTableModal(tb.id) },
-        { icon: '🗑️', key: 'tbl_actions_delete', desc: 'tbl_actions_delete_desc', danger: true, run: () => deleteCustomTable(tb.id) },
+        { icon: BIN_SVG, key: 'tbl_actions_delete', desc: 'tbl_actions_delete_desc', danger: true, run: () => deleteCustomTable(tb.id) },
     ].forEach(o => {
         const b = document.createElement('button');
         b.type = 'button';

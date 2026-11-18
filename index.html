@@ -127,7 +127,7 @@
         @keyframes bootTwinkle { from { opacity: 1; transform: scale(1); } to { opacity: .45; transform: scale(.7); } }
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before { animation: none; } .boot-sparkle i { top: var(--y); } }
     </style>
-    <link rel="stylesheet" href="theme.css?v=641">
+    <link rel="stylesheet" href="theme.css?v=642">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -138,6 +138,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 </head>
 <body>
+    <!-- 🗑️ הגרדיאנט של פח הזכוכית (BIN_SVG ב-i18n.js) - פעם אחת לכל העמוד; לא display:none, שהגרדיאנט יעבוד בכל דפדפן -->
+    <svg width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true" focusable="false"><defs><linearGradient id="bin-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--bin-a);stop-opacity:.9"/><stop offset="1" style="stop-color:var(--bin-b);stop-opacity:.4"/></linearGradient></defs></svg>
     <div id="boot-sparkle" class="boot-sparkle" aria-hidden="true"><i style="--x:11.0%;--s:5px;--t:4.20s;--d:0.00s;--dx:-30px;--y:0vh"></i><i style="--x:48.3%;--s:12px;--t:6.40s;--d:-0.71s;--dx:-7px;--y:53vh"></i><i style="--x:85.6%;--s:9px;--t:8.60s;--d:-1.42s;--dx:16px;--y:10vh"></i><i style="--x:22.9%;--s:6px;--t:5.85s;--d:-2.13s;--dx:-21px;--y:63vh"></i><i style="--x:60.2%;--s:13px;--t:8.05s;--d:-2.84s;--dx:2px;--y:20vh"></i><i style="--x:97.5%;--s:10px;--t:5.30s;--d:-3.55s;--dx:25px;--y:73vh"></i><i style="--x:34.8%;--s:7px;--t:7.50s;--d:-4.26s;--dx:-12px;--y:30vh"></i><i style="--x:72.1%;--s:14px;--t:4.75s;--d:-0.22s;--dx:11px;--y:83vh"></i><i style="--x:9.4%;--s:11px;--t:6.95s;--d:-5.68s;--dx:-26px;--y:40vh"></i><i style="--x:46.7%;--s:8px;--t:4.20s;--d:-2.19s;--dx:-3px;--y:93vh"></i><i style="--x:84.0%;--s:5px;--t:6.40s;--d:-0.70s;--dx:20px;--y:50vh"></i><i style="--x:21.3%;--s:12px;--t:8.60s;--d:-7.81s;--dx:-17px;--y:7vh"></i><i style="--x:58.6%;--s:9px;--t:5.85s;--d:-2.67s;--dx:6px;--y:60vh"></i><i style="--x:95.9%;--s:6px;--t:8.05s;--d:-1.18s;--dx:29px;--y:17vh"></i><i style="--x:33.2%;--s:13px;--t:5.30s;--d:-4.64s;--dx:-8px;--y:70vh"></i><i style="--x:70.5%;--s:10px;--t:7.50s;--d:-3.15s;--dx:15px;--y:27vh"></i><i style="--x:7.8%;--s:7px;--t:4.75s;--d:-1.86s;--dx:-22px;--y:80vh"></i><i style="--x:45.1%;--s:14px;--t:6.95s;--d:-5.12s;--dx:1px;--y:37vh"></i><i style="--x:82.4%;--s:11px;--t:4.20s;--d:-0.18s;--dx:24px;--y:90vh"></i><i style="--x:19.7%;--s:8px;--t:6.40s;--d:-0.69s;--dx:-13px;--y:47vh"></i><i style="--x:57.0%;--s:5px;--t:8.60s;--d:-5.60s;--dx:10px;--y:4vh"></i><i style="--x:94.3%;--s:12px;--t:5.85s;--d:-3.21s;--dx:-27px;--y:57vh"></i><i style="--x:31.6%;--s:9px;--t:8.05s;--d:-7.57s;--dx:-4px;--y:14vh"></i><i style="--x:68.9%;--s:6px;--t:5.30s;--d:-0.43s;--dx:19px;--y:67vh"></i><i style="--x:6.2%;--s:13px;--t:7.50s;--d:-2.04s;--dx:-18px;--y:24vh"></i><i style="--x:43.5%;--s:10px;--t:4.75s;--d:-3.50s;--dx:5px;--y:77vh"></i><i style="--x:80.8%;--s:7px;--t:6.95s;--d:-4.56s;--dx:28px;--y:34vh"></i><i style="--x:18.1%;--s:14px;--t:4.20s;--d:-2.37s;--dx:-9px;--y:87vh"></i><i style="--x:55.4%;--s:11px;--t:6.40s;--d:-0.68s;--dx:14px;--y:44vh"></i><i style="--x:92.7%;--s:8px;--t:8.60s;--d:-3.39s;--dx:-23px;--y:1vh"></i><i style="--x:30.0%;--s:5px;--t:5.85s;--d:-3.75s;--dx:0px;--y:54vh"></i><i style="--x:67.3%;--s:12px;--t:8.05s;--d:-5.91s;--dx:23px;--y:11vh"></i><i style="--x:4.6%;--s:9px;--t:5.30s;--d:-1.52s;--dx:-14px;--y:64vh"></i><i style="--x:41.9%;--s:6px;--t:7.50s;--d:-0.93s;--dx:9px;--y:21vh"></i><i style="--x:79.2%;--s:13px;--t:4.75s;--d:-0.39s;--dx:-28px;--y:74vh"></i><i style="--x:16.5%;--s:10px;--t:6.95s;--d:-4.00s;--dx:-5px;--y:31vh"></i><i style="--x:53.8%;--s:7px;--t:4.20s;--d:-0.36s;--dx:18px;--y:84vh"></i><i style="--x:91.1%;--s:14px;--t:6.40s;--d:-0.67s;--dx:-19px;--y:41vh"></i><i style="--x:28.4%;--s:11px;--t:8.60s;--d:-1.18s;--dx:4px;--y:94vh"></i><i style="--x:65.7%;--s:8px;--t:5.85s;--d:-4.29s;--dx:27px;--y:51vh"></i><i style="--x:3.0%;--s:5px;--t:8.05s;--d:-4.25s;--dx:-10px;--y:8vh"></i><i style="--x:40.3%;--s:12px;--t:5.30s;--d:-2.61s;--dx:13px;--y:61vh"></i><i style="--x:77.6%;--s:9px;--t:7.50s;--d:-7.32s;--dx:-24px;--y:18vh"></i><i style="--x:14.9%;--s:6px;--t:4.75s;--d:-2.03s;--dx:-1px;--y:71vh"></i><i style="--x:52.2%;--s:13px;--t:6.95s;--d:-3.44s;--dx:22px;--y:28vh"></i><i style="--x:89.5%;--s:10px;--t:4.20s;--d:-2.55s;--dx:-15px;--y:81vh"></i><i style="--x:26.8%;--s:7px;--t:6.40s;--d:-0.66s;--dx:8px;--y:38vh"></i><i style="--x:64.1%;--s:14px;--t:8.60s;--d:-7.57s;--dx:-29px;--y:91vh"></i><i style="--x:1.4%;--s:11px;--t:5.85s;--d:-4.83s;--dx:-6px;--y:48vh"></i><i style="--x:38.7%;--s:8px;--t:8.05s;--d:-2.59s;--dx:17px;--y:5vh"></i><i style="--x:76.0%;--s:5px;--t:5.30s;--d:-3.70s;--dx:-20px;--y:58vh"></i><i style="--x:13.3%;--s:12px;--t:7.50s;--d:-6.21s;--dx:3px;--y:15vh"></i><i style="--x:50.6%;--s:9px;--t:4.75s;--d:-3.67s;--dx:26px;--y:68vh"></i><i style="--x:87.9%;--s:6px;--t:6.95s;--d:-2.88s;--dx:-11px;--y:25vh"></i><i style="--x:25.2%;--s:13px;--t:4.20s;--d:-0.54s;--dx:12px;--y:78vh"></i><i style="--x:62.5%;--s:10px;--t:6.40s;--d:-0.65s;--dx:-25px;--y:35vh"></i><i style="--x:99.8%;--s:7px;--t:8.60s;--d:-5.36s;--dx:-2px;--y:88vh"></i><i style="--x:37.1%;--s:14px;--t:5.85s;--d:-5.37s;--dx:21px;--y:45vh"></i><i style="--x:74.4%;--s:11px;--t:8.05s;--d:-0.93s;--dx:-16px;--y:2vh"></i><i style="--x:11.7%;--s:8px;--t:5.30s;--d:-4.79s;--dx:7px;--y:55vh"></i><i style="--x:49.0%;--s:5px;--t:7.50s;--d:-5.10s;--dx:-30px;--y:12vh"></i><i style="--x:86.3%;--s:12px;--t:4.75s;--d:-0.56s;--dx:-7px;--y:65vh"></i><i style="--x:23.6%;--s:9px;--t:6.95s;--d:-2.32s;--dx:16px;--y:22vh"></i><i style="--x:60.9%;--s:6px;--t:4.20s;--d:-2.73s;--dx:-21px;--y:75vh"></i></div>
 
     <!-- מעטפת האפליקציה הנעולה בגודל מובייל קלאסי -->
@@ -831,7 +833,7 @@
                             <!-- ארכיון פתקים מחוקים - אייקון קטן ומעומעם, מוצג רק כשיש בו משהו (ר'
                                  refreshNotesArchiveCount); לחיצה פותחת מודל נפרד (לא מתקפל בתוך הרשימה) -->
                             <button type="button" class="notes-archive-icon-btn hidden" id="archive-toggle-weekly" onclick="openNotesArchiveModal('weekly')" data-i18n-title="notes_archive_toggle_label" title="Archive">
-                                <span aria-hidden="true">🗑️</span><span id="archive-count-weekly" class="notes-archive-count-badge"></span>
+                                <span aria-hidden="true" class="bin-slot"></span><span id="archive-count-weekly" class="notes-archive-count-badge"></span>
                             </button>
                         </div>
                     </div>
@@ -867,7 +869,7 @@
                             <div class="shop-foot">
                                 <button type="button" class="shop-again-toggle hidden" id="shop-again-toggle" onclick="toggleShopAgainPanel()" aria-expanded="false" aria-controls="shop-again"></button>
                                 <button type="button" class="notes-archive-icon-btn hidden" id="archive-toggle-general" onclick="openNotesArchiveModal('general')" data-i18n-title="notes_archive_toggle_label" title="Archive">
-                                    <span aria-hidden="true">🗑️</span><span id="archive-count-general" class="notes-archive-count-badge"></span>
+                                    <span aria-hidden="true" class="bin-slot"></span><span id="archive-count-general" class="notes-archive-count-badge"></span>
                                 </button>
                             </div>
                             <div id="shop-again" class="shop-again hidden"></div>
@@ -3813,7 +3815,7 @@
                     <!-- מחיקת טאב הועברה לתוך פאנל ההגדרות (⚙️) - לא מוצגת קבוע
                          מתחת לשורת הטאבים - לפי בקשה מפורשת ("שיהיה יותר נקי") -->
                     <div class="daily-board-tab-actions">
-                        <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()">🗑️ <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
+                        <button type="button" class="btn-link-action daily-board-delete-tab-btn" id="daily-board-delete-tab-btn" onclick="deleteActiveRoutineTab()"><span aria-hidden="true" class="bin-slot"></span> <span data-i18n="daily_board_delete_tab_btn">Delete tab</span></button>
                     </div>
                 </div>
                 <!-- 🌱 כרטיס עדין על פריט שלא סומן ✓ יותר מ-3 ימים (ר' renderRoutineNudge ב-app.js) -->
@@ -4572,20 +4574,20 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=554"></script>
+    <script src="i18n/core.js?v=555"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="nourish-loader.js?v=2"></script>
-    <script src="app.js?v=673"></script>
+    <script src="nourish-loader.js?v=3"></script>
+    <script src="app.js?v=674"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
-    <script src="tables.js?v=4"></script>
+    <script src="tables.js?v=5"></script>
     <script src="workouts.js?v=10"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=10"></script>
     <script src="home.js?v=41"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
-    <script src="shop.js?v=7"></script>
+    <script src="shop.js?v=8"></script>
 </body>
 </html>

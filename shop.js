@@ -488,17 +488,26 @@ function shopModalSync() {
 document.addEventListener('input', e => { if (e.target && e.target.id === 'center-item-input') shopModalSync(); });
 
 // ---------- 📤 שיתוף ----------
+// העיצוב שנבחר (2026-11-18, "שיתוף הרשימה קניות: 18 + 19"): כותרת בתוך מסגרת דקה, סמל לכל מחלקה, ◦ לכל דבר -
+// ובסוף "🚚 כבר בדרך - לא לקנות" עם מה שהוזמן ובדרך, שלא יקנו פעמיים
+const SHOP_DEPT_EMOJI = { produce: '🥬', bakery: '🍞', dairy: '🥛', meat: '🍗', pantry: '🥫', frozen: '🧊', drinks: '🧃', snacks: '🍪', cleaning: '🧽', care: '🧴', baby: '🍼', pets: '🐾', other: '🛍️' };
 function shareShoppingList() {
     const active = shopItemsCache.filter(shopIsActive);
     if (!active.length) return;
+    const transit = shopItemsCache.filter(shopIsTransit);
     const groups = shopGroups(active);
     const heads = groups.length > 1 || (groups.length === 1 && groups[0].dept !== 'other');
-    const lines = [`🛒 ${shareBold(t('general_title'))}`];
+    const qty = it => (shopQtyOf(it) > 1 ? ` ×${shopQtyOf(it)}` : '');
+    const lines = ['╭──────────────╮', `      🛒 ${shareBold(t('general_title'))}`, '╰──────────────╯'];
     groups.forEach(g => {
         lines.push('');
-        if (heads) lines.push(shareBold(shopDeptName(g.dept)));
-        g.items.forEach(it => lines.push(`▫️ ${it.content}${shopQtyOf(it) > 1 ? ` ×${shopQtyOf(it)}` : ''}`));
+        if (heads) lines.push(`${SHOP_DEPT_EMOJI[g.dept] || SHOP_DEPT_EMOJI.other} ${shareBold(shopDeptName(g.dept))}`);
+        g.items.forEach(it => lines.push(`   ◦ ${it.content}${qty(it)}`));
     });
+    if (transit.length) {
+        lines.push('', `🚚 ${shareBold(t('shop_share_transit'))}`);
+        transit.forEach(it => lines.push(`• ${it.content}${qty(it)}`));
+    }
     openSharePicker(lines.join('\n'), { subject: `🛒 ${t('general_title')}` });
 }
 
