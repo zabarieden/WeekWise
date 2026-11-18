@@ -60,13 +60,15 @@ async function loadMyDayRoutine(todayStr) {
             const { data: checks } = await supabaseClient.from('routine_item_checkins').select('item_id').in('item_id', items.map(it => it.id)).eq('checkin_date', todayStr);
             doneIds = new Set((checks || []).map(c => c.item_id));
         }
+        // הערה ו"לא היום" ליד כל וי (2026-11-18)
+        const notes = items.length ? await loadRoutineDayNotes(items.map(it => it.id), todayStr) : new Map();
         // שם הטאב בקטן - לכל טאב חוץ מהראשי (הראשון), כשיותר מטאב אחד מופיע היום
         const mainId = tabs[0] ? tabs[0].id : null;
         const names = new Map(queryTabs.map(tb => [tb.id, tb.name]));
         // ביום חופש - הדבר שנקבע ליום הזה מטאב אחר מראה את שם הטאב שלו
         const tabOf = it => (dayOff ? (it.tab_id !== dayOff.id ? names.get(it.tab_id) || null : null)
             : (todayTabs.length > 1 && it.tab_id !== mainId ? names.get(it.tab_id) || null : null));
-        return { items, doneIds, checksOn, tab: todayTabs[0], tabOf };
+        return { items, doneIds, checksOn, tab: todayTabs[0], tabOf, notes };
     } catch (e) {
         console.error('my day routine failed', e);
         return empty;
@@ -84,12 +86,167 @@ async function myDayToggleRoutine(item, checked) {
         ({ error } = await supabaseClient.from('routine_item_checkins').delete().eq('item_id', item.id).eq('checkin_date', todayStr));
     }
     if (error) { console.error('routine checkin failed', error); showAppToast(t('error_not_connected'), 'error'); loadTodayTasks(); return; }
+    // ✓ על פריט שסומן "לא היום" - כן נעשה, אז "לא היום" יורד (ההערה נשארת)
+    if (checked) await routineClearSkip(item.id, todayStr);
     if (item.vision_milestone_id) await syncGoalFromRoutineCheck(item.vision_milestone_id, todayStr, checked);
     if (item.vision_goal_id) await syncGoalSmallStepFromRoutine(item.vision_goal_id, todayStr, checked);
     if (checked && typeof routineNudge !== 'undefined' && routineNudge && routineNudge.itemIds.includes(item.id)) { routineNudge = null; renderRoutineNudge(); }
     const board = document.getElementById('modal-daily-board');
     if (board && board.classList.contains('open')) renderDailyBoard();
     loadTodayTasks();
+}
+
+// --- 🔗 בלוקים בשגרה, והערה ו"לא היום" ליד כל וי (לפי בקשה מפורשת, 2026-11-18: "שכל 7 עד 7:30 יהיה ביחד... ואז זה
+// יהיה וי אחד", "הערות בצד של כל וי בפוקוס ובשגרה"; נבחרה אפשרות 2 - בלוק שנפתח). בלוק = פריטים באותו טאב עם אותו
+// routine_items.block_name. ההערה של היום ו"לא היום" - routine_item_day_notes (שורה רק כשיש משהו). "לא היום" לא
+// נספר כנעשה וגם לא כנשאר; ✓ מוריד אותו ---
+const routineDayNotesCache = new Map(); // `${item_id}|${date}` → { skipped, note }
+async function loadRoutineDayNotes(ids, dateStr) {
+    const map = new Map();
+    if (!ids.length || !supabaseClient) return map;
+    try {
+        const { data, error } = await supabaseClient.from('routine_item_day_notes').select('item_id, skipped, note').in('item_id', ids).eq('note_date', dateStr);
+        if (error) return map;
+        ids.forEach(id => routineDayNotesCache.delete(`${id}|${dateStr}`));
+        (data || []).forEach(r => {
+            const v = { skipped: !!r.skipped, note: r.note || '' };
+            map.set(r.item_id, v);
+            routineDayNotesCache.set(`${r.item_id}|${dateStr}`, v);
+        });
+    } catch { /* בלי הערות - הכל עובד כרגיל */ }
+    return map;
+}
+async function saveRoutineDayNote(itemId, dateStr, skipped, note) {
+    const text = String(note || '').trim().slice(0, 200);
+    const key = `${itemId}|${dateStr}`;
+    let res;
+    if (!skipped && !text) {
+        res = await supabaseClient.from('routine_item_day_notes').delete().eq('item_id', itemId).eq('note_date', dateStr).eq('user_id', currentUserId);
+        if (!res.error) routineDayNotesCache.delete(key);
+    } else {
+        res = await supabaseClient.from('routine_item_day_notes').upsert({ item_id: itemId, user_id: currentUserId, note_date: dateStr, skipped: !!skipped, note: text || null, updated_at: new Date().toISOString() }, { onConflict: 'item_id,note_date' });
+        if (!res.error) routineDayNotesCache.set(key, { skipped: !!skipped, note: text });
+    }
+    return res;
+}
+async function routineClearSkip(itemId, dateStr) {
+    const cur = routineDayNotesCache.get(`${itemId}|${dateStr}`);
+    if (cur && cur.skipped) await saveRoutineDayNote(itemId, dateStr, false, cur.note);
+}
+// ✓ לכל מה שנשאר בבלוק בבת אחת: שמירה אחת ורענון אחד (לא 5 רענונים)
+async function myDayToggleRoutineMany(routineItems) {
+    if (!routineItems.length) return;
+    const todayStr = getLocalDateString();
+    const ids = routineItems.map(it => it.id);
+    const { data: existing } = await supabaseClient.from('routine_item_checkins').select('item_id').in('item_id', ids).eq('checkin_date', todayStr);
+    const have = new Set((existing || []).map(r => r.item_id));
+    const rows = routineItems.filter(it => !have.has(it.id)).map(it => ({ item_id: it.id, user_id: currentUserId, checkin_date: todayStr }));
+    if (rows.length) {
+        const { error } = await supabaseClient.from('routine_item_checkins').insert(rows);
+        if (error) { console.error('routine block checkin failed', error); showAppToast(t('error_not_connected'), 'error'); loadTodayTasks(); return; }
+    }
+    for (const it of routineItems) {
+        if (it.vision_milestone_id) await syncGoalFromRoutineCheck(it.vision_milestone_id, todayStr, true);
+        if (it.vision_goal_id) await syncGoalSmallStepFromRoutine(it.vision_goal_id, todayStr, true);
+    }
+    if (typeof routineNudge !== 'undefined' && routineNudge && routineItems.some(it => routineNudge.itemIds.includes(it.id))) { routineNudge = null; renderRoutineNudge(); }
+    const board = document.getElementById('modal-daily-board');
+    if (board && board.classList.contains('open')) renderDailyBoard();
+    loadTodayTasks();
+}
+// שמות מוכנים לבלוק (ותמיד גם "אחר" - שם חופשי)
+function routineBlockPresetNames() { return ['routine_block_morning', 'routine_block_before_work', 'routine_block_after_work', 'routine_block_evening'].map(k => t(k)); }
+function routineBlockSuggestName(minutes) { return t(minutes < 9 * 60 ? 'routine_block_morning' : minutes < 16 * 60 ? 'routine_block_before_work' : minutes < 19 * 60 ? 'routine_block_after_work' : 'routine_block_evening'); }
+
+// דף קטן מלמטה (בתוך מסגרת האפליקציה, מעל הפוקוס ו"השגרה שלי")
+function routineSheet(html, label) {
+    document.querySelectorAll('.rdn-layer').forEach(x => x.remove());
+    const host = document.querySelector('.phone-wrapper') || document.body;
+    const layer = document.createElement('div');
+    layer.className = 'rdn-layer';
+    layer.innerHTML = `<div class="rdn-card" role="dialog" aria-modal="true" aria-label="${myDayEsc(label)}">${html}</div>`;
+    layer.addEventListener('click', e => { if (e.target === layer) layer.remove(); });
+    layer.addEventListener('keydown', e => { if (e.key === 'Escape') layer.remove(); });
+    host.appendChild(layer);
+    return layer;
+}
+// ✏️ הערה להיום ליד וי: "לא היום" (מצב), בחירות מהירות לטקסט ("חלקית", "מאוחר יותר", "אחר" = כותבים לבד)
+function openRoutineDayNote({ itemId, title, done, uncheck }) {
+    const dateStr = getLocalDateString();
+    const cur = routineDayNotesCache.get(`${itemId}|${dateStr}`) || { skipped: false, note: '' };
+    let skipped = cur.skipped;
+    const quick = ['routine_note_partly', 'routine_note_later'].map(k => t(k));
+    const layer = routineSheet(`
+        <h3 class="rdn-title">${myDayEsc(t('routine_note_title'))}<small>${myDayEsc(title)}</small></h3>
+        <div class="rdn-chips">
+            <button type="button" class="rdn-chip rdn-skip${skipped ? ' on' : ''}" aria-pressed="${skipped}">${myDayEsc(t('routine_skip_today'))}</button>
+            ${quick.map(q => `<button type="button" class="rdn-chip rdn-quick" data-q="${myDayEsc(q)}" aria-pressed="false">${myDayEsc(q)}</button>`).join('')}
+            <button type="button" class="rdn-chip rdn-other" aria-pressed="false">${myDayEsc(t('nm_other'))}</button>
+        </div>
+        <input type="text" class="rdn-input" maxlength="200" value="${myDayEsc(cur.note)}" placeholder="${myDayEsc(t('routine_note_ph'))}" aria-label="${myDayEsc(t('routine_note_title'))}">
+        <div class="rdn-actions"><button type="button" class="btn-primary rdn-save">${myDayEsc(t('save_generic'))}</button><button type="button" class="btn-secondary rdn-close">${myDayEsc(t('close_btn'))}</button></div>`, t('routine_note_title'));
+    const input = layer.querySelector('.rdn-input');
+    const skipBtn = layer.querySelector('.rdn-skip');
+    const markQuick = () => layer.querySelectorAll('.rdn-quick').forEach(b => { const on = input.value.trim() === b.dataset.q; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    skipBtn.onclick = () => { skipped = !skipped; skipBtn.classList.toggle('on', skipped); skipBtn.setAttribute('aria-pressed', String(skipped)); };
+    layer.querySelectorAll('.rdn-quick').forEach(b => { b.onclick = () => { input.value = b.dataset.q; markQuick(); }; });
+    layer.querySelector('.rdn-other').onclick = () => { input.value = ''; markQuick(); input.focus(); };
+    input.addEventListener('input', markQuick);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); layer.querySelector('.rdn-save').click(); } });
+    markQuick();
+    layer.querySelector('.rdn-close').onclick = () => layer.remove();
+    layer.querySelector('.rdn-save').onclick = async e => {
+        e.currentTarget.disabled = true;
+        const { error } = await saveRoutineDayNote(itemId, dateStr, skipped, input.value);
+        if (error) { console.error('routine note failed', error); showAppToast(t('error_not_connected'), 'error'); e.currentTarget.disabled = false; return; }
+        layer.remove();
+        // "לא היום" על משהו שסומן ✓ - הוי יורד (אחד או השני)
+        if (skipped && done && uncheck) { await uncheck(); return; }
+        const board = document.getElementById('modal-daily-board');
+        if (board && board.classList.contains('open')) renderDailyBoard();
+        loadTodayTasks();
+    };
+    setTimeout(() => (skipped || cur.note ? input : skipBtn).focus(), 60);
+}
+// 🔗 שם לבלוק: השמות המוכנים, "אחר" (שם חופשי), ולבלוק קיים גם "לפרק" (הפריטים חוזרים להיות נפרדים, שום דבר לא נמחק)
+function openRoutineBlockSheet({ current, suggested, onSave, onSplit }) {
+    const names = [...new Set(routineBlockPresetNames().concat(current ? [current] : []))];
+    let picked = current || suggested || names[0];
+    const isPreset = n => names.includes(n);
+    const layer = routineSheet(`
+        <h3 class="rdn-title">${myDayEsc(t(current ? 'routine_block_edit_title' : 'routine_block_name_title'))}</h3>
+        <div class="rdn-chips">${names.map(n => `<button type="button" class="rdn-chip rdn-name" data-n="${myDayEsc(n)}">${myDayEsc(n)}</button>`).join('')}<button type="button" class="rdn-chip rdn-other">${myDayEsc(t('nm_other'))}</button></div>
+        <input type="text" class="rdn-input hidden" maxlength="40" placeholder="${myDayEsc(t('routine_block_name_ph'))}" aria-label="${myDayEsc(t('routine_block_name_ph'))}">
+        <div class="rdn-actions"><button type="button" class="btn-primary rdn-save">${myDayEsc(t(current ? 'save_generic' : 'routine_block_join'))}</button>${onSplit ? `<button type="button" class="btn-secondary rdn-split">${myDayEsc(t('routine_block_split'))}</button>` : `<button type="button" class="btn-secondary rdn-close">${myDayEsc(t('close_btn'))}</button>`}</div>`, t('routine_block_name_title'));
+    const input = layer.querySelector('.rdn-input');
+    const sync = () => layer.querySelectorAll('.rdn-name').forEach(b => { const on = input.classList.contains('hidden') && b.dataset.n === picked; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    layer.querySelectorAll('.rdn-name').forEach(b => { b.onclick = () => { picked = b.dataset.n; input.classList.add('hidden'); layer.querySelector('.rdn-other').classList.remove('on'); sync(); }; });
+    layer.querySelector('.rdn-other').onclick = e => { input.classList.remove('hidden'); e.currentTarget.classList.add('on'); sync(); input.focus(); };
+    if (picked && !isPreset(picked)) { input.value = picked; input.classList.remove('hidden'); layer.querySelector('.rdn-other').classList.add('on'); }
+    sync();
+    const closeBtn = layer.querySelector('.rdn-close');
+    if (closeBtn) closeBtn.onclick = () => layer.remove();
+    const splitBtn = layer.querySelector('.rdn-split');
+    if (splitBtn) splitBtn.onclick = async () => { splitBtn.disabled = true; await onSplit(); layer.remove(); };
+    layer.querySelector('.rdn-save').onclick = async e => {
+        const name = (input.classList.contains('hidden') ? picked : input.value).trim().slice(0, 40);
+        if (!name) { input.focus(); return; }
+        e.currentTarget.disabled = true;
+        await onSave(name);
+        layer.remove();
+    };
+    setTimeout(() => (layer.querySelector('.rdn-name.on') || layer.querySelector('button')).focus(), 60);
+}
+// שמירת שם הבלוק לכמה פריטים (null = לפרק)
+async function setRoutineItemsBlock(ids, name) {
+    if (!ids.length) return true;
+    const { error } = await supabaseClient.from('routine_items').update({ block_name: name || null }).in('id', ids).eq('user_id', currentUserId);
+    if (error) { console.error('routine block failed', error); showAppToast(t('error_not_connected'), 'error'); return false; }
+    if (typeof dailyBoardItemsCache !== 'undefined') dailyBoardItemsCache.forEach(it => { if (ids.includes(it.id)) it.block_name = name || null; });
+    const board = document.getElementById('modal-daily-board');
+    if (board && board.classList.contains('open')) renderDailyBoard();
+    loadTodayTasks();
+    return true;
 }
 
 // --- ציר הזמן ---
@@ -184,14 +341,23 @@ function buildMyDayItems({ todayStr, schedule, completedScheduleIds, events, goa
         if (routineLinkedIds.has(it.id)) return;
         const done = routine.doneIds.has(it.id);
         const time = String(it.time || '').slice(0, 5);
+        // 🔗 הבלוק שלו, ו"לא היום" / הערה של היום (2026-11-18)
+        const dn = (routine.notes && routine.notes.get(it.id)) || null;
+        const skipped = !!(routine.checksOn && dn && dn.skipped && !done);
+        const baseTag = routine.tabOf && routine.tabOf(it) ? `${t('myday_filter_routine')} · ${routine.tabOf(it)}` : t('myday_filter_routine');
         items.push({
             kind: 'routine', group: 'routine', minutes: scheduleTimeToMinutes(time), done: routine.checksOn ? done : false, checkable: routine.checksOn,
             title: it.title, toggle: checked => myDayToggleRoutine(it, checked),
-            build: () => myDayRow({
-                done: routine.checksOn && done, time, text: `${myDayIcon(it.title)}${it.title}`,
-                tag: routine.tabOf && routine.tabOf(it) ? `${t('myday_filter_routine')} · ${routine.tabOf(it)}` : t('myday_filter_routine'),
-                kindClass: 'routine', onchange: routine.checksOn ? checked => myDayToggleRoutine(it, checked) : null,
-            }),
+            routineItem: it, tabId: it.tab_id, blockName: String(it.block_name || '').trim() || null, skipped, note: dn ? dn.note : '',
+            build: () => {
+                const row = myDayRow({
+                    done: routine.checksOn && done, time, text: `${myDayIcon(it.title)}${it.title}`,
+                    tag: skipped ? `${t('routine_skip_today')}${dn.note ? ` · ${dn.note}` : ''}` : dn && dn.note ? `${baseTag} · ${dn.note}` : baseTag,
+                    kindClass: 'routine', onchange: routine.checksOn ? checked => myDayToggleRoutine(it, checked) : null,
+                });
+                if (skipped) row.classList.add('is-skipped');
+                return row;
+            },
         });
     });
     (newMeItems || []).forEach(nm => {
@@ -256,7 +422,7 @@ function myDayRow({ done, time, text, withName, tag, kindClass, onchange, onopen
 // אחרת משימה פתוחה בלי שעה
 function myDayPickNow(items) {
     const now = myDayNowMinutes();
-    const open = items.filter(it => !it.done && it.checkable);
+    const open = items.filter(it => !it.done && it.checkable && !it.skipped);
     const timed = open.filter(it => it.minutes !== null).sort((a, b) => a.minutes - b.minutes);
     const current = timed.filter(it => it.minutes <= now && now - it.minutes <= 120).pop();
     if (current) return { item: current, label: 'now' };
@@ -351,7 +517,8 @@ function setMyDayFilter(filter) {
 // --- המגירה הסגורה בתחתית הבית: כמה בוצע ומה עכשיו (עם ✓); המים - צ'יפ קטן ליד הכותרת ---
 function renderMyDayBar(items) {
     const countEl = document.getElementById('myday-bar-count');
-    const total = items.filter(it => it.checkable).length;
+    // "לא היום" לא נספר - לא כנעשה ולא כנשאר
+    const total = items.filter(it => it.checkable && !it.skipped).length;
     const done = items.filter(it => it.checkable && it.done).length;
     // כמה בוצע - רק כשפותחים את "היום שלי" (לפי בקשה מפורשת, 2026-10-20: המספרים בפס הסגור התנגשו עם האימון)
     const sheetCount = document.getElementById('myday-sheet-count');
@@ -596,6 +763,107 @@ function openHomeFocusGoalPicker() {
     layer.appendChild(box);
     (box.querySelector('.hf-pick-item:not(:disabled)') || inputs.find(x => !x.disabled) || box.querySelector('button')).focus();
 }
+// 🔗 בלוקים בפוקוס (בחירה 2026-11-18, אפשרות 2 "בלוק שנפתח"): פריטי שגרה מאותו טאב עם אותו שם בלוק (לפחות 2 היום) -
+// כרטיס אחד במקום הראשון שלהם. סגור: עיגול אחד מסמן את כל מה שנשאר; נגיעה בשם פותחת - וי לכל דבר, ✏️ הערה ו"לא היום".
+// כשהכל נעשה (או "לא היום") - שורה קטנה אחת "5 מתוך 5". הספירה למעלה סופרת כל דבר בנפרד
+const homeFocusOpenBlocks = new Set();
+const HF_CHECK = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const HF_DASH = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M6 12h12" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/></svg>';
+const HF_PENCIL = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></svg>';
+const HF_CHEV = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const HF_LINK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
+function homeFocusBlocks(items) {
+    const map = new Map();
+    items.forEach(it => {
+        if (it.kind !== 'routine' || !it.blockName || !it.routineItem) return;
+        const key = `${it.tabId}|${it.blockName}`;
+        if (!map.has(key)) map.set(key, { key, name: it.blockName, items: [] });
+        map.get(key).items.push(it);
+    });
+    const list = [...map.values()].filter(b => b.items.length >= 2);
+    const byItem = new Map();
+    list.forEach((b, idx) => { b.idx = idx; b.items.forEach(it => byItem.set(it, b)); });
+    return { list, byItem };
+}
+// בסיור, בתוך הפוקוס: בלוק לדוגמה כשעוד אין בלוקים (לפי בקשה מפורשת, 2026-11-18: "שתהיה דוגמא וגם את הסיור")
+function homeFocusDemoOn() { return typeof appTourActive !== 'undefined' && appTourActive && typeof appTourCtx !== 'undefined' && appTourCtx === 'focus'; }
+function homeFocusRange(its) {
+    const mins = its.map(x => x.minutes).filter(m => m !== null && m !== undefined);
+    return mins.length ? `${myDayFormatMinutes(Math.min(...mins))}–${myDayFormatMinutes(Math.max(...mins))}` : '';
+}
+function homeFocusBlockHtml(b, items, pick, demo) {
+    const its = b.items;
+    const total = its.length, done = its.filter(x => x.done).length, skip = its.filter(x => x.skipped).length;
+    const checkable = !!its[0].checkable;
+    const rest = its.filter(x => x.checkable && !x.done && !x.skipped);
+    const range = homeFocusRange(its);
+    const rangeHtml = range ? `<bdi dir="ltr">${range}</bdi>` : '';
+    const meta = [checkable ? t('hf_block_count').replace('{done}', done).replace('{total}', total) : t('hf_block_things').replace('{n}', total), skip ? t('hf_block_skipped').replace('{n}', skip) : ''].filter(Boolean).join(' · ');
+    const open = demo || homeFocusOpenBlocks.has(b.key);
+    const name = myDayEsc(b.name);
+    const at = demo ? '' : ` data-b="${b.idx}"`;
+    if (checkable && !rest.length && !open) {
+        const dots = its.map(x => `<i${x.done ? '' : ' class="off"'}></i>`).join('');
+        return `<li class="hf-row is-done hf-block-done"><button type="button" class="hf-undo" data-hf="toggle"${at} aria-expanded="false" aria-label="${myDayEsc(t('hf_block_open_aria').replace('{name}', b.name))}">${HF_CHECK}</button>${range ? `<span class="hf-time">${rangeHtml}</span>` : ''}<span class="hf-title">${name} · ${myDayEsc(meta)}</span><span class="hf-dots" aria-hidden="true">${dots}</span>${its.some(x => x.note) ? `<span class="hf-note-mark" aria-hidden="true">${HF_PENCIL}</span>` : ''}</li>`;
+    }
+    const isNow = !demo && pick && its.includes(pick.item) && (pick.label === 'now' || pick.label === 'next');
+    const tag = demo ? `<span class="hf-tag">${myDayEsc(t('hf_block_demo'))}</span>` : isNow ? `<span class="hf-tag">${myDayEsc(t(pick.label === 'now' ? 'myday_now' : 'myday_next'))}</span>` : '';
+    const ringPct = total ? (done + skip) / total : 0;
+    const ring = `<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><circle cx="16" cy="16" r="13" class="hf-ring-bg"/><circle cx="16" cy="16" r="13" class="hf-ring-fg" stroke-dasharray="${(ringPct * 81.7).toFixed(1)} 82" transform="rotate(-90 16 16)"/></svg>`;
+    const inner = x => {
+        const i = items.indexOf(x);
+        const di = demo ? '' : ` data-i="${i}"`;
+        const icon = x.done ? HF_CHECK : x.skipped ? HF_DASH : '';
+        const label = x.done ? t('home_focus_undo_aria').replace('{item}', x.title) : x.skipped ? t('hf_unskip_aria').replace('{item}', x.title) : `${t('home_focus_done_aria')}: ${x.title}`;
+        const mini = x.checkable ? `<button type="button" class="hf-mini${x.done ? ' on' : x.skipped ? ' skip' : ''}" data-hf="mini"${di} aria-label="${myDayEsc(label)}">${icon}</button>` : '<span class="hf-dot" aria-hidden="true"></span>';
+        const noteBtn = x.checkable ? `<button type="button" class="hf-note-btn${x.note || x.skipped ? ' has' : ''}" data-hf="note"${di} aria-label="${myDayEsc(t('routine_note_title'))}: ${myDayEsc(x.title)}">${HF_PENCIL}</button>` : '';
+        const noteLine = x.skipped || x.note ? `<li class="hf-in-note">${x.skipped ? `<span class="hf-skip-tag">${myDayEsc(t('routine_skip_today'))}</span>` : ''}${x.note ? `<span>${myDayEsc(x.note)}</span>` : ''}</li>` : '';
+        return `<li class="hf-in${x.done ? ' is-done' : ''}${x.skipped ? ' is-skip' : ''}">${mini}<span class="hf-time">${myDayFormatMinutes(x.minutes)}</span><span class="hf-title">${myDayEsc(x.title)}</span>${noteBtn}</li>${noteLine}`;
+    };
+    return `<li class="hf-block${isNow ? ' is-now' : ''}${open ? ' is-open' : ''}${demo ? ' is-demo' : ''}"${demo ? ' inert' : ''}>
+        <div class="hf-block-head">
+            ${checkable ? `<button type="button" class="hf-ring${rest.length ? '' : ' is-full'}" data-hf="all"${at} ${rest.length ? '' : 'disabled '}aria-label="${myDayEsc(t('hf_block_mark_rest'))}: ${name}">${ring}</button>` : '<span class="hf-dot" aria-hidden="true"></span>'}
+            <button type="button" class="hf-block-main" data-hf="toggle"${at} aria-expanded="${open}"><span class="hf-block-name">${name}</span><span class="hf-block-meta">${[rangeHtml].concat(meta.split(' · ').map(myDayEsc)).filter(Boolean).map(p => `<span class="hf-nw">${p}</span>`).join(' · ')}</span></button>
+            ${tag}
+            <button type="button" class="hf-block-chev" data-hf="toggle"${at} aria-expanded="${open}" aria-label="${myDayEsc(t(open ? 'hf_block_close_aria' : 'hf_block_open_aria').replace('{name}', b.name))}">${HF_CHEV}</button>
+        </div>
+        ${open ? `<ul class="hf-block-in">${its.map(inner).join('')}</ul>${checkable && rest.length ? `<button type="button" class="hf-block-all" data-hf="all"${at}>${myDayEsc(t('hf_block_mark_rest'))}</button>` : ''}` : `<p class="hf-block-items">${its.map(x => myDayEsc(x.title)).join(' · ')}</p>`}
+    </li>`;
+}
+// הבלוק לדוגמה של הסיור: חמשת הדברים הראשונים של "יום עבודה + ספורט" בשפה של האפליקציה
+function homeFocusDemoBlock() {
+    const lines = typeof parseRoutineTemplateItems === 'function' ? parseRoutineTemplateItems(t('routine_tpl_work_sport_items')).slice(0, 5) : [];
+    if (lines.length < 2) return null;
+    const its = lines.map((l, k) => {
+        const [h, m] = l.time.split(':').map(Number);
+        return { kind: 'routine', checkable: true, minutes: h * 60 + m, title: l.title, done: k < 2, skipped: k === 2, note: k === 2 ? t('routine_note_later') : '' };
+    });
+    return { key: 'demo', name: t('routine_block_morning'), items: its };
+}
+// 🔗 הצעה בפוקוס: 3 דברים ומעלה ברצף מאותו טאב (עד 20 דקות בין אחד לשני) שעוד לא בבלוק - "לחבר לבלוק אחד?".
+// פעם אחת לכל רצף: "לא" לא שואל שוב על אותם דברים. אף פעם לא מחבר לבד
+function homeFocusSuggestKey() { return `weekwise_block_no_${currentUserId}`; }
+function homeFocusSuggestRun(items) {
+    let no = [];
+    try { no = JSON.parse(localStorage.getItem(homeFocusSuggestKey()) || '[]'); } catch {}
+    const byTab = new Map();
+    items.filter(it => it.kind === 'routine' && it.routineItem && !it.blockName && it.minutes !== null)
+        .forEach(it => { if (!byTab.has(it.tabId)) byTab.set(it.tabId, []); byTab.get(it.tabId).push(it); });
+    for (const list of byTab.values()) {
+        list.sort((a, b) => a.minutes - b.minutes);
+        let run = [];
+        for (let k = 0; k <= list.length; k++) {
+            const cur = list[k];
+            if (cur && run.length && cur.minutes - run[run.length - 1].minutes <= 20) { run.push(cur); continue; }
+            if (run.length >= 3) {
+                const id = run.map(x => x.routineItem.id).sort().join(',');
+                if (!no.includes(id)) return { items: run, id };
+            }
+            run = cur ? [cur] : [];
+        }
+    }
+    return null;
+}
 function renderHomeFocus() {
     const body = document.getElementById('home-focus-body');
     if (!body) return;
@@ -604,39 +872,97 @@ function renderHomeFocus() {
     // השגרה בפנים, מצומצמת (לפי בקשה מפורשת, 2026-11-17: "לשים גם את השגרה ביותר צמצום")
     const items = myDayItems.filter(it => it.checkable || it.kind === 'routine')
         .slice().sort((x, y) => (x.minutes === null ? 1e4 : x.minutes) - (y.minutes === null ? 1e4 : y.minutes));
+    const demoBlock = homeFocusDemoOn() && !homeFocusBlocks(items).list.length ? homeFocusDemoBlock() : null;
+    const demoHtml = demoBlock ? homeFocusBlockHtml(demoBlock, [], null, true) : '';
     if (!items.length) {
         // אין כלום היום: מנוחה - כוכבים שמנצנצים בשקט (בחירה 2026-11-08, אפשרות 8), והמטרות למעלה
         const stars = HOME_FOCUS_STARS.map(([x, y, r, d, gold]) => {
             const sz = r * 2.6;
             return `<path d="M${x} ${y - sz}Q${x} ${y} ${x + sz} ${y}Q${x} ${y} ${x} ${y + sz}Q${x} ${y} ${x - sz} ${y}Q${x} ${y} ${x} ${y - sz}Z" class="hf-star${gold ? ' is-gold' : ''}" style="animation-delay:${d}s"/>`;
         }).join('');
-        body.innerHTML = `${goalsHtml}<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>`;
+        body.innerHTML = demoHtml ? `${goalsHtml}<section class="hf-today"><ul class="hf-list">${demoHtml}</ul></section>`
+            : `${goalsHtml}<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>`;
         return;
     }
     const pick = myDayPickNow(myDayItems);
-    const countable = items.filter(it => it.checkable);
+    // "לא היום" לא נספר - לא כנעשה ולא כנשאר
+    const countable = items.filter(it => it.checkable && !it.skipped);
     const done = countable.filter(it => it.done).length, left = countable.length - done;
     const pct = countable.length ? Math.round((done / countable.length) * 100) : 0;
-    const check = '<svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    const rows = items.map((it, i) => {
+    const { list: blocks, byItem } = homeFocusBlocks(items);
+    const sugg = demoBlock || homeFocusDemoOn() ? null : homeFocusSuggestRun(items);
+    const noteBtn = (it, i) => (it.kind === 'routine' && it.routineItem && it.checkable
+        ? `<button type="button" class="hf-note-btn${it.note || it.skipped ? ' has' : ''}" data-hf="note" data-i="${i}" aria-label="${myDayEsc(t('routine_note_title'))}: ${myDayEsc(it.title)}">${HF_PENCIL}</button>` : '');
+    const rowHtml = (it, i) => {
         const time = myDayFormatMinutes(it.minutes);
+        const noteSmall = it.note ? `<span class="hf-row-note">${myDayEsc(it.note)}</span>` : '';
+        if (it.skipped) {
+            return `<li class="hf-row is-done is-routine is-skip"><button type="button" class="hf-undo is-skip" data-hf="mini" data-i="${i}" aria-label="${myDayEsc(t('hf_unskip_aria').replace('{item}', it.title))}">${HF_DASH}</button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span><span class="hf-skip-tag">${myDayEsc(t('routine_skip_today'))}</span>${noteSmall}${noteBtn(it, i)}</li>`;
+        }
         if (it.done) {
-            return `<li class="hf-row is-done${it.kind === 'routine' ? ' is-routine' : ''}"><button type="button" class="hf-undo" data-i="${i}" aria-label="${myDayEsc(t('home_focus_undo_aria').replace('{item}', it.title))}">${check}</button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span></li>`;
+            return `<li class="hf-row is-done${it.kind === 'routine' ? ' is-routine' : ''}"><button type="button" class="hf-undo" data-i="${i}" aria-label="${myDayEsc(t('home_focus_undo_aria').replace('{item}', it.title))}">${HF_CHECK}</button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span>${noteSmall}${noteBtn(it, i)}</li>`;
         }
         if (!it.checkable) return `<li class="hf-row is-routine is-plain"><span class="hf-dot" aria-hidden="true"></span>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span></li>`;
         const isNow = pick && pick.item === it && (pick.label === 'now' || pick.label === 'next');
         const tag = isNow ? `<span class="hf-tag">${myDayEsc(t(pick.label === 'now' ? 'myday_now' : 'myday_next'))}</span>` : '';
-        return `<li class="hf-row${it.kind === 'routine' ? ' is-routine' : ''}${isNow ? ' is-now' : ''}"><button type="button" class="hf-check" data-i="${i}" aria-label="${myDayEsc(t('home_focus_done_aria'))}: ${myDayEsc(it.title)}"></button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}</span>${tag}</li>`;
-    }).join('');
+        return `<li class="hf-row${it.kind === 'routine' ? ' is-routine' : ''}${isNow ? ' is-now' : ''}"><button type="button" class="hf-check" data-i="${i}" aria-label="${myDayEsc(t('home_focus_done_aria'))}: ${myDayEsc(it.title)}"></button>${time ? `<span class="hf-time">${time}</span>` : ''}<span class="hf-title">${myDayEsc(it.title)}${it.note ? `<small class="hf-row-note">${myDayEsc(it.note)}</small>` : ''}</span>${tag}${noteBtn(it, i)}</li>`;
+    };
+    const shown = new Set();
+    let rows = demoHtml;
+    items.forEach((it, i) => {
+        if (sugg && sugg.items[0] === it) {
+            const range = myDayEsc(t('hf_block_suggest')).replace('{range}', `<bdi dir="ltr">${homeFocusRange(sugg.items)}</bdi>`);
+            rows += `<li class="hf-suggest"><p>${HF_LINK}<span>${range}</span></p><div class="hf-suggest-acts"><button type="button" class="btn-primary" data-hf="sug-yes">${myDayEsc(t('routine_block_join'))}</button><button type="button" class="btn-secondary" data-hf="sug-no">${myDayEsc(t('hf_block_suggest_no'))}</button></div></li>`;
+        }
+        const b = byItem.get(it);
+        if (b) { if (!shown.has(b.key)) { shown.add(b.key); rows += homeFocusBlockHtml(b, items, pick, false); } return; }
+        rows += rowHtml(it, i);
+    });
     body.innerHTML = `${goalsHtml}
         <section class="hf-today">
             ${countable.length ? `<div class="hf-sum"><span><b>${myDayEsc(t('home_focus_done_n').replace('{n}', done))}</b> · ${myDayEsc(left ? t('home_focus_left_n').replace('{n}', left) : t('home_focus_all_done'))}</span><span class="hf-pct">${pct}%</span></div>
             <div class="hf-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>` : ''}
             <ul class="hf-list">${rows}</ul>
         </section>`;
-    body.querySelectorAll('.hf-check').forEach(btn => { btn.onclick = () => { btn.disabled = true; btn.classList.add('is-ticking'); items[Number(btn.dataset.i)].toggle(true); }; });
-    body.querySelectorAll('.hf-undo').forEach(btn => { btn.onclick = () => { btn.disabled = true; items[Number(btn.dataset.i)].toggle(false); }; });
-    const nowRow = body.querySelector('.hf-row.is-now');
+    body.querySelectorAll('.hf-check[data-i]').forEach(btn => { btn.onclick = () => { btn.disabled = true; btn.classList.add('is-ticking'); items[Number(btn.dataset.i)].toggle(true); }; });
+    body.querySelectorAll('.hf-undo[data-i]:not([data-hf])').forEach(btn => { btn.onclick = () => { btn.disabled = true; items[Number(btn.dataset.i)].toggle(false); }; });
+    // הבלוקים, ההערות וההצעה - לחיצה אחת שמטפלת בכולם (data-hf)
+    body.onclick = async e => {
+        const el = e.target.closest('[data-hf]');
+        if (!el || !body.contains(el) || el.disabled) return;
+        const act = el.dataset.hf;
+        const b = el.dataset.b !== undefined ? blocks[Number(el.dataset.b)] : null;
+        const it = el.dataset.i !== undefined ? items[Number(el.dataset.i)] : null;
+        if (act === 'toggle' && b) {
+            if (homeFocusOpenBlocks.has(b.key)) homeFocusOpenBlocks.delete(b.key); else homeFocusOpenBlocks.add(b.key);
+            renderHomeFocus();
+            const again = body.querySelector(`.hf-block-main[data-b="${b.idx}"], .hf-undo[data-b="${b.idx}"]`);
+            if (again) again.focus({ preventScroll: true });
+        } else if (act === 'all' && b) {
+            const rest = b.items.filter(x => x.checkable && !x.done && !x.skipped);
+            if (!rest.length) return;
+            el.disabled = true;
+            el.classList.add('is-ticking');
+            homeFocusOpenBlocks.delete(b.key);
+            await myDayToggleRoutineMany(rest.map(x => x.routineItem));
+        } else if (act === 'mini' && it) {
+            el.disabled = true;
+            if (it.done) it.toggle(false);
+            else if (it.skipped) { await routineClearSkip(it.routineItem.id, getLocalDateString()); loadTodayTasks(); }
+            else { el.classList.add('on'); it.toggle(true); }
+        } else if (act === 'note' && it) {
+            openRoutineDayNote({ itemId: it.routineItem.id, title: it.title, done: it.done, uncheck: () => it.toggle(false) });
+        } else if (act === 'sug-yes' && sugg) {
+            openRoutineBlockSheet({ suggested: routineBlockSuggestName(sugg.items[0].minutes), onSave: name => setRoutineItemsBlock(sugg.items.map(x => x.routineItem.id), name) });
+        } else if (act === 'sug-no' && sugg) {
+            let no = [];
+            try { no = JSON.parse(localStorage.getItem(homeFocusSuggestKey()) || '[]'); } catch {}
+            no.push(sugg.id);
+            try { localStorage.setItem(homeFocusSuggestKey(), JSON.stringify(no.slice(-50))); } catch {}
+            renderHomeFocus();
+        }
+    };
+    const nowRow = body.querySelector('.hf-row.is-now, .hf-block.is-now');
     if (nowRow) requestAnimationFrame(() => { try { nowRow.scrollIntoView({ block: 'nearest' }); } catch {} });
 }
 function homeFocusStep(dir) {

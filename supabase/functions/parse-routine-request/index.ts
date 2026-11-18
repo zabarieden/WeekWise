@@ -48,7 +48,8 @@ function jsonResponse(body: unknown, status = 200) {
     });
 }
 
-type Item = { time: string; hour: number; title: string };
+// block: שם הבלוק כשהמשתמש/ת כתבו את הדברים תחת כותרת ("בוקר: ...") - כמה דברים ביחד עם וי אחד בפוקוס (2026-11-18)
+type Item = { time: string; hour: number; title: string; block?: string };
 
 // "16:10" / "8:05" / "16" → "16:10" / "08:05" / "16:00"; מחוץ ל-05:00–23:59 → null
 function cleanTime(it: any): string | null {
@@ -74,7 +75,8 @@ function cleanTabs(raw: any[], forcedDays: number[] | null) {
             const title = String(it?.title || "").trim().slice(0, 80);
             if (!title || !time || seen.has(time)) continue;
             seen.add(time);
-            items.push({ time, hour: Number(time.slice(0, 2)) + (Number(time.slice(3)) >= 30 && Number(time.slice(0, 2)) < 23 ? 1 : 0), title });
+            const block = String(it?.block || "").trim().slice(0, 40);
+            items.push({ time, hour: Number(time.slice(0, 2)) + (Number(time.slice(3)) >= 30 && Number(time.slice(0, 2)) < 23 ? 1 : 0), title, ...(block ? { block } : {}) });
         }
         items.sort((a, b) => a.time.localeCompare(b.time));
         if (items.length) tabs.push({ name, weekdays, items });
@@ -149,7 +151,11 @@ Deno.serve(async (req) => {
                         "- An activity that spans a range (\"work 9–17\") goes at its start time; keep the end in the title only when " +
                         "it helps (\"Work until 17:00\").\n" +
                         "- Titles are short and keep the user's own language and wording. Never invent activities that weren't " +
-                        "mentioned, and never add reminders or notes as separate items.\n\n" +
+                        "mentioned, and never add reminders or notes as separate items.\n" +
+                        "- block: when the user writes several activities under a heading (\"Morning: wake up 7, shower 7:10, journal 7:15\", " +
+                        "\"Evening routine - ...\"), give each of those items block = that heading, short, in the user's language, with no emoji " +
+                        "(\"Morning\"). The heading itself is not an item. Items not written under a heading get no block. Never invent " +
+                        "blocks the user didn't write.\n\n" +
                         "Text: " + text,
                 }],
                 tools: [{
@@ -172,6 +178,7 @@ Deno.serve(async (req) => {
                                                 properties: {
                                                     time: { type: "string", description: "HH:MM, 24-hour clock, exactly as the user wrote it" },
                                                     title: { type: "string" },
+                                                    block: { type: "string", description: "The heading the user wrote this item under (e.g. \"Morning\"), or empty" },
                                                 },
                                                 required: ["time", "title"],
                                             },

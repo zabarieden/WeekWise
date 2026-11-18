@@ -2188,6 +2188,8 @@ const APP_TOUR_STEPS = [
     { id: 'focus', ch: 'home', ctx: 'home', icon: '◎', target: '#btn-home-focus', titleKey: 'home_focus_label', text: 'apptour_focus_text', optional: true },
     // בתוך מצב הפוקוס עצמו (לפי בקשה מפורשת, 2026-11-08: "שהסיור יסביר על הפוקוס"): הכרטיס, פתק באמצע, יציאה
     { id: 'f_card', ch: 'home', ctx: 'focus', icon: '◎', target: '#home-focus-body', titleKey: 'apptour_f_card_title', text: 'apptour_f_card_text', when: appTourFocusAvailable },
+    // 🔗 בלוק בפוקוס (2026-11-18: "אני רוצה את הפוקוס גם שתהיה דוגמא וגם את הסיור") - כשאין עוד בלוק, בלוק לדוגמה (homeFocusDemoBlock)
+    { id: 'f_block', ch: 'home', ctx: 'focus', icon: '🔗', target: '#home-focus-body .hf-block', titleKey: 'apptour_f_block_title', text: 'apptour_f_block_text', when: appTourFocusAvailable },
     { id: 'f_note', ch: 'home', ctx: 'focus', icon: '📝', target: '#home-focus-layer .home-focus-note', titleKey: 'apptour_f_note_title', text: 'apptour_f_note_text', when: appTourFocusAvailable },
     { id: 'f_exit', ch: 'home', ctx: 'focus', icon: '✕', target: '#home-focus-layer .home-focus-exit', titleKey: 'home_focus_exit_aria', text: 'apptour_f_exit_text', when: appTourFocusAvailable },
     { id: 'noteline', ch: 'home', ctx: 'home', icon: '📝', target: '#home-note-line', titleKey: 'notes_ai_title', text: 'apptour_noteline_text', optional: true },
@@ -2558,7 +2560,10 @@ async function appTourEnsureContext(step) {
             changed = true;
         }
     }
+    const wasCtx = appTourCtx;
     appTourCtx = ctx;
+    // בפוקוס בסיור יש בלוק לדוגמה (כשאין בלוק אמיתי) - מציירים מחדש כשנכנסים לשם
+    if (ctx === 'focus' && wasCtx !== 'focus' && typeof renderHomeFocus === 'function') renderHomeFocus();
     await appTourWait(changed ? 460 : 60);
     const target = appTourResolveTarget(step);
     if (target) { appTourScrollIntoContainer(target); await appTourWait(40); }
@@ -10413,7 +10418,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
     { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_recipes_shortcut', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
-    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'habits_streaks', 'routine_nudge'] },
+    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'routine_blocks', 'routine_day_note', 'habits_streaks', 'routine_nudge'] },
     // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
     { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
@@ -18422,6 +18427,12 @@ async function toggleRoutineItemCheckin(itemId, btn) {
         showAppToast(t('error_not_connected'), 'error');
         return;
     }
+    // ✓ על "לא היום" - כן נעשה: "לא היום" יורד (ההערה נשארת)
+    if (checked && btn.classList.contains('is-skip')) {
+        btn.classList.remove('is-skip');
+        await routineClearSkip(itemId, todayStr);
+        renderDailyBoard();
+    }
     const milestoneId = routineItemGoalLinks.get(itemId);
     if (milestoneId) syncGoalFromRoutineCheck(milestoneId, todayStr, checked);
     const smallStepGoalId = routineItemSmallStepLinks.get(itemId);
@@ -18926,19 +18937,26 @@ const ROUTINE_READY_TEMPLATES = [
     // 🌱 התחלה פשוטה - קטנה, חינם לכולם, ומוצעת גם בטאב ריק (לפי בקשה מפורשת, 2026-11-15: "תבנית מוכנה כללית
     // כזו קטנה רק שיהיה להם כבר משהו מוכן")
     { id: 'starter', icon: '🌱', free: true },
-    { id: 'morning', icon: '🌅' },
-    { id: 'evening', icon: '🌙' },
-    { id: 'workday', icon: '💼' },
+    // 🔗 blocks: הדברים שמגיעים כבר מחוברים לבלוק (וי אחד בפוקוס) - לפי שעה מ/עד, והשם מ-routine_block_<name>.
+    // לפי שאלה מפורשת, 2026-11-18: "ואם זה טמפלייט מוכן? תסדר אותם פשוט עכשיו? מקסימום אפשר לערוך"
+    { id: 'morning', icon: '🌅', blocks: [{ from: '06:00', to: '09:00', name: 'morning' }] },
+    { id: 'evening', icon: '🌙', blocks: [{ from: '20:00', to: '22:00', name: 'evening' }] },
+    { id: 'workday', icon: '💼', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }] },
     // 🏃 יום עבודה + ספורט - השגרה שלה מ-15.11 (הטאב 'התמדה' שנמחק בטעות), עם נסיעה לעבודה מיד אחרי ההליכה (2026-11-17)
-    { id: 'work_sport', icon: '🏃' },
-    { id: 'home_office', icon: '🏠' },
+    { id: 'work_sport', icon: '🏃', blocks: [{ from: '07:00', to: '07:35', name: 'morning' }, { from: '16:10', to: '18:00', name: 'after_work' }] },
+    { id: 'home_office', icon: '🏠', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }] },
     { id: 'study', icon: '📚' },
-    { id: 'workout', icon: '💪' },
+    { id: 'workout', icon: '💪', blocks: [{ from: '07:00', to: '09:00', name: 'morning' }, { from: '21:00', to: '22:00', name: 'evening' }] },
     { id: 'eating', icon: '🥗' },
     { id: 'calm', icon: '🧘' },
-    { id: 'kids', icon: '🧸' },
+    { id: 'kids', icon: '🧸', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }, { from: '18:00', to: '20:00', name: 'evening' }] },
     { id: 'weekend', icon: '🌿' },
 ];
+// שם הבלוק של פריט בתבנית מוכנה (או null)
+function routineTemplateBlockFor(tpl, time) {
+    const b = (tpl.blocks || []).find(x => time >= x.from && time <= x.to);
+    return b ? t(`routine_block_${b.name}`) : null;
+}
 let routineDaysFillMode = 'copy';
 // כמה פריטים יש בטאב הפעיל (מתעדכן ב-renderDailyBoard) - "העתק של הטאב" מוצע רק כשיש מה להעתיק
 let dailyBoardActiveItemCount = 0;
@@ -19023,13 +19041,13 @@ function renderRoutineTemplates() {
 }
 
 async function fetchRoutineTabItems(tabId) {
-    const { data } = await supabaseClient.from('routine_items').select('title, time, vision_milestone_id, vision_goal_id, days_of_week').eq('tab_id', tabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
+    const { data } = await supabaseClient.from('routine_items').select('title, time, vision_milestone_id, vision_goal_id, days_of_week, block_name').eq('tab_id', tabId).eq('user_id', currentUserId).eq('kind', 'scheduled');
     return data || [];
 }
 
 async function copyRoutineItemsToTab(items, tabId) {
     if (!items.length) return;
-    const rows = items.map(it => ({ tab_id: tabId, user_id: currentUserId, title: it.title, time: it.time, kind: 'scheduled', vision_milestone_id: it.vision_milestone_id || null, vision_goal_id: it.vision_goal_id || null, days_of_week: it.days_of_week || ROUTINE_ALL_DAYS.join(',') }));
+    const rows = items.map(it => ({ tab_id: tabId, user_id: currentUserId, title: it.title, time: it.time, kind: 'scheduled', vision_milestone_id: it.vision_milestone_id || null, vision_goal_id: it.vision_goal_id || null, days_of_week: it.days_of_week || ROUTINE_ALL_DAYS.join(','), block_name: it.block_name || null }));
     const { error } = await supabaseClient.from('routine_items').insert(rows);
     if (error) throw error;
 }
@@ -19120,7 +19138,7 @@ async function applyRoutineReadyTemplate(templateId) {
     }).select('*').single();
     if (error || !data) { showAppToast(t('error_adding_item') + (error ? error.message : ''), 'error'); return; }
     dailyBoardTabs.push(data);
-    const rows = items.map(it => ({ tab_id: data.id, user_id: currentUserId, title: it.title, time: routineItemTime(it), kind: 'scheduled' }));
+    const rows = items.map(it => ({ tab_id: data.id, user_id: currentUserId, title: it.title, time: routineItemTime(it), kind: 'scheduled', block_name: routineTemplateBlockFor(tpl, routineItemTime(it)) }));
     const { error: itemsError } = await supabaseClient.from('routine_items').insert(rows);
     if (itemsError) showAppToast(t('error_adding_item') + itemsError.message, 'error');
     closeModal('modal-routine-add-choice');
@@ -19326,6 +19344,8 @@ async function routineAddAiItems(tab, items) {
     const rows = items.map(it => ({
         tab_id: tab.id, user_id: currentUserId, title: it.title, time: routineItemTime(it), kind: 'scheduled',
         days_of_week: (it.days && it.days.length ? it.days : ROUTINE_ALL_DAYS).join(','),
+        // 🔗 "בוקר: ..." - העוזר מחבר לבלוק את מה שנכתב תחת כותרת (2026-11-18)
+        block_name: String(it.block || '').trim().slice(0, 40) || null,
     }));
     const { error } = await supabaseClient.from('routine_items').insert(rows);
     if (error) throw error;
@@ -19365,7 +19385,9 @@ async function createRoutineWithAI() {
     closeModal('modal-routine-ai');
     if (!tab) return;
     await finishRoutineTabsChange(tab.id);
-    showAppToast(existing ? t('routine_ai_added').replace('{n}', items.length).replace('{name}', tab.name) : t('routine_ai_done').replace('{name}', tab.name));
+    const blocksMade = new Set(items.map(it => String(it.block || '').trim()).filter(Boolean)).size;
+    showAppToast((existing ? t('routine_ai_added').replace('{n}', items.length).replace('{name}', tab.name) : t('routine_ai_done').replace('{name}', tab.name))
+        + (blocksMade ? ` · ${t('routine_ai_blocks').replace('{n}', blocksMade)}` : ''));
 }
 
 // 🌱 טאב ריק מציע את "התחלה פשוטה" - נגיעה אחת ממלאת אותו (פריטים רגילים, אפשר לערוך הכל)
@@ -24449,6 +24471,12 @@ async function renderDailyBoard() {
         const { data: todayChecks } = await supabaseClient.from('routine_item_checkins').select('item_id').in('item_id', items.map(it => it.id)).eq('checkin_date', getLocalDateString());
         doneTodayIds = new Set((todayChecks || []).map(c => c.item_id));
     }
+    // ✏️ ההערה של היום ו"לא היום" ליד כל וי, ו-🔗 הבלוקים של הטאב (2026-11-18): הפריט הראשון בכל בלוק מקבל תג עם
+    // השם (נגיעה - לשנות שם או לפרק), וכל הפריטים שלו - קו בצד
+    const dayNotes = checksOn && items && items.length ? await loadRoutineDayNotes(items.map(it => it.id), getLocalDateString()) : new Map();
+    const blockOf = it => (it && !it.nmMeal ? String(it.block_name || '').trim() : '');
+    const blockFirst = new Map();
+    (items || []).filter(blockOf).sort((a, b) => String(a.time || '').localeCompare(String(b.time || ''))).forEach(it => { if (!blockFirst.has(blockOf(it))) blockFirst.set(blockOf(it), it.id); });
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
@@ -24479,7 +24507,9 @@ async function renderDailyBoard() {
             // 📅 פריט שלא היום (ימים לפריט) - חלש יותר, בלי ✓, והימים שלו לידו
             const offToday = !!item && !routineItemOnDay(item, todayIdx);
             const row = document.createElement('div');
-            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty') + (inNewMe ? ' is-in-newme' : '') + (offToday ? ' is-off-today' : '');
+            const blockName = blockOf(item);
+            row.className = 'daily-board-item-row' + (item ? '' : ' daily-board-item-row-empty') + (inNewMe ? ' is-in-newme' : '') + (offToday ? ' is-off-today' : '') + (blockName ? ' is-in-block' : '');
+            const dn = item && checksOn && !inNewMe && !offToday ? dayNotes.get(item.id) : null;
             const timeSpan = document.createElement('span');
             timeSpan.className = 'daily-board-item-time';
             timeSpan.textContent = timeStr;
@@ -24490,10 +24520,12 @@ async function renderDailyBoard() {
             titleBtn.onclick = () => item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr);
             if (checksOn && item && !inNewMe && !offToday) {
                 const done = doneTodayIds.has(item.id);
+                const skipped = !!(dn && dn.skipped && !done);
                 const checkBtn = document.createElement('button');
                 checkBtn.type = 'button';
-                checkBtn.className = 'btn-complete-item daily-board-item-check' + (done ? ' checked' : '');
-                checkBtn.textContent = done ? '✓' : '';
+                checkBtn.className = 'btn-complete-item daily-board-item-check' + (done ? ' checked' : '') + (skipped ? ' is-skip' : '');
+                checkBtn.textContent = done ? '✓' : skipped ? '–' : '';
+                if (skipped) checkBtn.setAttribute('aria-label', t('hf_unskip_aria').replace('{item}', item.title));
                 checkBtn.onclick = () => toggleRoutineItemCheckin(item.id, checkBtn);
                 row.appendChild(checkBtn);
             } else if (checksOn) {
@@ -24521,7 +24553,44 @@ async function renderDailyBoard() {
                 tag.onclick = () => restoreRoutineItemFromNewMe(item.id);
                 row.appendChild(tag);
             }
+            if (blockName && blockFirst.get(blockName) === item.id) {
+                const blockTag = document.createElement('button');
+                blockTag.type = 'button';
+                blockTag.className = 'daily-board-block-tag';
+                blockTag.textContent = blockName;
+                blockTag.setAttribute('aria-label', t('routine_block_edit_title') + ': ' + blockName);
+                blockTag.onclick = () => {
+                    const ids = (items || []).filter(it => blockOf(it) === blockName).map(it => it.id);
+                    openRoutineBlockSheet({ current: blockName, onSave: name => setRoutineItemsBlock(ids, name), onSplit: () => setRoutineItemsBlock(ids, null) });
+                };
+                row.appendChild(blockTag);
+            }
+            if (item && checksOn && !inNewMe && !offToday) {
+                const noteBtn = document.createElement('button');
+                noteBtn.type = 'button';
+                noteBtn.className = 'daily-board-note-btn' + (dn ? ' has' : '');
+                noteBtn.innerHTML = HF_PENCIL;
+                noteBtn.setAttribute('aria-label', `${t('routine_note_title')}: ${item.title}`);
+                noteBtn.onclick = () => openRoutineDayNote({ itemId: item.id, title: item.title, done: doneTodayIds.has(item.id), uncheck: async () => { const b = row.querySelector('.daily-board-item-check'); if (b) await toggleRoutineItemCheckin(item.id, b); renderDailyBoard(); } });
+                row.appendChild(noteBtn);
+            }
             section.appendChild(row);
+            if (dn && ((dn.skipped && !doneTodayIds.has(item.id)) || dn.note)) {
+                const line = document.createElement('div');
+                line.className = 'daily-board-item-note' + (blockName ? ' is-in-block' : '');
+                if (dn.skipped && !doneTodayIds.has(item.id)) {
+                    const skipTag = document.createElement('span');
+                    skipTag.className = 'hf-skip-tag';
+                    skipTag.textContent = t('routine_skip_today');
+                    line.appendChild(skipTag);
+                }
+                if (dn.note) {
+                    const txt = document.createElement('span');
+                    txt.textContent = dn.note;
+                    line.appendChild(txt);
+                }
+                section.appendChild(line);
+            }
         }));
         body.appendChild(section);
     });
@@ -24615,6 +24684,39 @@ function renderRoutineItemDaysChips() {
         wrap.appendChild(chip);
     });
 }
+// 🔗 הבלוק של הפריט (2026-11-18): "בלי", הבלוקים שכבר יש בטאב, השמות המוכנים, ו"אחר" = שם חופשי (כמו בכל בחירה קבועה)
+let pendingRoutineItemBlock = null;
+let routineItemBlockOther = false;
+function renderRoutineItemBlockChips() {
+    const wrap = document.getElementById('routine-item-block-chips');
+    const input = document.getElementById('routine-item-block-input');
+    if (!wrap || !input) return;
+    const inTab = [...new Set(dailyBoardItemsCache.map(it => String(it.block_name || '').trim()).filter(Boolean))];
+    const names = [...new Set(inTab.concat(routineBlockPresetNames()))];
+    if (pendingRoutineItemBlock && !names.includes(pendingRoutineItemBlock)) routineItemBlockOther = true;
+    wrap.innerHTML = '';
+    const chip = (label, on, onclick) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'board-hour-chip' + (on ? ' active' : '');
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.textContent = label;
+        b.onclick = onclick;
+        wrap.appendChild(b);
+    };
+    chip(t('routine_block_none'), !pendingRoutineItemBlock && !routineItemBlockOther, () => { pendingRoutineItemBlock = null; routineItemBlockOther = false; renderRoutineItemBlockChips(); });
+    names.forEach(n => chip(n, !routineItemBlockOther && pendingRoutineItemBlock === n, () => { pendingRoutineItemBlock = n; routineItemBlockOther = false; renderRoutineItemBlockChips(); }));
+    chip(t('nm_other'), routineItemBlockOther, () => { routineItemBlockOther = true; renderRoutineItemBlockChips(); input.focus(); });
+    input.classList.toggle('hidden', !routineItemBlockOther);
+    if (routineItemBlockOther && document.activeElement !== input) input.value = pendingRoutineItemBlock && !names.includes(pendingRoutineItemBlock) ? pendingRoutineItemBlock : '';
+}
+function routineItemBlockValue() {
+    if (routineItemBlockOther) {
+        const v = (document.getElementById('routine-item-block-input').value || '').trim().slice(0, 40);
+        return v || null;
+    }
+    return pendingRoutineItemBlock || null;
+}
 function openAddRoutineItemModal(time) {
     hideRoutineClash();
     if (!activeDailyBoardTabId) return;
@@ -24626,6 +24728,9 @@ function openAddRoutineItemModal(time) {
     document.getElementById('routine-item-title-input').value = '';
     pendingRoutineItemDays = new Set(ROUTINE_ALL_DAYS);
     renderRoutineItemDaysChips();
+    pendingRoutineItemBlock = null;
+    routineItemBlockOther = false;
+    renderRoutineItemBlockChips();
     document.getElementById('routine-item-delete-btn').classList.add('hidden');
     if (typeof renderRoutineItemWorkoutBtn === 'function') renderRoutineItemWorkoutBtn();
     openModalOverDailyBoard('modal-add-routine-item');
@@ -24643,6 +24748,9 @@ function openEditRoutineItemModal(item, opts = {}) {
     document.getElementById('routine-item-title-input').value = item.title;
     pendingRoutineItemDays = new Set(routineItemDays(item));
     renderRoutineItemDaysChips();
+    pendingRoutineItemBlock = String(item.block_name || '').trim() || null;
+    routineItemBlockOther = false;
+    renderRoutineItemBlockChips();
     document.getElementById('routine-item-delete-btn').classList.remove('hidden');
     if (typeof renderRoutineItemWorkoutBtn === 'function') renderRoutineItemWorkoutBtn();
     openModalOverDailyBoard('modal-add-routine-item');
@@ -24713,7 +24821,7 @@ async function saveRoutineItem() {
     const clash = routineClashAllowBoth ? null : dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId && routineItemsOverlap(it, itemDays));
     if (clash) { showRoutineClash(clash); return; }
     hideRoutineClash();
-    const payload = { title, time: pendingRoutineItemTime, days_of_week: itemDays.join(',') };
+    const payload = { title, time: pendingRoutineItemTime, days_of_week: itemDays.join(','), block_name: routineItemBlockValue() };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
         if (typeof syncRoutineEditToWorkout === 'function') await syncRoutineEditToWorkout(editingRoutineItemId, payload);
