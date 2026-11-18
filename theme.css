@@ -12497,3 +12497,65 @@ html.light-mode { --bin-stroke: #7c3aed; --bin-a: #c4b5fd; --bin-b: #6d28d9; }
 /* 🏮 מטרה שנכתבה ביד בפוקוס = "פנס" (בחירה 2026-11-18, רעיון 12): הילה רכה בצבע הערכה מאחורי המילים, בלי מסגרת */
 .hf-goal.is-lantern { align-items: center; padding: 16px 14px; border: none; background: radial-gradient(ellipse 70% 85% at center, color-mix(in srgb, var(--focus-neon) 24%, transparent), transparent 72%); -webkit-backdrop-filter: none; backdrop-filter: none; text-align: center; }
 .hf-goal.is-lantern .hf-goal-title { flex: none; font-size: 1rem; font-weight: 700; line-height: 1.5; text-align: center; text-shadow: 0 0 18px color-mix(in srgb, var(--focus-neon) 50%, transparent); }
+
+/* 🔗 בלוק ב"השגרה שלי": כרטיס עם עיגול, שם, טווח וחץ לקפל (לפי בקשה מפורשת, 2026-11-18) */
+.daily-board-block { margin: 6px 0; padding: 4px 8px 6px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--accent-purple) 7%, transparent); }
+.daily-board-block-head { display: flex; align-items: center; gap: 8px; padding: 6px 2px; }
+.daily-board-block-ring { flex: none; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border: none; border-radius: 50%; background: none; cursor: pointer; }
+.daily-board-block-ring:disabled { cursor: default; }
+.dbb-ring-bg { fill: none; stroke: color-mix(in srgb, var(--text-primary) 22%, transparent); stroke-width: 3; }
+.dbb-ring-fg { fill: none; stroke: var(--accent-purple-light, var(--accent-purple)); stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray .4s ease; }
+.daily-board-block-ring.is-ticking .dbb-ring-fg { stroke-dasharray: 82 82; }
+.daily-board-block-name { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 2px 0; border: none; background: none; color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; overflow-wrap: anywhere; }
+.daily-board-block-name b { font-size: .98rem; }
+.daily-board-block-name > span { font-size: .74rem; color: var(--text-secondary); }
+.daily-board-block-chev { flex: none; width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border: none; border-radius: 9px; background: color-mix(in srgb, var(--text-primary) 7%, transparent); color: var(--text-secondary); cursor: pointer; }
+.daily-board-block-chev svg { transition: transform .2s ease; }
+.daily-board-block:not(.is-closed) .daily-board-block-chev svg { transform: rotate(180deg); }
+.daily-board-block.is-closed .daily-board-block-body { display: none; }
+.daily-board-block .daily-board-item-row.is-in-block, .daily-board-block .daily-board-item-note.is-in-block { border-inline-start: none; padding-inline-start: 0; }
+/* 🔄 "מה מפריע לי" (change.js) */
+.gv-change-btn { align-self: flex-start; margin: 4px 0 2px; padding: 9px 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 50%, transparent); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); color: var(--text-primary); font: inherit; font-weight: 800; cursor: pointer; overflow-wrap: anywhere; }
+.chg-layer { position: absolute; inset: 0; z-index: 1960; display: flex; background: var(--bg-main); }
+.chg-layer.hidden { display: none; }
+.chg-sheet { flex: 1; width: 100%; max-width: 560px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px)); overflow-y: auto; }
+.chg-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.chg-icon-btn { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text-primary) 18%, transparent); background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); font: inherit; cursor: pointer; }
+html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
+.chg-dots { display: flex; gap: 6px; }
+.chg-dots i { display: block; width: 8px; height: 8px; border-radius: 50%; background: color-mix(in srgb, var(--text-primary) 22%, transparent); }
+.chg-dots i.on { background: var(--accent-purple-light, var(--accent-purple)); }
+.chg-body { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.chg-q { margin: 6px 0 0; font-size: 1.35rem; font-weight: 800; color: var(--text-primary); text-wrap: balance; overflow-wrap: anywhere; }
+.chg-topics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.chg-topic { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 11px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent); background: color-mix(in srgb, var(--text-primary) 5%, transparent); color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; text-align: start; cursor: pointer; overflow-wrap: anywhere; hyphens: auto; }
+.chg-topic-icon { flex: none; font-size: 1.2rem; }
+.chg-topic.on, .chg-chip.on { border-color: var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 18%, transparent); }
+.chg-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chg-chip { padding: 9px 14px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--text-primary) 22%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; text-align: start; cursor: pointer; overflow-wrap: anywhere; }
+.chg-input { width: 100%; box-sizing: border-box; padding: 12px 13px; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, transparent); background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); font: inherit; font-size: .95rem; }
+.chg-ai-text { min-height: 120px; resize: vertical; }
+.chg-label { display: flex; flex-direction: column; gap: 6px; font-size: .86rem; font-weight: 700; color: var(--text-secondary); }
+.chg-time-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-weight: 700; color: var(--text-secondary); }
+.chg-ai-btn { align-self: flex-start; padding: 10px 14px; border-radius: 12px; border: 1px dashed color-mix(in srgb, var(--accent-purple) 60%, transparent); background: color-mix(in srgb, var(--accent-purple) 9%, transparent); color: var(--text-primary); font: inherit; font-weight: 700; text-align: start; cursor: pointer; overflow-wrap: anywhere; }
+.chg-card-in { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 14px; background: color-mix(in srgb, var(--text-primary) 6%, transparent); border: 1px solid color-mix(in srgb, var(--accent-purple) 30%, transparent); }
+.chg-ifthen { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 10px; align-items: baseline; }
+.chg-ifthen span { font-size: .8rem; font-weight: 800; color: var(--accent-purple-light, var(--accent-purple)); }
+.chg-ifthen b { overflow-wrap: anywhere; color: var(--text-primary); }
+.chg-ladder { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 4px; font-size: .9rem; color: var(--text-primary); }
+.chg-ladder li.now { font-weight: 800; }
+.chg-switch { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+.chg-switch input { flex: none; width: 20px; height: 20px; accent-color: var(--accent-purple); }
+.chg-next { padding: 13px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink)); color: #fff; font: inherit; font-size: 1rem; font-weight: 800; cursor: pointer; }
+.chg-next:disabled { opacity: .6; }
+.chg-card { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--accent-purple) 35%, transparent); background: color-mix(in srgb, var(--accent-purple) 8%, transparent); }
+.chg-card h4 { margin: 0; font-size: .95rem; color: var(--text-primary); }
+.chg-planb { margin: 0; font-size: .88rem; color: var(--text-secondary); overflow-wrap: anywhere; }
+.chg-planb b { color: var(--text-primary); }
+.chg-check { display: flex; flex-direction: column; gap: 8px; color: var(--text-primary); }
+/* ◎ ו-☰ במסך הבית גדולים יותר (לפי בקשה מפורשת, 2026-11-18: "להגדיל את הכפתורים של המצב פוקוס והרשימות לידו") */
+#btn-home-focus, #btn-home-lists { width: 54px; height: 54px; }
+#btn-home-focus svg, #btn-home-lists svg { width: 26px; height: 26px; }
+/* ✏️ במקום המילה "החלפה" במטרות של הפוקוס (2026-11-18) */
+.hf-goals-pick.hf-goals-edit { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--focus-neon) 14%, transparent); }
+.hf-goals-edit svg { width: 16px; height: 16px; }

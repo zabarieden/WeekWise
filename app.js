@@ -2222,6 +2222,8 @@ const APP_TOUR_STEPS = [
     { id: 'g_demo', ch: 'goals', ctx: 'goals', icon: '👣', titleKey: 'apptour_g_path_title', text: 'apptour_g_path_text', link: 'apptour_m_vision_link', demo: 'goal' },
     { id: 'g_today', ch: 'goals', ctx: 'goals', icon: '✅', target: '#gv-today', titleKey: 'gv_today_title', text: 'apptour_g_today_text', when: () => visionGoalsCache.some(g => !g.is_achieved) },
     { id: 'g_add', ch: 'goals', ctx: 'goals', icon: '➕', target: '#vision-drawer-overlay .gv-add-btn', titleKey: 'apptour_g_add_title', text: 'apptour_g_add_text' },
+    // 🔄 "מה מפריע לי" (2026-11-18) - דרך אחרת להתחיל יעד: ממה שמפריע
+    { id: 'g_change', ch: 'goals', ctx: 'goals', icon: '🔄', target: '#gv-change-btn', titleKey: 'chg_title', text: 'apptour_g_change_text', when: () => !!document.getElementById('gv-change-btn') },
     // 📚 ספריית היעדים עצמה - נפתחת בסיור ומראה את הנושאים (לפי בקשה מפורשת, 2026-10-20)
     { id: 'g_lib', ch: 'goals', ctx: 'goals', glib: true, icon: '📚', target: '#goals-library .glib-grid .glib-tile', titleKey: 'glib_title', text: 'apptour_g_lib_text' },
     // 🏅 ההישגים שלי - פריט חדש בתפריט, מיד אחרי היעדים (2026-11-15)
@@ -10436,7 +10438,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
-    { tab: 'general', head: 'faq_cat_goals', ids: ['goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
+    { tab: 'general', head: 'faq_cat_goals', ids: ['change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
     { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week', 'achievements'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
     { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_money', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
@@ -10455,6 +10457,7 @@ const HELP_FAQ_WHEN = {
     new_me_advanced: () => typeof nmChAllDone === 'function' && nmChAllDone(),
     routine_newme_sync: () => typeof hasNewMe !== 'undefined' && hasNewMe,
     food_list_languages: () => currentLang !== 'he',
+    change_flow: () => typeof openChangeFlow === 'function',
 };
 let helpFaqTab = 'general';
 
@@ -24488,6 +24491,59 @@ async function renderDailyBoard() {
     const blockOf = it => (it && !it.nmMeal ? String(it.block_name || '').trim() : '');
     const blockFirst = new Map();
     (items || []).filter(blockOf).sort((a, b) => String(a.time || '').localeCompare(String(b.time || ''))).forEach(it => { if (!blockFirst.has(blockOf(it))) blockFirst.set(blockOf(it), it.id); });
+    const blockCount = new Map();
+    (items || []).forEach(it => { const b = blockOf(it); if (b) blockCount.set(b, (blockCount.get(b) || 0) + 1); });
+    // 🔗 הבלוקים גם ב"השגרה שלי" (לפי בקשה מפורשת, 2026-11-18: "שהבלוקים לא יהיו רק בפוקוס שהם יהיו גם בשגרה שלי"):
+    // כרטיס עם עיגול שמסמן את כל מה שנשאר היום, השם (נגיעה - לשנות שם או לפרק), הטווח וכמה נעשו, וחץ לקפל.
+    // בפנים - אותן שורות כמו תמיד (וי, עיפרון, עריכה בנגיעה)
+    const blockCard = (name, rowFor) => {
+        const its = (items || []).filter(it => blockOf(it) === name).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+        const today = its.filter(it => routineItemOnDay(it, todayIdx) && !routineItemInNewMe(it));
+        const done = today.filter(it => doneTodayIds.has(it.id)).length;
+        const skip = today.filter(it => !doneTodayIds.has(it.id) && (dayNotes.get(it.id) || {}).skipped).length;
+        const rest = today.filter(it => !doneTodayIds.has(it.id) && !(dayNotes.get(it.id) || {}).skipped);
+        const key = `${activeDailyBoardTabId}|${name}`;
+        const closed = routineBoardClosedBlocks.has(key);
+        const range = `${String(its[0].time || '').slice(0, 5)}–${String(its[its.length - 1].time || '').slice(0, 5)}`;
+        const card = document.createElement('div');
+        card.className = 'daily-board-block' + (closed ? ' is-closed' : '');
+        const head = document.createElement('div');
+        head.className = 'daily-board-block-head';
+        if (checksOn && today.length) {
+            const pct = (done + skip) / today.length;
+            const ring = document.createElement('button');
+            ring.type = 'button';
+            ring.className = 'daily-board-block-ring' + (rest.length ? '' : ' is-full');
+            ring.disabled = !rest.length;
+            ring.setAttribute('aria-label', `${t('hf_block_mark_rest')}: ${name}`);
+            ring.innerHTML = `<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><circle cx="16" cy="16" r="13" class="dbb-ring-bg"/><circle cx="16" cy="16" r="13" class="dbb-ring-fg" stroke-dasharray="${(pct * 81.7).toFixed(1)} 82" transform="rotate(-90 16 16)"/></svg>`;
+            ring.onclick = async () => { ring.disabled = true; ring.classList.add('is-ticking'); await myDayToggleRoutineMany(rest); };
+            head.appendChild(ring);
+        }
+        const nameBtn = document.createElement('button');
+        nameBtn.type = 'button';
+        nameBtn.className = 'daily-board-block-name';
+        nameBtn.setAttribute('aria-label', `${t('routine_block_edit_title')}: ${name}`);
+        const meta = [range, checksOn && today.length ? t('hf_block_count').replace('{done}', done).replace('{total}', today.length) : t('hf_block_things').replace('{n}', its.length), skip ? t('hf_block_skipped').replace('{n}', skip) : ''].filter(Boolean);
+        nameBtn.innerHTML = `<b>${escapeHtmlForReport(name)}</b><span>${meta.map((m, i) => (i === 0 ? `<bdi dir="ltr" class="hf-nw">${escapeHtmlForReport(m)}</bdi>` : `<span class="hf-nw">${escapeHtmlForReport(m)}</span>`)).join(' · ')}</span>`;
+        const ids = its.map(it => it.id);
+        nameBtn.onclick = () => openRoutineBlockSheet({ current: name, onSave: n => setRoutineItemsBlock(ids, n), onSplit: () => setRoutineItemsBlock(ids, null) });
+        head.appendChild(nameBtn);
+        const chev = document.createElement('button');
+        chev.type = 'button';
+        chev.className = 'daily-board-block-chev';
+        chev.setAttribute('aria-expanded', closed ? 'false' : 'true');
+        chev.setAttribute('aria-label', t(closed ? 'hf_block_open_aria' : 'hf_block_close_aria').replace('{name}', name));
+        chev.innerHTML = HF_CHEV;
+        chev.onclick = () => { if (routineBoardClosedBlocks.has(key)) routineBoardClosedBlocks.delete(key); else routineBoardClosedBlocks.add(key); renderDailyBoard(); };
+        head.appendChild(chev);
+        card.appendChild(head);
+        const inner = document.createElement('div');
+        inner.className = 'daily-board-block-body';
+        its.forEach(it => rowFor(it, String(it.time || '').slice(0, 5), inner));
+        card.appendChild(inner);
+        return card;
+    };
     const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
@@ -24511,8 +24567,9 @@ async function renderDailyBoard() {
         header.className = 'daily-board-bucket-header';
         header.textContent = t(bucketLabelKeys[key]);
         section.appendChild(header);
-        bucketTimes.forEach(timeStr => (itemsByTime[timeStr] || [null]).forEach(item => {
-            if (item && item.nmMeal) { section.appendChild(routineNewMeRow(item, checksOn)); return; }
+        // שורה אחת בלוח (פריט או שעה ריקה) - לתוך החלק של השעה, או לתוך כרטיס של בלוק
+        const rowFor = (item, timeStr, target) => {
+            if (item && item.nmMeal) { target.appendChild(routineNewMeRow(item, checksOn)); return; }
             // ארוחה שהוסתרה כי היא כבר בתפריט של New Me - מוצגת חלשה עם 💎, ולחיצה עליו מחזירה אותה
             const inNewMe = routineItemInNewMe(item);
             // 📅 פריט שלא היום (ימים לפריט) - חלש יותר, בלי ✓, והימים שלו לידו
@@ -24567,7 +24624,7 @@ async function renderDailyBoard() {
                 tag.onclick = () => restoreRoutineItemFromNewMe(item.id);
                 row.appendChild(tag);
             }
-            if (blockName && blockFirst.get(blockName) === item.id) {
+            if (blockName && blockFirst.get(blockName) === item.id && (blockCount.get(blockName) || 0) < 2) {
                 const blockTag = document.createElement('button');
                 blockTag.type = 'button';
                 blockTag.className = 'daily-board-block-tag';
@@ -24588,7 +24645,7 @@ async function renderDailyBoard() {
                 noteBtn.onclick = () => openRoutineDayNote({ itemId: item.id, title: item.title, done: doneTodayIds.has(item.id), uncheck: async () => { const b = row.querySelector('.daily-board-item-check'); if (b) await toggleRoutineItemCheckin(item.id, b); renderDailyBoard(); } });
                 row.appendChild(noteBtn);
             }
-            section.appendChild(row);
+            target.appendChild(row);
             if (dn && ((dn.skipped && !doneTodayIds.has(item.id)) || dn.note)) {
                 const line = document.createElement('div');
                 line.className = 'daily-board-item-note' + (blockName ? ' is-in-block' : '');
@@ -24603,8 +24660,17 @@ async function renderDailyBoard() {
                     txt.textContent = dn.note;
                     line.appendChild(txt);
                 }
-                section.appendChild(line);
+                target.appendChild(line);
             }
+        };
+        bucketTimes.forEach(timeStr => (itemsByTime[timeStr] || [null]).forEach(item => {
+            // 🔗 בלוק (2 פריטים ומעלה): כרטיס אחד במקום הפריט הראשון שלו, והשאר בתוכו
+            const bn = blockOf(item);
+            if (bn && (blockCount.get(bn) || 0) >= 2) {
+                if (blockFirst.get(bn) === item.id) section.appendChild(blockCard(bn, rowFor));
+                return;
+            }
+            rowFor(item, timeStr, section);
         }));
         body.appendChild(section);
     });
@@ -24629,6 +24695,7 @@ async function renderDailyBoard() {
 // לבוקר וצהריים לצהריים וכו - ואני רוצה גם הסבר"): "לפי חלקי היום" בנגיעה אחת (עד 12:00 בוקר, עד 15:00 צהריים, עד
 // 18:00 אחר הצהריים, ואחר כך ערב), "לבחור בעצמי" (נוגעים בפריטים ואז "לחבר"), ולפרק הכל. ההסבר מאחורי "i" קטן ---
 let routineBlockPick = null;
+const routineBoardClosedBlocks = new Set();
 const ROUTINE_DAY_PARTS = [[12 * 60, 'morning'], [15 * 60, 'noon'], [18 * 60, 'afternoon'], [24 * 60, 'evening']];
 function routineDayPartBlock(time) {
     const m = scheduleTimeToMinutes(String(time || '').slice(0, 5));

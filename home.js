@@ -676,6 +676,28 @@ function homeFocusGoalsKey() { return `weekwise_focus_goals_${currentUserId}`; }
 function homeFocusChosenGoalIds() {
     try { const v = JSON.parse(localStorage.getItem(homeFocusGoalsKey()) || 'null'); return Array.isArray(v) ? v : null; } catch { return null; }
 }
+// ☁️ בכל המכשירים (לפי בקשה מפורשת, 2026-11-18: "הוספתי מטרה לסוף שנה בפוקוס ולא ראיתי אותה במובייל ובדפדפן כן"):
+// הבחירה נשמרת גם ב-user_premium.focus_goals, והמכשיר שומר עותק (כדי שהפוקוס ייפתח מיד גם בלי רשת)
+async function loadHomeFocusGoals() {
+    if (!supabaseClient || !currentUserId) return;
+    try {
+        const { data, error } = await supabaseClient.from('user_premium').select('focus_goals').eq('user_id', currentUserId).maybeSingle();
+        if (error || !data) return;
+        if (Array.isArray(data.focus_goals)) {
+            localStorage.setItem(homeFocusGoalsKey(), JSON.stringify(data.focus_goals.slice(0, HOME_FOCUS_GOALS_MAX)));
+            if (isHomeFocusOn()) renderHomeFocus();
+        } else {
+            // עוד לא נשמר בענן - מה שיש במכשיר הזה עולה לשם (פעם אחת)
+            const local = homeFocusChosenGoalIds();
+            if (local) saveHomeFocusGoals(local);
+        }
+    } catch { /* בלי רשת - העותק במכשיר */ }
+}
+async function saveHomeFocusGoals(list) {
+    try { localStorage.setItem(homeFocusGoalsKey(), JSON.stringify(list)); } catch {}
+    if (!supabaseClient || !currentUserId) return;
+    try { await supabaseClient.from('user_premium').upsert({ user_id: currentUserId, username: currentUsername, focus_goals: list }, { onConflict: 'user_id' }); } catch {}
+}
 function homeFocusActiveGoals() { return (typeof visionGoalsCache !== 'undefined' ? visionGoalsCache : []).filter(g => !g.is_achieved); }
 // הבחירה נשמרת כרשימה: מזהה של יעד מ"היעדים שלי", או { t: 'טקסט' } - מטרה שנכתבה ביד (לפי בקשה מפורשת, 2026-11-17:
 // "2 מטרות שאפשר לרשום ידנית - עד 2 מטרות עיקריות"). בסך הכל עד 2
@@ -698,7 +720,10 @@ function homeFocusDaysTo(dateStr) {
 function homeFocusGoalsHtml() {
     const goals = homeFocusGoals();
     const yearEnd = `${new Date().getFullYear()}-12-31`;
-    const head = `<div class="hf-goals-head"><span>🎯 ${myDayEsc(t('home_focus_goals_title'))} <small>· ${myDayEsc(t('home_focus_days_left').replace('{n}', homeFocusDaysTo(yearEnd)))}</small></span><button type="button" class="hf-goals-pick" onclick="openHomeFocusGoalPicker()">${myDayEsc(t(goals.length ? 'home_focus_goals_change' : 'home_focus_goals_choose'))}</button></div>`;
+    const head = `<div class="hf-goals-head"><span>🎯 ${myDayEsc(t('home_focus_goals_title'))} <small>· ${myDayEsc(t('home_focus_days_left').replace('{n}', homeFocusDaysTo(yearEnd)))}</small></span>${goals.length
+        // ✏️ סמל קטן במקום המילה "החלפה" (לפי בקשה מפורשת, 2026-11-18)
+        ? `<button type="button" class="hf-goals-pick hf-goals-edit" onclick="openHomeFocusGoalPicker()" aria-label="${myDayEsc(t('home_focus_goals_change'))}" title="${myDayEsc(t('home_focus_goals_change'))}">${HF_PENCIL}</button>`
+        : `<button type="button" class="hf-goals-pick" onclick="openHomeFocusGoalPicker()">${myDayEsc(t('home_focus_goals_choose'))}</button>`}</div>`;
     if (!goals.length) return `<section class="hf-goals is-empty">${head}</section>`;
     const rows = goals.map(g => {
         // מטרה שנכתבה ביד: השם וכמה ימים עד סוף השנה; נגיעה פותחת את הבחירה
@@ -759,7 +784,7 @@ function openHomeFocusGoalPicker() {
     box.addEventListener('click', e => { if (e.target === box) box.remove(); });
     box.querySelector('.hf-pick-save').onclick = () => {
         const list = [...chosen].concat(inputs.map(x => x.value.trim()).filter(Boolean).map(text => ({ t: text }))).slice(0, HOME_FOCUS_GOALS_MAX);
-        try { localStorage.setItem(homeFocusGoalsKey(), JSON.stringify(list)); } catch {}
+        saveHomeFocusGoals(list);
         box.remove();
         renderHomeFocus();
     };
@@ -1249,8 +1274,34 @@ async function loadGoodThingsToday() {
     renderHomeChips();
 }
 function goodThingsSaved() { return !!(goodThingsToday && goodThingsToday.some(x => String(x || '').trim())); }
+// רק בפרימיום, ושבוע אחרי שהפרימיום נפתח (לפי בקשה מפורשת, 2026-11-18: "3 דברים טובים מהיום התווסף רק אחרי שמוסיפים
+// פרימיום! וגם זה אחרי שבוע שהפרימיום נפתח מציעים את זה ומראים שאפשר לסגור את זה דרך ההגדרות כמו סיור קטן").
+// מתי נפתח: user_premium.upgraded_at, ואם אין - הפעם הראשונה שהמכשיר הזה ראה פרימיום
+let goodThingsPremiumSince = null;
+function goodThingsPremiumDays() {
+    if (typeof isRealPremiumUser === 'undefined' || !isRealPremiumUser) return -1;
+    let since = goodThingsPremiumSince;
+    if (!since) {
+        const key = `weekwise_premium_seen_${currentUserId}`;
+        try { since = localStorage.getItem(key); if (!since) { since = new Date().toISOString(); localStorage.setItem(key, since); } } catch { return -1; }
+    }
+    return Math.floor((Date.now() - new Date(since).getTime()) / 86400000);
+}
+function goodThingsUnlocked() { return goodThingsPremiumDays() >= 7; }
+// 🌙 פעם אחת, כשזה נפתח: סיור קטן - הצ'יפ, ואיפה מכבים אותו בהגדרות
+function maybeIntroGoodThings() {
+    const key = `weekwise_good_things_intro_${currentUserId}`;
+    try { if (localStorage.getItem(key)) return; } catch { return; }
+    if (typeof appTourActive !== 'undefined' && appTourActive) return;
+    if (document.querySelector('.apple-modal.open') || !document.querySelector('.home-chip-good')) return;
+    try { localStorage.setItem(key, '1'); } catch {}
+    openAppTour(false, null, { steps: [
+        { id: 'gt_new', ch: 'home', ctx: 'home', icon: '🌙', target: '.home-chip-good', titleKey: 'good_things_new_title', text: 'good_things_new_text' },
+        { id: 'gt_off', ch: 'settings', ctx: 'settings_sub', sub: 'personalization', icon: '⚙️', target: '#good-things-toggle', titleKey: 'settings_good_things_label', text: 'good_things_off_text' },
+    ] });
+}
 function goodThingsChipVisible() {
-    if (!isGoodThingsOn() || !isHomeEvening()) return false;
+    if (!isGoodThingsOn() || !isHomeEvening() || !goodThingsUnlocked()) return false;
     let skipped = null;
     try { skipped = localStorage.getItem(`weekwise_good_things_skip_${currentUserId}`); } catch {}
     return goodThingsSaved() || skipped !== goodThingsDay();
@@ -1312,7 +1363,8 @@ function applyGoodThingsSetting() {
 }
 async function loadGoodThingsSetting() {
     if (!supabaseClient || !currentUserId) return;
-    const { data } = await supabaseClient.from('user_premium').select('good_things_enabled').eq('user_id', currentUserId).maybeSingle();
+    const { data } = await supabaseClient.from('user_premium').select('good_things_enabled, upgraded_at').eq('user_id', currentUserId).maybeSingle();
+    goodThingsPremiumSince = data && data.upgraded_at ? data.upgraded_at : null;
     if (data && data.good_things_enabled !== null && data.good_things_enabled !== undefined) {
         try { localStorage.setItem(GOOD_THINGS_KEY, String(data.good_things_enabled)); } catch {}
     }
@@ -1362,6 +1414,7 @@ function renderHomeChips() {
     }
     box.innerHTML = chips.join('');
     box.classList.toggle('hidden', !chips.length);
+    if (box.querySelector('.home-chip-good')) setTimeout(maybeIntroGoodThings, 1200);
 }
 
 // --- 🌦️ מזג אוויר בשמיים: כבוי כברירת מחדל (צריך אישור מיקום). המיקום המשוער (מעוגל לכקילומטר)
@@ -1540,6 +1593,7 @@ function initHomePhase2() {
     homePhase2Day = getLocalDateString();
     loadHomeCountdown();
     loadGoodThingsSetting();
+    loadHomeFocusGoals();
     loadGoodThingsToday();
     refreshHomeWeather(false);
     if (homePhase2Timer) return;
