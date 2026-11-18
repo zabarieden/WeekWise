@@ -155,8 +155,9 @@ async function myDayToggleRoutineMany(routineItems) {
     loadTodayTasks();
 }
 // שמות מוכנים לבלוק (ותמיד גם "אחר" - שם חופשי)
-function routineBlockPresetNames() { return ['routine_block_morning', 'routine_block_before_work', 'routine_block_after_work', 'routine_block_evening'].map(k => t(k)); }
-function routineBlockSuggestName(minutes) { return t(minutes < 9 * 60 ? 'routine_block_morning' : minutes < 16 * 60 ? 'routine_block_before_work' : minutes < 19 * 60 ? 'routine_block_after_work' : 'routine_block_evening'); }
+// חלקי היום קודם (לפי בקשה מפורשת, 2026-11-18: "בוקר לבוקר וצהריים לצהריים"), ואחריהם לפני / אחרי העבודה
+function routineBlockPresetNames() { return ['routine_block_morning', 'routine_block_noon', 'routine_block_afternoon', 'routine_block_evening', 'routine_block_before_work', 'routine_block_after_work'].map(k => t(k)); }
+function routineBlockSuggestName(minutes) { return t(minutes < 12 * 60 ? 'routine_block_morning' : minutes < 15 * 60 ? 'routine_block_noon' : minutes < 18 * 60 ? 'routine_block_afternoon' : 'routine_block_evening'); }
 
 // דף קטן מלמטה (בתוך מסגרת האפליקציה, מעל הפוקוס ו"השגרה שלי")
 function routineSheet(html, label) {

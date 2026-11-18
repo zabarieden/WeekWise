@@ -12477,3 +12477,20 @@ html.light-mode { --bin-stroke: #7c3aed; --bin-a: #c4b5fd; --bin-b: #6d28d9; }
 .shop-cart-clear { list-style: none; display: flex; justify-content: center; padding: 8px 0 2px; }
 .shop-cart-clear button { padding: 8px 16px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 55%, transparent); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); color: var(--text-primary); font: inherit; font-size: .86rem; font-weight: 700; cursor: pointer; overflow-wrap: anywhere; }
 .shop-list .shop-cart-clear { background: none; border: none; box-shadow: none; padding: 8px 0 2px; justify-content: center; }
+/* ✕ באמצע העיגול (לפי בקשה מפורשת, 2026-11-18: "למרכז את האיקס") - בכרטיס המכתב השבועי ובכרטיס ה"למה" */
+.gv-why-pop-x { padding: 0; display: grid; place-items: center; line-height: 1; font-size: .95rem; }
+
+/* 🔗 בלוקים ב"השגרה שלי": החלון (לפי חלקי היום / לבחור בעצמי / לפרק), ה-"i", ומצב הבחירה עם הפס למטה (2026-11-18) */
+.rdn-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.rdn-info { flex: none; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text-primary) 35%, transparent); background: transparent; color: var(--text-secondary); font: inherit; font-size: .8rem; font-weight: 800; font-style: italic; cursor: pointer; }
+.rdn-info[aria-expanded="true"] { border-color: var(--accent-purple); color: var(--text-primary); }
+.rdn-info-text { margin: 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--accent-purple) 10%, transparent); font-size: .86rem; line-height: 1.55; color: var(--text-primary); overflow-wrap: anywhere; }
+.rdn-option { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--text-primary) 16%, transparent); background: color-mix(in srgb, var(--text-primary) 5%, transparent); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; box-sizing: border-box; overflow-wrap: anywhere; }
+.rdn-option b { font-size: .98rem; }
+.rdn-option span { font-size: .8rem; color: var(--text-secondary); }
+.daily-board-item-row.is-pickable .daily-board-item-title { border-radius: 10px; outline: 1px dashed color-mix(in srgb, var(--accent-purple) 45%, transparent); outline-offset: 2px; }
+.daily-board-item-row.is-picked .daily-board-item-title { outline: 2px solid var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 16%, transparent); }
+.routine-pickbar { position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 16px; background: linear-gradient(var(--bg-sheet), var(--bg-sheet)), var(--bg-main); border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, transparent); box-shadow: 0 -6px 18px rgba(0, 0, 0, .25); }
+.routine-pickbar span { flex: 1; min-width: 0; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+.routine-pickbar button { flex: none; padding: 8px 14px; }
+.routine-pickbar button:disabled { opacity: .5; }

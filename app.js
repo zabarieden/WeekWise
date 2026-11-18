@@ -2967,7 +2967,7 @@ async function markAppTourSeen() {
 // פעם אחת אוטומטית: מחכים למסך בית רגוע (בלי חלון/מגירה פתוחים) ורק אז מתחילים.
 // אם המשתמש/ת כבר עבר/ה למסך אחר - לא מפריעים; ננסה שוב בכניסה הבאה
 // 🚀 הסיור הקצר: 5 דברים שהכי חשוב להכיר (ירח הלילה עם הנגיעה האמיתית ביניהם), וכרטיס סיום עם "לסיור המלא"
-const APP_TOUR_QUICK_IDS = ['focus', 'peek', 'ai', 'menu', 'm_night'];
+const APP_TOUR_QUICK_IDS = ['focus', 'f_block', 'peek', 'ai', 'menu', 'm_night'];
 function appTourQuickSteps() {
     return APP_TOUR_QUICK_IDS.map(id => APP_TOUR_STEPS.find(st => st.id === id)).filter(Boolean)
         .concat([{ id: 'quick_done', ch: 'summary', ctx: 'home', icon: '🚀', titleKey: 'apptour_quick_done_title', text: 'apptour_quick_done_text', fullTour: true }]);
@@ -18707,6 +18707,7 @@ function renderDailyBoardHourSettings() {
 }
 
 async function openDailyBoardModal() {
+    routineBlockPick = null;
     if (!supabaseClient || !currentUserId) return;
     const hoursPanel = document.getElementById('daily-board-hours-panel');
     if (hoursPanel) hoursPanel.classList.add('hidden');
@@ -22695,6 +22696,8 @@ function renderGoalPanel(goal) {
     // ✉️ מכתב בתחילת כל שבוע במסע (כמו Fabulous, רעיון 6 שבחרה) - מה שנכתב בסיכום של השבוע שעבר
     const letter = buildGoalWeekLetter(goal);
     if (letter) panel.appendChild(letter);
+    // 🔄 "מה מפריע לי" (2026-11-18): התוכנית - כש… אז…, ואם בכל זאת, והבדיקה השבועית (change.js)
+    if (goal.change_plan && typeof chgPlanCard === 'function') { const card = chgPlanCard(goal, milestones); if (card) panel.appendChild(card); }
     // 🎁 הפרס נפתח בתחנה שנבחרה (רעיון 4) - פעם אחת, בפעם הראשונה שרואים את היעד אחרי שהתחנה הושלמה
     setTimeout(() => maybeOpenGoalReward(goal, milestones), 600);
 
@@ -24525,7 +24528,10 @@ async function renderDailyBoard() {
             titleBtn.type = 'button';
             titleBtn.className = 'daily-board-item-title';
             titleBtn.textContent = item ? item.title : t('daily_board_item_add_placeholder');
-            titleBtn.onclick = () => item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr);
+            // 🔗 "לבחור בעצמי": נגיעה בפריט בוחרת אותו לבלוק (במקום לפתוח אותו)
+            const picking = !!routineBlockPick && !!item && !inNewMe;
+            if (picking) { row.classList.add('is-pickable'); if (routineBlockPick.has(item.id)) row.classList.add('is-picked'); titleBtn.setAttribute('aria-pressed', routineBlockPick.has(item.id) ? 'true' : 'false'); }
+            titleBtn.onclick = () => (routineBlockPick ? (picking ? routineBlockPickToggle(item.id) : null) : item ? openEditRoutineItemModal(item) : openAddRoutineItemModal(timeStr));
             if (checksOn && item && !inNewMe && !offToday) {
                 const done = doneTodayIds.has(item.id);
                 const skipped = !!(dn && dn.skipped && !done);
@@ -24602,6 +24608,63 @@ async function renderDailyBoard() {
         }));
         body.appendChild(section);
     });
+    // 🔗 "לבחור בעצמי": פס קבוע למטה - כמה נבחרו, "לחבר" ו"ביטול"
+    if (routineBlockPick) {
+        const bar = document.createElement('div');
+        bar.className = 'routine-pickbar';
+        const n = routineBlockPick.size;
+        bar.innerHTML = `<span>${escapeHtmlForReport(t('routine_blocks_picked').replace('{n}', n))}</span><button type="button" class="btn-primary" ${n < 2 ? 'disabled' : ''}>${escapeHtmlForReport(t('routine_block_join'))}</button><button type="button" class="btn-secondary">${escapeHtmlForReport(t('cancel_btn'))}</button>`;
+        const [join, cancel] = bar.querySelectorAll('button');
+        join.onclick = () => {
+            const ids = [...routineBlockPick];
+            const first = (items || []).filter(it => ids.includes(it.id)).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')))[0];
+            openRoutineBlockSheet({ suggested: first ? routineDayPartBlock(first.time) : null, onSave: async name => { routineBlockPick = null; await setRoutineItemsBlock(ids, name); } });
+        };
+        cancel.onclick = () => { routineBlockPick = null; renderDailyBoard(); };
+        body.appendChild(bar);
+    }
+}
+
+// --- 🔗 הבלוקים של הטאב (לפי בקשה מפורשת, 2026-11-18: "לא הבנתי איך מחברים בלוקים ואיך בוחרים אותם. ואם אני רוצה בוקר
+// לבוקר וצהריים לצהריים וכו - ואני רוצה גם הסבר"): "לפי חלקי היום" בנגיעה אחת (עד 12:00 בוקר, עד 15:00 צהריים, עד
+// 18:00 אחר הצהריים, ואחר כך ערב), "לבחור בעצמי" (נוגעים בפריטים ואז "לחבר"), ולפרק הכל. ההסבר מאחורי "i" קטן ---
+let routineBlockPick = null;
+const ROUTINE_DAY_PARTS = [[12 * 60, 'morning'], [15 * 60, 'noon'], [18 * 60, 'afternoon'], [24 * 60, 'evening']];
+function routineDayPartBlock(time) {
+    const m = scheduleTimeToMinutes(String(time || '').slice(0, 5));
+    const part = ROUTINE_DAY_PARTS.find(([end]) => m < end);
+    return t('routine_block_' + (part ? part[1] : 'evening'));
+}
+function routineBlockPickToggle(id) {
+    if (!routineBlockPick) return;
+    if (routineBlockPick.has(id)) routineBlockPick.delete(id); else routineBlockPick.add(id);
+    renderDailyBoard();
+}
+function openRoutineBlocksSheet() {
+    const items = dailyBoardItemsCache.filter(it => !it.nmMeal);
+    const withBlocks = items.filter(it => String(it.block_name || '').trim());
+    const esc = escapeHtmlForReport;
+    const layer = routineSheet(`
+        <h3 class="rdn-title rdn-title-row"><span>🔗 ${esc(t('routine_blocks_title'))}</span><button type="button" class="rdn-info" aria-expanded="false" aria-label="${esc(t('routine_blocks_info_aria'))}">i</button></h3>
+        <p class="rdn-info-text hidden">${esc(t('routine_blocks_info'))}</p>
+        <button type="button" class="rdn-option" data-act="parts"><b>${esc(t('routine_blocks_by_parts'))}</b><span>${esc(['morning', 'noon', 'afternoon', 'evening'].map(k => t('routine_block_' + k)).join(' · '))}</span></button>
+        <button type="button" class="rdn-option" data-act="pick"><b>${esc(t('routine_blocks_pick'))}</b></button>
+        ${withBlocks.length ? `<button type="button" class="rdn-option" data-act="clear"><b>${esc(t('routine_blocks_clear'))}</b></button>` : ''}
+        <div class="rdn-actions"><button type="button" class="btn-secondary rdn-close">${esc(t('close_btn'))}</button></div>`, t('routine_blocks_title'));
+    const info = layer.querySelector('.rdn-info');
+    info.onclick = () => { const p = layer.querySelector('.rdn-info-text'); const open = p.classList.toggle('hidden') === false; info.setAttribute('aria-expanded', String(open)); };
+    layer.querySelector('.rdn-close').onclick = () => layer.remove();
+    layer.querySelector('[data-act="parts"]').onclick = async () => {
+        if (!items.length) { layer.remove(); return; }
+        const byName = new Map();
+        items.forEach(it => { const n = routineDayPartBlock(it.time); if (!byName.has(n)) byName.set(n, []); byName.get(n).push(it.id); });
+        layer.remove();
+        for (const [name, ids] of byName) await setRoutineItemsBlock(ids, name);
+        showAppToast(t('routine_blocks_parts_done'));
+    };
+    layer.querySelector('[data-act="pick"]').onclick = () => { layer.remove(); routineBlockPick = new Set(); renderDailyBoard(); };
+    const clear = layer.querySelector('[data-act="clear"]');
+    if (clear) clear.onclick = async () => { layer.remove(); await setRoutineItemsBlock(withBlocks.map(it => it.id), null); };
 }
 
 // 💎 הארוחות של New Me ל"השגרה שלי" - רק בטאב שיש בו ארוחה שהוסתרה בשבילן (שם הן באות במקומה), ורק כשהסנכרון דלוק

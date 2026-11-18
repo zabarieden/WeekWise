@@ -127,7 +127,7 @@
         @keyframes bootTwinkle { from { opacity: 1; transform: scale(1); } to { opacity: .45; transform: scale(.7); } }
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before { animation: none; } .boot-sparkle i { top: var(--y); } }
     </style>
-    <link rel="stylesheet" href="theme.css?v=643">
+    <link rel="stylesheet" href="theme.css?v=644">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -3760,6 +3760,9 @@
                     <button type="button" class="daily-board-tab-add" id="daily-board-settings-btn" onclick="toggleDailyBoardHoursPanel()" data-i18n-title="daily_board_hours_settings_label" title="Hours for this tab">⚙️</button>
                     <div class="daily-board-tabs-scroll" id="daily-board-tabs-list"></div>
                     <button type="button" class="daily-board-tab-add" id="daily-board-overview-btn" onclick="openRoutineGoalsOverviewModal()" data-i18n-title="habits_overview_btn_title" title="Monthly overview">📅</button>
+                    <!-- 🔗 בלוקים (לפי בקשה מפורשת, 2026-11-18: "לא הבנתי איך מחברים בלוקים ואיך בוחרים אותם... בוקר לבוקר
+                         וצהריים לצהריים"): לפי חלקי היום בנגיעה אחת, או לבחור בעצמי - openRoutineBlocksSheet ב-app.js -->
+                    <button type="button" class="daily-board-tab-add" id="daily-board-blocks-btn" onclick="openRoutineBlocksSheet()" data-i18n-title="routine_blocks_title" data-i18n-aria-label="routine_blocks_title" title="Blocks" aria-label="Blocks">🔗</button>
                     <!-- ➕ פותח בחירה: טאב ריק / שכפול הטאב הנוכחי / תבניות מוכנות (פרימיום) - לפי בקשה מפורשת -->
                     <!-- ✨ עוזר השגרה - גלוי בשורת הטאבים (לפי בקשה מפורשת, 2026-11-15), נפתח עם שם הטאב הנוכחי -->
                     <button type="button" class="daily-board-tab-add" id="daily-board-ai-btn" onclick="openRoutineAiModal(routineActiveTabName())" data-i18n-title="routine_ai_title" title="Routine assistant"><i class="ic-spark" aria-hidden="true"></i></button>
@@ -4573,10 +4576,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=556"></script>
+    <script src="i18n/core.js?v=557"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=3"></script>
-    <script src="app.js?v=675"></script>
+    <script src="app.js?v=676"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="bag.js?v=10"></script>
@@ -4584,7 +4587,7 @@
     <script src="workouts.js?v=10"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=10"></script>
-    <script src="home.js?v=41"></script>
+    <script src="home.js?v=42"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=9"></script>
