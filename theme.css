@@ -12501,6 +12501,16 @@ html.light-mode { --bin-stroke: #7c3aed; --bin-a: #c4b5fd; --bin-b: #6d28d9; }
 .ic-bin .bin-shine { fill: none; stroke: #fff; stroke-opacity: .7; stroke-width: 1.3; stroke-linecap: round; }
 .ic-bin .bin-lid rect { fill: var(--bin-a); fill-opacity: .9; stroke: var(--bin-stroke); stroke-width: 1; }
 .ic-bin .bin-lid path { fill: none; stroke: var(--bin-stroke); stroke-width: 1.3; stroke-linecap: round; }
+/* ⏰ השעון המעורר הסגול (CLOCK_SVG ב-i18n.js) - אותה זכוכית כמו הפח; מצלצל במעבר עכבר או בנגיעה (2026-11-24) */
+.ic-clock { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.22em; overflow: visible; flex: none; transform-origin: 50% 60%; }
+.ic-clock .clk-body { fill: url(#bin-glass); stroke: var(--bin-stroke); stroke-width: 1.3; }
+.ic-clock .clk-bell, .ic-clock .clk-legs { fill: none; stroke: var(--bin-stroke); stroke-width: 1.7; stroke-linecap: round; }
+.ic-clock .clk-hands { fill: none; stroke: var(--bin-stroke); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ic-clock .clk-shine { fill: none; stroke: #fff; stroke-opacity: .7; stroke-width: 1.3; stroke-linecap: round; }
+@keyframes clkRing { 0%, 100% { transform: rotate(0); } 10% { transform: rotate(-16deg); } 20% { transform: rotate(15deg); } 30% { transform: rotate(-13deg); } 40% { transform: rotate(12deg); } 50% { transform: rotate(-9deg); } 60% { transform: rotate(7deg); } 70% { transform: rotate(-4deg); } 80% { transform: rotate(2deg); } }
+.ic-clock.is-ringing { animation: clkRing .85s ease-in-out; }
+@media (hover: hover) { .ic-clock:hover, button:hover > .ic-clock, a:hover > .ic-clock, [role="button"]:hover > .ic-clock, button:hover > * > .ic-clock { animation: clkRing .85s ease-in-out; } }
+@media (prefers-reduced-motion: reduce) { .ic-clock.is-ringing, .ic-clock:hover { animation: none; } }
 .ic-bin .bin-lid { transform-box: view-box; transform-origin: 20px 7.4px; transition: transform .22s ease; }
 .bin-open .ic-bin .bin-lid { transform: rotate(26deg) translateY(-1px); }
 @media (hover: hover) { :is(button, a, [role="button"]):hover .ic-bin .bin-lid { transform: rotate(26deg) translateY(-1px); } }

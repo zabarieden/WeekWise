@@ -120,6 +120,52 @@ function binHtml(text) {
     const esc = String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     return esc.replace(/🗑️?/g, BIN_SVG);
 }
+// ⏰ → שעון מעורר סגול מצויר, באותו סגנון זכוכית של הפח (בקשתה 2026-11-24: "תוריד את השעון הזה מכל התזכורות ובמקומו
+// שעון סגול שמתאים לאפליקציה בכל המקומות" + "שעוברים מעליו עם העכבר או האצבע שיזוז כאילו הוא מצלצל"). כל טקסט שמגיע
+// למסך עם ⏰ - מתרגום, הודעה, צ'אט או כרטיס - עובר כאן (MutationObserver), כך שאין צורך לגעת בכל מקום בנפרד.
+// בתוך option / select / textarea אי אפשר לצייר, ושם השעון פשוט יורד. התראות של הטלפון נשארות עם האימוג'י (טקסט בלבד)
+const CLOCK_SVG = '<svg class="ic-clock" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path class="clk-bell" d="M3.6 7.4a3.4 3.4 0 0 1 4.6-4.6M20.4 7.4a3.4 3.4 0 0 0-4.6-4.6"/><circle class="clk-body" cx="12" cy="13" r="7.3"/><path class="clk-shine" d="M7.9 11.2a4.6 4.6 0 0 1 2.6-2.9"/><path class="clk-hands" d="M12 9.3V13l2.7 1.7"/><path class="clk-legs" d="M7.4 19.4l-1.5 1.8M16.6 19.4l1.5 1.8"/></svg>';
+const CLOCK_EMOJI_RE = /⏰️?/g;
+function clockifyNode(root) {
+    if (!root || typeof document === 'undefined') return;
+    if (root.nodeType === 3) root = root.parentElement;
+    if (!root || (root.textContent || '').indexOf('⏰') === -1) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode: n => (n.nodeValue.indexOf('⏰') !== -1 && n.parentElement && !n.parentElement.closest('script, style, title, svg')) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT,
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+        if (n.parentElement.closest('option, select, textarea, [contenteditable="true"]')) { n.nodeValue = n.nodeValue.replace(CLOCK_EMOJI_RE, '').replace(/^\s+/, ''); return; }
+        const parts = n.nodeValue.split(CLOCK_EMOJI_RE);
+        const frag = document.createDocumentFragment();
+        parts.forEach((p, i) => {
+            if (p) frag.appendChild(document.createTextNode(p));
+            if (i < parts.length - 1) { const box = document.createElement('span'); box.innerHTML = CLOCK_SVG; frag.appendChild(box.firstChild); }
+        });
+        n.parentNode.replaceChild(frag, n);
+    });
+}
+if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') {
+    const clockObserver = new MutationObserver(muts => {
+        for (const m of muts) {
+            if (m.type === 'characterData') { if ((m.target.nodeValue || '').indexOf('⏰') !== -1) clockifyNode(m.target); continue; }
+            m.addedNodes.forEach(n => { if ((n.nodeType === 1 || n.nodeType === 3) && (n.textContent || '').indexOf('⏰') !== -1) clockifyNode(n); });
+        }
+    });
+    const startClocks = () => { clockifyNode(document.body); clockObserver.observe(document.body, { childList: true, subtree: true, characterData: true }); };
+    if (document.body) startClocks(); else document.addEventListener('DOMContentLoaded', startClocks);
+    // 🔔 נגיעה באצבע (או לחיצה) - השעון מצלצל רגע; בעכבר זה קורה כבר במעבר מעליו (theme.css)
+    document.addEventListener('pointerdown', e => {
+        const hit = e.target && e.target.closest ? (e.target.closest('.ic-clock') || (e.target.closest('button, a, label, [role="button"], .reminder-toast') || { querySelector: () => null }).querySelector('.ic-clock')) : null;
+        if (!hit) return;
+        hit.classList.remove('is-ringing');
+        void hit.getBoundingClientRect();
+        hit.classList.add('is-ringing');
+        setTimeout(() => hit.classList.remove('is-ringing'), 900);
+    }, { passive: true });
+}
+
 // טקסט רגיל לאלמנט - ואם יש בו 🗑️, עם הפח המצויר
 function setTextWithBins(el, text) {
     if (String(text).indexOf('🗑') === -1) el.textContent = text;
