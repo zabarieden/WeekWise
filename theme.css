@@ -8178,7 +8178,11 @@ html[dir="rtl"] .home-focus-layer { --focus-side: -1; }
 .home-focus-layer.hidden, .home-hero-panel.hidden ~ .home-focus-layer { display: none; }
 body.home-focus-on .hamburger-fab, body.home-focus-on .ai-brain-fab { visibility: hidden; }
 /* חלונית העציץ / התפריט של הפתק המהיר פתוחים - בועת העוזר לא מסתירה אותם */
-.home-focus-exit { position: absolute; top: 16px; inset-inline-end: 16px; z-index: 2; width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--focus-glass-line); background: var(--focus-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text-primary); font: inherit; font-size: 0.85rem; cursor: pointer; }
+/* ◎ למטה, ליד הפתק המהיר, במקום ✕ למעלה (2026-11-24) - עיגול זכוכית עדין בצבע הפוקוס */
+.home-focus-foot { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 12px; max-width: 100%; }
+.home-focus-exit { flex: 0 0 auto; width: 48px; height: 48px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--focus-neon) 45%, var(--focus-glass-line)); background: var(--focus-glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--focus-neon); box-shadow: 0 0 18px color-mix(in srgb, var(--focus-neon) 28%, transparent); font: inherit; cursor: pointer; transition: transform .2s ease, box-shadow .2s ease; }
+.home-focus-exit:active { transform: scale(.92); }
+.home-focus-exit:focus-visible { outline: 2px solid var(--focus-neon); outline-offset: 3px; }
 .home-focus-body { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; max-width: 380px; }
 .home-focus-stack { --then-gap: -46px; position: relative; width: 100%; }
 .home-focus-stack.has-back-1 { --then-gap: -34px; width: calc(100% - 34px); margin-inline-end: 34px; }

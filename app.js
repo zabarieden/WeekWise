@@ -2197,7 +2197,7 @@ const APP_TOUR_STEPS = [
     // 🔗 בלוק בפוקוס (2026-11-18: "אני רוצה את הפוקוס גם שתהיה דוגמא וגם את הסיור") - כשאין עוד בלוק, בלוק לדוגמה (homeFocusDemoBlock)
     { id: 'f_block', ch: 'home', ctx: 'focus', icon: '🔗', target: '#home-focus-body .hf-block', titleKey: 'apptour_f_block_title', text: 'apptour_f_block_text', when: appTourFocusAvailable },
     { id: 'f_note', ch: 'home', ctx: 'focus', icon: '📝', target: '#home-focus-layer .home-focus-note', titleKey: 'apptour_f_note_title', text: 'apptour_f_note_text', when: appTourFocusAvailable },
-    { id: 'f_exit', ch: 'home', ctx: 'focus', icon: '✕', target: '#home-focus-layer .home-focus-exit', titleKey: 'home_focus_exit_aria', text: 'apptour_f_exit_text', when: appTourFocusAvailable },
+    { id: 'f_exit', ch: 'home', ctx: 'focus', icon: '◎', target: '#home-focus-layer .home-focus-exit', titleKey: 'home_focus_exit_aria', text: 'apptour_f_exit_text', when: appTourFocusAvailable },
     { id: 'noteline', ch: 'home', ctx: 'home', icon: '📝', target: '#home-note-line', titleKey: 'notes_ai_title', text: 'apptour_noteline_text', optional: true },
     // "היום שלי" - המגירה בתחתית מסך הבית (הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js). מודגשת שורת
     // הכותרת שלה - החלק התחתון של המגירה נמצא מאחורי הפס הקבוע של כפתורי הסיור

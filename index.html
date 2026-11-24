@@ -137,7 +137,7 @@
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img, .boot-book b { animation: none; } .boot-book b { opacity: .85; } .boot-sparkle i { top: var(--y); } }
     </style>
     <link rel="preload" as="image" href="splash-book.webp?v=3" type="image/webp">
-    <link rel="stylesheet" href="theme.css?v=649">
+    <link rel="stylesheet" href="theme.css?v=650">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -303,9 +303,12 @@
 
             <!-- ◎ מצב פוקוס - רק הדבר האחד של עכשיו (ופתק מהיר); כל השאר מוסתר (home.js) -->
             <div class="home-focus-layer hidden" id="home-focus-layer">
-                <button type="button" class="home-focus-exit" onclick="toggleHomeFocus(false)" data-i18n-aria-label="home_focus_exit_aria" aria-label="Exit focus mode"><span aria-hidden="true">✕</span></button>
                 <div class="home-focus-body" id="home-focus-body"></div>
-                <button type="button" class="home-focus-note" onclick="setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add');"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v4h4M8 11h8M8 14.5h8"/></svg><span data-i18n="notes_ai_title">Quick Note</span></button>
+                <!-- ◎ יציאה מהפוקוס: עיגול הפוקוס למטה במקום ✕ למעלה (בקשתה 2026-11-24: "שיהיה עיגול של הפוקוס למטה... יותר עדין") -->
+                <div class="home-focus-foot">
+                    <button type="button" class="home-focus-note" onclick="setQuickNoteDestination('weekly'); openModal('modal-ai-quick-add');"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M15 3v4h4M8 11h8M8 14.5h8"/></svg><span data-i18n="notes_ai_title">Quick Note</span></button>
+                    <button type="button" class="home-focus-exit" onclick="toggleHomeFocus(false)" data-i18n-aria-label="home_focus_exit_aria" data-i18n-title="home_focus_exit_aria" aria-label="Exit focus mode" title="Exit focus mode"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.5"/></svg></button>
+                </div>
             </div>
 
             <!-- 🔍 חיפוש בכל האפליקציה (home.js) -->
@@ -4590,10 +4593,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=571"></script>
+    <script src="i18n/core.js?v=572"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=8"></script>
-    <script src="app.js?v=682"></script>
+    <script src="app.js?v=683"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="change.js?v=2"></script>
