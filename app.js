@@ -42,13 +42,18 @@ function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
 // עוד יש כניסה שמורה במכשיר מנסים שוב (עם הפסקות קצרות, ושוב כשהרשת חוזרת), ובינתיים במקום הטופס - "מתחברים...".
 // מסך הכניסה מופיע רק כשבאמת אין כניסה (יציאה, או כניסה ש-Supabase ביטל)
 // ✦ מסך הכניסה: נצנצים נופלים במקום הלוגו (לפי בקשה מפורשת, 2026-11-17), רק למי שכבר מחובר/ת - נעלם ברגע שהאפליקציה מוכנה
+// מ-2026-11-24 יש במרכז את הספר N10 הגדול: נשאר לפחות 1.3 שניות מתחילת הטעינה, שלא "יהבהב" כשהאפליקציה נטענת מהר
 function endBootSparkle() {
     const root = document.documentElement;
     const el = document.getElementById('boot-sparkle');
     if (!root.classList.contains('booting') || !el) { root.classList.remove('booting'); if (el) el.remove(); return; }
-    if (el.classList.contains('is-out')) return;
-    el.classList.add('is-out');
-    setTimeout(() => { root.classList.remove('booting'); el.remove(); }, 460);
+    if (el.classList.contains('is-out') || el.dataset.ending) return;
+    el.dataset.ending = '1';
+    const wait = Math.max(0, 1300 - (window.performance ? performance.now() : 0));
+    setTimeout(() => {
+        el.classList.add('is-out');
+        setTimeout(() => { root.classList.remove('booting'); el.remove(); }, 460);
+    }, wait);
 }
 function hasStoredAuthSession() {
     try { return Object.keys(localStorage).some(k => /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k)); } catch { return false; }
