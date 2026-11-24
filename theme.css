@@ -10679,6 +10679,23 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-time { color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }
 .wk-row-main { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; padding: 0 8px; border: none; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 600; text-align: start; cursor: pointer; }
 .wk-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* ✏️ עריכה ו-🕐 שעה גלויות (בקשתה 2026-11-24: "לא מובן איפה אפשר לשנות או לערוך את האימון והשעה") */
+.wk-today-top { grid-area: when; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.wk-today-top .wk-today-when { margin-bottom: 0; min-width: 0; }
+.wk-edit-btn { flex: none; display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 4px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--wk-c) 50%, transparent); background: color-mix(in srgb, var(--wk-c) 14%, transparent); color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 800; cursor: pointer; }
+.wk-edit-btn .wk-ico, .wk-time-edit .wk-ico { width: 14px; height: 14px; }
+.wk-time-edit { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 2px 10px; border-radius: 999px; border: 1px dashed color-mix(in srgb, var(--wk-c) 60%, var(--text-secondary)); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.86rem; font-weight: 800; cursor: pointer; }
+.wk-time-edit.is-empty { color: var(--text-secondary); }
+.wk-edit-btn:focus-visible, .wk-time-edit:focus-visible, .wk-time-btn:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: 2px; }
+.wk-time-btn { min-height: 40px; padding: 0; border: none; background: transparent; cursor: pointer; font-family: inherit; }
+.wk-time-btn bdi { padding-bottom: 1px; border-bottom: 1px dashed color-mix(in srgb, var(--text-secondary) 70%, transparent); }
+.wk-time-btn.is-empty { display: grid; place-items: center; color: var(--text-secondary); opacity: 0.6; }
+.wk-time-btn.is-empty .wk-ico { width: 15px; height: 15px; }
+.wk-row-pen { flex: none; display: grid; place-items: center; margin-inline-start: auto; color: var(--text-secondary); opacity: 0.65; }
+.wk-row-pen .wk-ico { width: 14px; height: 14px; }
+.wk-card-meta { display: inline-flex; align-items: center; gap: 4px; }
+.wk-card-pen { display: inline-grid; place-items: center; color: var(--text-secondary); opacity: 0.6; }
+.wk-card-pen .wk-ico { width: 11px; height: 11px; }
 .wk-row-main:focus-visible { outline: 2px solid var(--accent-purple); outline-offset: -2px; }
 .wk-row-add { color: var(--text-secondary); font-size: 1.15rem; font-weight: 400; opacity: 0.55; }
 .wk-row-add:hover, .wk-row-add:focus-visible { opacity: 1; }

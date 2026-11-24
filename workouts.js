@@ -115,6 +115,9 @@ const WK_ICONS = {
     bell: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></g></svg>',
     routine: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></g></svg>',
     spark: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><path d="M11 2.5c.7 4.6 2.6 6.5 7.2 7.2-4.6.7-6.5 2.6-7.2 7.2-.7-4.6-2.6-6.5-7.2-7.2C8.4 9 10.3 7.1 11 2.5z"/><path d="M18.5 14.5c.35 2.1 1.2 2.95 3.3 3.3-2.1.35-2.95 1.2-3.3 3.3-.35-2.1-1.2-2.95-3.3-3.3 2.1-.35 2.95-1.2 3.3-3.3z" opacity="0.75"/></g></svg>',
+    // ✏️ / 🕐 - עריכה ושעה גלויות (בקשתה 2026-11-24: "זה לא מובן איפה אפשר לשנות או לערוך את האימון והשעה")
+    pen: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>',
+    clock: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></svg>',
     // "אימוג'י אחד של כח או משקולות להכל" - משקולת אחת, בצבע של הערכה
     dumbbell: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><rect x="5" y="6" width="3.2" height="12" rx="1.3"/><rect x="15.8" y="6" width="3.2" height="12" rx="1.3"/><rect x="1.8" y="8.6" width="2.6" height="6.8" rx="1.1"/><rect x="19.6" y="8.6" width="2.6" height="6.8" rx="1.1"/><rect x="8" y="10.9" width="8" height="2.2" rx="1.1"/></g></svg>',
 };
@@ -371,9 +374,11 @@ function wkReadyChipsHtml() {
     }).join('') + `<button type="button" class="wk-ready wk-ready-ai" data-wk-ai-open><span class="wk-ready-spark" aria-hidden="true">${WK_ICONS.spark}</span><b>${wkEsc(t('workout_ai_btn'))}</b></button>`;
 }
 
-function wkMetaLine(w, minutesOverride) {
+// editTime: בכרטיס של היום השעה היא כפתור שפותח ישר את בחירת השעה (ובלי שעה - "🕐 להוסיף שעה")
+function wkMetaLine(w, minutesOverride, editTime) {
     const parts = [];
-    if (w.time) parts.push(`<bdi dir="ltr">${wkEsc(w.time)}</bdi>`);
+    if (editTime) parts.push(`<button type="button" class="wk-time-edit${w.time ? '' : ' is-empty'}" data-wk-edit-time="${w.id}" aria-label="${wkEsc(t('workout_time_label'))}${w.time ? ': ' + wkEsc(w.time) : ''}">${WK_ICONS.clock}${w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : `<span>${wkEsc(t('workout_add_time'))}</span>`}</button>`);
+    else if (w.time) parts.push(`<bdi dir="ltr">${wkEsc(w.time)}</bdi>`);
     const min = minutesOverride || w.duration_minutes;
     if (min) parts.push(`${min} ${wkEsc(t('sport_minutes_unit'))}`);
     if (w.place) parts.push(wkEsc(wkPlaceLabel(w.place)));
@@ -424,10 +429,10 @@ function wkTodayHtml() {
     }
     return `
         <div class="wk-today${done ? ' is-done' : ''}"${wkCVar(main)}>
-            <span class="wk-today-when">${wkEsc(whenLabel)}</span>
+            <div class="wk-today-top"><span class="wk-today-when">${wkEsc(whenLabel)}</span><button type="button" class="wk-edit-btn" data-wk-edit="${main.id}" aria-label="${wkEsc(t('workout_edit_title'))}: ${wkEsc(wkName(main))}">${WK_ICONS.pen}<span>${wkEsc(t('edit_btn'))}</span></button></div>
             <span class="wk-today-icon" aria-hidden="true">${wkStar(main)}</span>
             <b class="wk-today-name">${wkEsc(wkName(main))}</b>
-            <span class="wk-today-meta">${wkMetaLine(main)}${main.intensity ? ' ' + wkIntensityChip(main.intensity) : ''}</span>
+            <span class="wk-today-meta">${wkMetaLine(main, null, !timed)}${main.intensity ? ' ' + wkIntensityChip(main.intensity) : ''}</span>
             ${ex.length ? `
                 <button type="button" class="wk-ex-toggle" data-wk-ex-toggle="${main.id}" aria-expanded="${open}">${wkEsc(t('workout_ex_count').replace('{n}', ex.length))} <span aria-hidden="true">${open ? '▴' : '▾'}</span></button>
                 ${open ? `<ul class="wk-ex-list">${ex.map((e, i) => `<li><label><input type="checkbox" data-wk-ex-tick="${main.id}" data-i="${i}"${exTicks.includes(i) ? ' checked' : ''}><span>${wkEsc(e.name)}</span>${e.sets || e.reps ? `<bdi dir="ltr" class="wk-ex-sr">${wkEsc([e.sets, e.reps].filter(Boolean).join('×'))}</bdi>` : ''}</label></li>`).join('')}</ul>` : ''}` : ''}
@@ -468,10 +473,11 @@ function wkTimelineHtml() {
                 <li class="wk-row${isToday ? ' is-today' : ''}${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}${isPast ? ' is-past' : ''}" data-day="${dayIdx}"${wkCVar(w)}>
                     <b class="wk-day">${i === 0 ? dayLabel : ''}</b>
                     ${rest ? '<span class="wk-dot" aria-hidden="true"></span>' : `<span class="wk-node" aria-hidden="true">${wkStar(w)}</span>`}
-                    <span class="wk-time">${w.time && !rest ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : ''}</span>
-                    <button type="button" class="wk-row-main" data-wk-edit="${w.id}">
+                    ${rest ? '<span class="wk-time"></span>' : `<button type="button" class="wk-time wk-time-btn${w.time ? '' : ' is-empty'}" data-wk-edit-time="${w.id}" aria-label="${wkEsc(t('workout_time_label'))} – ${wkEsc(wkName(w))}${w.time ? ': ' + wkEsc(w.time) : ''}">${w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : WK_ICONS.clock}</button>`}
+                    <button type="button" class="wk-row-main" data-wk-edit="${w.id}" aria-label="${wkEsc(t('workout_edit_title'))}: ${wkEsc(wkName(w))}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
                         <span class="wk-row-name">${wkEsc(wkName(w))}${!rest && w.duration_minutes ? ` · <bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''}</span>
                         ${!rest && w.intensity ? `<span class="wk-int-dot wk-int-${w.intensity}" title="${wkEsc(t('workout_int_' + w.intensity))}"></span>` : ''}
+                        <span class="wk-row-pen" aria-hidden="true">${WK_ICONS.pen}</span>
                     </button>
                     ${check}
                 </li>`;
@@ -484,6 +490,7 @@ function wkBindCard(body) {
     body.querySelectorAll('[data-wk-add]').forEach(b => b.addEventListener('click', () => openWorkoutEditor(null)));
     body.querySelectorAll('[data-wk-add-day]').forEach(b => b.addEventListener('click', () => openWorkoutEditor(null, Number(b.dataset.wkAddDay))));
     body.querySelectorAll('[data-wk-edit]').forEach(b => b.addEventListener('click', () => openWorkoutEditor(b.dataset.wkEdit)));
+    body.querySelectorAll('[data-wk-edit-time]').forEach(b => b.addEventListener('click', () => openWorkoutEditor(b.dataset.wkEditTime, null, true)));
     body.querySelectorAll('[data-wk-check]').forEach(b => b.addEventListener('click', () => { b.disabled = true; toggleWorkoutDone(b.dataset.wkCheck, b.dataset.wkDate); }));
     body.querySelectorAll('[data-wk-start]').forEach(b => b.addEventListener('click', () => startWorkoutTimer(b.dataset.wkStart)));
     body.querySelectorAll('[data-wk-timer-toggle]').forEach(b => b.addEventListener('click', toggleWorkoutTimerPause));
@@ -536,7 +543,7 @@ function wkBoardHtml() {
             return `
                 <div class="wk-card${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}"${wkCVar(w)} role="button" tabindex="0" data-wk-card="${w.id}" data-day="${dayIdx}" aria-label="${wkEsc(wkName(w))}${w.time && !rest ? ' ' + wkEsc(w.time) : ''}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
                     <span class="wk-card-name">${wkStar(w, 'wk-star-inline')}${wkEsc(wkName(w))}</span>
-                    ${rest ? '' : `<span class="wk-card-meta">${[w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : '', w.duration_minutes ? `<bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''].filter(Boolean).join(' · ')}</span>`}
+                    <span class="wk-card-meta">${rest ? '' : [w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : '', w.duration_minutes ? `<bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''].filter(Boolean).join(' · ')}<span class="wk-card-pen" aria-hidden="true">${WK_ICONS.pen}</span></span>
                     ${canCheck ? `<button type="button" class="wk-card-check" data-wk-check="${w.id}" data-wk-date="${date}" aria-pressed="${done}" aria-label="${wkEsc(t('workout_check_aria'))} – ${wkEsc(wkName(w))}, ${wkEsc(t(dayNameKeys[dayIdx]))}">${done ? WK_ICONS.check : ''}</button>` : ''}
                     ${w.routine_item_id ? `<span class="wk-card-routine" aria-hidden="true">${WK_ICONS.routine}</span>` : ''}
                 </div>`;
@@ -1231,7 +1238,8 @@ async function wkAiApply(mode) {
 
 // ---------- הוספה / עריכה ----------
 let workoutDraft = null;
-function openWorkoutEditor(id, dayIdx) {
+// focusTime: נפתח מנגיעה בשעה - בחירת השעה נפתחת מיד
+function openWorkoutEditor(id, dayIdx, focusTime) {
     const row = id ? workoutPlan.find(w => w.id === id) : null;
     workoutDraft = row ? {
         id: row.id, kind: row.kind, custom_name: row.custom_name || '', days: new Set(wkDays(row)), time: row.time || null,
@@ -1245,6 +1253,7 @@ function openWorkoutEditor(id, dayIdx) {
     // שם מותאם שהוא אחד מסוגי הספורט השמורים - הבועה שלו נבחרת
     renderWorkoutEditor();
     openModal('modal-workout-plan');
+    if (focusTime) setTimeout(() => { const b = document.getElementById('wk-time-btn'); if (b && b.getAttribute('aria-expanded') !== 'true') { b.scrollIntoView({ block: 'center' }); b.click(); } }, 160);
 }
 function wkCustomPlace(p) { return !!p && !WORKOUT_PLACES.includes(p); }
 function renderWorkoutEditor() {
