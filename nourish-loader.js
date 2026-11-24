@@ -5,7 +5,7 @@
 // Also here (not in new-me.js) because the whole app uses it: the styled time picker (nmTimeBtnHtml & co.).
 // ⚠️ When one of these files changes, bump its ?v= HERE (they are no longer in index.html).
 const NOURISH_SCRIPTS = [
-    'new-me-data.js?v=25',
+    'new-me-data.js?v=26',
     'new-me.js?v=90',
     'new-me-challenges.js?v=15',
     'secret-room.js?v=39',
