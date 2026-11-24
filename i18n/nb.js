@@ -348,7 +348,7 @@ translations.nb = {
     nm_m1_ready_text: "Først noen små spørsmål – så velger vi måltidene sammen.",
     nm_m1_skip: "Hopp over",
     nm_m1_tip_ai: "En matrett som ikke står på listen? Senere kan du skrive den med egne ord under «Bytt» – og AI regner den ut. Og nå velger vi sammen hva du skal spise hver dag.",
-    nm_m1_tip_love: "Og hvis du ikke elsker noe, kan du alltid bytte det ut med AI. Det spiller ingen rolle hvilken mat – elsker du den, blir den på menyen.",
+    nm_m1_tip_love: "Og hvis du til slutt ikke likte det, kan du alltid bytte det ut med AI. Det spiller ingen rolle hvilken mat – elsker du den, blir den på menyen.",
     nm_m1_tip_rice: "Ris elsker jeg mest – det blir basen min, så jeg velger det. Jeg anbefaler å gå for det som er kjent og godt.",
     faq_a_shop_basics: "Når Handlelisten er helt tom – for eksempel helt i starten – vises en grunnliste å starte med: melk, brød, egg og mer. Et trykk på en vare legger den til på listen, og «Legg til alle» legger til alt på én gang. Så snart noe står på listen, forsvinner grunnlisten.",
     faq_q_shop_basics: "Hva er grunnlisten i en tom Handleliste?",

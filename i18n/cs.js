@@ -348,7 +348,7 @@ translations.cs = {
     nm_m1_ready_text: "Nejdřív pár malých otázek – a pak spolu vybereme jídla.",
     nm_m1_skip: "Přeskočit",
     nm_m1_tip_ai: "Jídlo, které na seznamu není? Později ho v sekci „Vyměnit“ můžete napsat vlastními slovy – a AI ho spočítá. A teď spolu vybereme, co jíst každý den.",
-    nm_m1_tip_love: "A když vám něco nechutná – vždycky to můžete vyměnit pomocí AI. Nezáleží na tom, jaké jídlo – když vám chutná, zůstává v menu.",
+    nm_m1_tip_love: "A když vám to nakonec nechutná – vždycky to můžete vyměnit pomocí AI. Nezáleží na tom, jaké jídlo – když vám chutná, zůstává v menu.",
     nm_m1_tip_rice: "Nejvíc mám rád rýži – bude mým základem, takže si ji vyberu. Doporučuji sáhnout po tom, co znáte a co vám chutná.",
     faq_a_shop_basics: "Když je Nákupní Seznam úplně prázdný – třeba úplně na začátku – objeví se základní seznam na začátek: mléko, chléb, vejce a další. Klepnutí na položku ji přidá do seznamu a „Přidat všechny“ přidá všechno najednou. Jakmile je v seznamu cokoli, základní seznam zmizí.",
     faq_q_shop_basics: "Co je základní seznam v prázdném Nákupním Seznamu?",

@@ -348,7 +348,7 @@ translations.ca = {
     nm_m1_ready_text: "Primer unes quantes preguntes petites – després triem els àpats tu i jo.",
     nm_m1_skip: "Omet",
     nm_m1_tip_ai: "Un menjar que no és a la llista? Més endavant, a «Canvia», el pots escriure amb les teves paraules – i la IA el calcularà. I ara, triem tu i jo què menjar cada dia.",
-    nm_m1_tip_love: "I si alguna cosa no t'encanta – sempre la pots canviar amb la IA. Tant és quin menjar – si t'encanta, es queda al menú.",
+    nm_m1_tip_love: "I si al final no t'ha agradat – sempre ho pots canviar amb la IA. Tant és quin menjar – si t'encanta, es queda al menú.",
     nm_m1_tip_rice: "El que més m'agrada és l'arròs – serà la meva base, així que el triaré. Recomano anar pel que és conegut i bo.",
     faq_a_shop_basics: "Quan la Llista de Compres està del tot buida (per exemple, just al principi), apareix una llista bàsica per començar: llet, pa, ous i més. Un toc en un producte l'afegeix a la llista, i «Afegeix-los tots» ho afegeix tot de cop. Tan bon punt hi ha alguna cosa a la llista, la llista bàsica desapareix.",
     faq_q_shop_basics: "Què és la llista bàsica en una Llista de Compres buida?",

@@ -348,7 +348,7 @@ translations.de = {
     nm_m1_ready_text: "Zuerst ein paar kleine Fragen – dann wählen wir zusammen die Mahlzeiten aus.",
     nm_m1_skip: "Überspringen",
     nm_m1_tip_ai: "Ein Essen, das nicht auf der Liste steht? Später kannst du es unter „Tauschen“ in eigenen Worten aufschreiben – und die KI rechnet es aus. Und jetzt wählen wir zusammen aus, was du jeden Tag isst.",
-    nm_m1_tip_love: "Und wenn du etwas nicht magst – du kannst es jederzeit mit der KI tauschen. Egal, welches Essen – wenn du es liebst, bleibt es im Menü.",
+    nm_m1_tip_love: "Und wenn es dir am Ende doch nicht schmeckt – du kannst es jederzeit mit der KI tauschen. Egal, welches Essen – wenn du es liebst, bleibt es im Menü.",
     nm_m1_tip_rice: "Reis mag ich am allerliebsten – er wird meine Basis, also wähle ich ihn. Ich empfehle, bei dem zu bleiben, was vertraut ist und schmeckt.",
     faq_a_shop_basics: "Wenn die Einkaufsliste ganz leer ist – zum Beispiel ganz am Anfang –, erscheint eine Basisliste für den Anfang: Milch, Brot, Eier und mehr. Ein Tippen auf einen Artikel fügt ihn der Liste hinzu, und „Alle hinzufügen“ fügt alles auf einmal hinzu. Sobald etwas auf der Liste steht, verschwindet die Basisliste.",
     faq_q_shop_basics: "Was ist die Basisliste in einer leeren Einkaufsliste?",

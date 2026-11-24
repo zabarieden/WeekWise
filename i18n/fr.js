@@ -348,7 +348,7 @@ translations.fr = {
     nm_m1_ready_text: "D'abord quelques petites questions – puis nous choisirons les repas ensemble.",
     nm_m1_skip: "Passer",
     nm_m1_tip_ai: "Un aliment qui n'est pas dans la liste ? Plus tard, dans « Changer », vous pourrez l'écrire avec vos propres mots – et l'IA fera le calcul. Et maintenant, choisissons ensemble ce qu'on mange chaque jour.",
-    nm_m1_tip_love: "Et si quelque chose ne vous plaît pas – vous pouvez toujours le changer avec l'IA. Peu importe le plat – si vous l'aimez, il reste au menu.",
+    nm_m1_tip_love: "Et si finalement un plat ne vous a pas plu – vous pouvez toujours le changer avec l'IA. Peu importe le plat – si vous l'aimez, il reste au menu.",
     nm_m1_tip_rice: "Ce que je préfère, c'est le riz – ce sera ma base, alors je vais le choisir. Je vous conseille de miser sur ce que vous connaissez et trouvez bon.",
     faq_a_shop_basics: "Quand la Liste de Courses est complètement vide – par exemple tout au début – une liste de base pour commencer apparaît : lait, pain, œufs et plus encore. Un toucher sur un article l'ajoute à la liste, et « Tout ajouter » ajoute tout d'un coup. Dès qu'il y a quelque chose sur la liste, la liste de base disparaît.",
     faq_q_shop_basics: "Qu'est-ce que la liste de base dans une Liste de Courses vide ?",

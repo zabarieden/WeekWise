@@ -350,7 +350,7 @@ translations.en = {
     nm_m1_ready_text: "First a few small questions – then we'll choose the meals together.",
     nm_m1_skip: "Skip",
     nm_m1_tip_ai: "A food that isn't on the list? Later, in \"Swap\", you can write it in your own words – and AI will work it out. And now, let's choose together what to eat each day.",
-    nm_m1_tip_love: "And if you don't love something – you can always swap it with AI. No matter which food – if you love it, it stays on the menu.",
+    nm_m1_tip_love: "And if in the end you didn't love it – you can always swap it with AI. No matter which food – if you love it, it stays on the menu.",
     nm_m1_tip_rice: "I love rice the most – it'll be my base, so I'll pick it. I recommend going with what's familiar and tasty.",
     shop_basics_all: "Add them all",
     shop_basics_items: "milk|bread|eggs|tomatoes|cucumbers|cheese|rice|pasta|olive oil|apples|bananas|toilet paper",

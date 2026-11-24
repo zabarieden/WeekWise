@@ -348,7 +348,7 @@ translations.es = {
     nm_m1_ready_text: "Primero, unas preguntitas; después, tú y yo elegimos las comidas.",
     nm_m1_skip: "Saltar",
     nm_m1_tip_ai: "¿Una comida que no está en la lista? Luego, en «Cambiar», puedes escribirla con tus palabras, y la IA la calcula. Y ahora, tú y yo elegimos qué comer cada día.",
-    nm_m1_tip_love: "Y si algo no te encanta, siempre puedes cambiarlo con la IA. Da igual qué comida sea: si te encanta, se queda en el menú.",
+    nm_m1_tip_love: "Y si al final no te encantó, siempre puedes cambiarlo con la IA. Da igual qué comida sea: si te encanta, se queda en el menú.",
     nm_m1_tip_rice: "El arroz es lo que más me gusta: será mi base, así que voy a elegirlo. Te recomiendo ir a lo conocido y sabroso.",
     faq_a_shop_basics: "Cuando la Lista de Compras está completamente vacía (por ejemplo, al principio de todo), aparece una lista básica para empezar: leche, pan, huevos y más. Un toque en un producto lo añade a la lista, y «Añadir todos» lo añade todo de una vez. En cuanto hay algo en la lista, desaparece.",
     faq_q_shop_basics: "¿Qué es la lista básica en una Lista de Compras vacía?",

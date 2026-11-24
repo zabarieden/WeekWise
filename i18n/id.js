@@ -348,7 +348,7 @@ translations.id = {
     nm_m1_ready_text: "Pertama, beberapa pertanyaan kecil – lalu kita pilih makanannya bersama.",
     nm_m1_skip: "Lewati",
     nm_m1_tip_ai: "Makanan yang tidak ada di daftar? Nanti, di \"Ganti\", kamu bisa menuliskannya dengan kata-katamu sendiri – dan AI akan menghitungnya. Sekarang, ayo kita pilih bersama mau makan apa setiap hari.",
-    nm_m1_tip_love: "Dan kalau ada yang tidak kamu suka – kamu selalu bisa menggantinya dengan AI. Makanan apa pun tak masalah – kalau kamu suka, ia tetap ada di menu.",
+    nm_m1_tip_love: "Dan kalau akhirnya kamu tidak suka – kamu selalu bisa menggantinya dengan AI. Makanan apa pun tak masalah – kalau kamu suka, ia tetap ada di menu.",
     nm_m1_tip_rice: "Aku paling suka nasi – nasi akan jadi dasarku, jadi aku memilihnya. Aku sarankan pilih yang sudah dikenal dan enak.",
     faq_a_shop_basics: "Saat Daftar Belanja benar-benar kosong – misalnya di awal sekali – muncul daftar dasar untuk memulai: susu, roti, telur, dan lainnya. Ketukan pada sebuah barang menambahkannya ke daftar, dan “Tambahkan semua” menambahkan semuanya sekaligus. Begitu ada sesuatu di daftar, daftar dasar ini menghilang.",
     faq_q_shop_basics: "Apa itu daftar dasar di Daftar Belanja yang kosong?",

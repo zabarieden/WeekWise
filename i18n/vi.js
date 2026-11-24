@@ -348,7 +348,7 @@ translations.vi = {
     nm_m1_ready_text: "Trước tiên là vài câu hỏi nhỏ – rồi chúng mình cùng chọn các bữa ăn.",
     nm_m1_skip: "Bỏ qua",
     nm_m1_tip_ai: "Món ăn không có trong danh sách? Sau này, trong \"Đổi\", bạn có thể tự viết bằng lời của mình – và AI sẽ tính giúp. Còn bây giờ, mình cùng chọn xem mỗi ngày ăn gì nhé.",
-    nm_m1_tip_love: "Và nếu có món bạn không thích – lúc nào bạn cũng có thể đổi bằng AI. Món gì cũng được – nếu bạn thích, món đó sẽ ở lại trong thực đơn.",
+    nm_m1_tip_love: "Và nếu cuối cùng bạn không thích – lúc nào bạn cũng có thể đổi bằng AI. Món gì cũng được – nếu bạn thích, món đó sẽ ở lại trong thực đơn.",
     nm_m1_tip_rice: "Mình thích cơm nhất – cơm sẽ là nền của mình, nên mình sẽ chọn cơm. Mình khuyên nên chọn những món quen thuộc và ngon.",
     faq_a_shop_basics: "Khi Danh Sách Mua Sắm hoàn toàn trống – ví dụ như lúc mới bắt đầu – một danh sách cơ bản để bắt đầu sẽ hiện ra: sữa, bánh mì, trứng và nhiều thứ khác. Chạm vào một món để thêm nó vào danh sách, còn “Thêm tất cả” sẽ thêm mọi thứ cùng lúc. Ngay khi danh sách có món nào đó, danh sách cơ bản sẽ biến mất.",
     faq_q_shop_basics: "Danh sách cơ bản trong Danh Sách Mua Sắm trống là gì?",

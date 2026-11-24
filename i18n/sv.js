@@ -348,7 +348,7 @@ translations.sv = {
     nm_m1_ready_text: "Först några små frågor – sedan väljer vi måltiderna tillsammans.",
     nm_m1_skip: "Hoppa över",
     nm_m1_tip_ai: "En maträtt som inte finns på listan? Senare kan du skriva den med egna ord under \"Byt\" – och AI räknar ut den. Och nu väljer vi tillsammans vad du ska äta varje dag.",
-    nm_m1_tip_love: "Och om du inte älskar något – du kan alltid byta ut det med AI. Det spelar ingen roll vilken mat – älskar du den, stannar den på menyn.",
+    nm_m1_tip_love: "Och om du till slut inte gillade det – du kan alltid byta ut det med AI. Det spelar ingen roll vilken mat – älskar du den, stannar den på menyn.",
     nm_m1_tip_rice: "Ris älskar jag mest – det blir min bas, så jag väljer det. Jag rekommenderar att gå på det som är bekant och gott.",
     faq_a_shop_basics: "När Inköpslistan är helt tom – till exempel allra först – visas en baslista att börja med: mjölk, bröd, ägg och mer. Ett tryck på en vara lägger till den på listan, och ”Lägg till alla” lägger till allt på en gång. Så fort något finns på listan försvinner baslistan.",
     faq_q_shop_basics: "Vad är baslistan i en tom Inköpslista?",

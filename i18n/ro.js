@@ -348,7 +348,7 @@ translations.ro = {
     nm_m1_ready_text: "Mai întâi câteva întrebări mici – apoi alegem împreună mesele.",
     nm_m1_skip: "Omite",
     nm_m1_tip_ai: "O mâncare care nu e pe listă? Mai târziu, la „Schimbă”, o poți scrie cu cuvintele tale – iar AI o calculează. Și acum, hai să alegem împreună ce mănânci în fiecare zi.",
-    nm_m1_tip_love: "Și dacă ceva nu-ți place – îl poți schimba oricând cu AI. Nu contează ce mâncare – dacă o iubești, rămâne în meniu.",
+    nm_m1_tip_love: "Și dacă până la urmă nu ți-a plăcut – îl poți schimba oricând cu AI. Nu contează ce mâncare – dacă o iubești, rămâne în meniu.",
     nm_m1_tip_rice: "Cel mai mult iubesc orezul – va fi baza mea, așa că îl aleg. Recomand să mergi pe ce e cunoscut și gustos.",
     faq_a_shop_basics: "Când Lista de Cumpărături e complet goală – de exemplu chiar la început – apare o listă de bază pentru început: lapte, pâine, ouă și altele. O atingere pe un produs îl adaugă pe listă, iar „Adaugă-le pe toate” adaugă totul deodată. Imediat ce e ceva pe listă, lista de bază dispare.",
     faq_q_shop_basics: "Ce este lista de bază într-o Listă de Cumpărături goală?",

@@ -348,7 +348,7 @@ translations.it = {
     nm_m1_ready_text: "Prima qualche piccola domanda – poi sceglieremo insieme i pasti.",
     nm_m1_skip: "Salta",
     nm_m1_tip_ai: "Un cibo che non è nella lista? Più tardi, in “Cambia”, puoi scriverlo con parole tue – e l'IA fa i calcoli. E ora scegliamo insieme cosa mangiare ogni giorno.",
-    nm_m1_tip_love: "E se qualcosa non ti piace – puoi sempre cambiarlo con l'IA. Non importa quale cibo – se lo ami, resta nel menu.",
+    nm_m1_tip_love: "E se alla fine non ti è piaciuto – puoi sempre cambiarlo con l'IA. Non importa quale cibo – se lo ami, resta nel menu.",
     nm_m1_tip_rice: "Il riso è quello che amo di più – sarà la mia base, quindi lo scelgo. Ti consiglio di puntare su ciò che conosci e ti piace.",
     faq_a_shop_basics: "Quando la Lista della Spesa è completamente vuota – per esempio proprio all'inizio – compare una lista base per iniziare: latte, pane, uova e altro. Un tocco su un articolo lo aggiunge alla lista, e “Aggiungi tutti” aggiunge tutto in una volta. Appena c'è qualcosa in lista, la lista base scompare.",
     faq_q_shop_basics: "Cos'è la lista base in una Lista della Spesa vuota?",

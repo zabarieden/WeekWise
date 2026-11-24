@@ -348,7 +348,7 @@ translations.yo = {
     nm_m1_ready_text: "Àkọ́kọ́, ìbéèrè kéékèèké díẹ̀ – lẹ́yìn náà a ó jọ yan àwọn oúnjẹ.",
     nm_m1_skip: "Fo Ré",
     nm_m1_tip_ai: "Oúnjẹ tí kò sí nínú àtòjọ? Lẹ́yìn náà, nínú \"Pààrọ̀\", o lè kọ ọ́ ní ọ̀rọ̀ ara rẹ – AI yóò sì ṣírò rẹ̀. Àti nísinsìnyí, jẹ́ ká jọ yan ohun tí o máa jẹ lójoojúmọ́.",
-    nm_m1_tip_love: "Tí o kò bá fẹ́ràn nǹkan kan – o lè pààrọ̀ rẹ̀ pẹ̀lú AI nígbàkígbà. Oúnjẹ yòówù kó jẹ́ – tí o bá fẹ́ràn rẹ̀, ó máa wà nínú àkójọ oúnjẹ.",
+    nm_m1_tip_love: "Tí o kò bá fẹ́ràn rẹ̀ níkẹyìn – o lè pààrọ̀ rẹ̀ pẹ̀lú AI nígbàkígbà. Oúnjẹ yòówù kó jẹ́ – tí o bá fẹ́ràn rẹ̀, ó máa wà nínú àkójọ oúnjẹ.",
     nm_m1_tip_rice: "Ìrẹsì ni mo fẹ́ràn jùlọ – òun ni yóò jẹ́ ìpìlẹ̀ mi, nítorí náà màá yàn án. Mo dámọ̀ràn pé kí o yan ohun tí o mọ̀ tí ó sì dùn.",
     faq_a_shop_basics: "Nígbà tí Àtòjọ Ọjà bá ṣófo pátápátá – fún àpẹẹrẹ ní ìbẹ̀rẹ̀ gan-an – àtòjọ ìpìlẹ̀ láti bẹ̀rẹ̀ máa hàn: wàrà, búrẹ́dì, ẹyin àti àwọn mìíràn. Títẹ ohun kan máa fi kún àtòjọ, “Fi gbogbo wọn kún” sì máa fi gbogbo rẹ̀ kún un lẹ́ẹ̀kan náà. Ní kété tí nǹkan kan bá wà nínú àtòjọ, àtòjọ ìpìlẹ̀ náà máa pòórá.",
     faq_q_shop_basics: "Kí ni àtòjọ ìpìlẹ̀ nínú Àtòjọ Ọjà tó ṣófo?",

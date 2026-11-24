@@ -348,7 +348,7 @@ translations.hu = {
     nm_m1_ready_text: "Előbb néhány apró kérdés – aztán együtt választjuk ki az étkezéseket.",
     nm_m1_skip: "Kihagyás",
     nm_m1_tip_ai: "Olyan étel, ami nincs a listán? Később a „Csere” részben saját szavaiddal leírhatod – és az AI kiszámolja. Most pedig válasszuk ki együtt, mit eszel minden nap.",
-    nm_m1_tip_love: "És ha valamit nem szeretsz – az AI segítségével mindig kicserélheted. Mindegy, milyen étel – ha szereted, a menüben marad.",
+    nm_m1_tip_love: "És ha végül mégsem ízlett – az AI segítségével mindig kicserélheted. Mindegy, milyen étel – ha szereted, a menüben marad.",
     nm_m1_tip_rice: "A rizst szeretem a legjobban – ez lesz az alapom, ezért ezt választom. Azt ajánlom, hogy maradj annál, ami ismerős és finom.",
     faq_a_shop_basics: "Amikor a Bevásárlólista teljesen üres – például a legelején –, megjelenik egy alaplista kezdésnek: tej, kenyér, tojás és még sok más. Egy koppintás egy tételre hozzáadja a listához, az „Összes hozzáadása” pedig mindent egyszerre hozzáad. Amint van valami a listán, az alaplista eltűnik.",
     faq_q_shop_basics: "Mi az alaplista egy üres Bevásárlólistán?",

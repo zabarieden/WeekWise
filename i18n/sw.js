@@ -348,7 +348,7 @@ translations.sw = {
     nm_m1_ready_text: "Kwanza maswali machache madogo – kisha tutachagua milo pamoja.",
     nm_m1_skip: "Ruka",
     nm_m1_tip_ai: "Chakula ambacho hakipo kwenye orodha? Baadaye, kwenye \"Badilisha\", unaweza kukiandika kwa maneno yako mwenyewe – na AI itakihesabu. Na sasa, tuchague pamoja utakachokula kila siku.",
-    nm_m1_tip_love: "Na kama hupendi kitu – unaweza kukibadilisha kwa AI wakati wowote. Haijalishi ni chakula gani – ukikipenda, kinabaki kwenye menyu.",
+    nm_m1_tip_love: "Na ikiwa mwishowe hukukipenda – unaweza kukibadilisha kwa AI wakati wowote. Haijalishi ni chakula gani – ukikipenda, kinabaki kwenye menyu.",
     nm_m1_tip_rice: "Ninaupenda wali kuliko vyote – utakuwa msingi wangu, kwa hivyo nitauchagua. Ninapendekeza uchague kinachojulikana na kitamu.",
     faq_a_shop_basics: "Orodha ya Ununuzi ikiwa tupu kabisa – kwa mfano mwanzoni kabisa – orodha ya msingi ya kuanzia inaonekana: maziwa, mkate, mayai na zaidi. Kugusa kitu kunakiongeza kwenye orodha, na “Ongeza vyote” huongeza kila kitu mara moja. Mara tu kitu kinapokuwa kwenye orodha, orodha ya msingi inatoweka.",
     faq_q_shop_basics: "Orodha ya msingi kwenye Orodha ya Ununuzi tupu ni nini?",

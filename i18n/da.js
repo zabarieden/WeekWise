@@ -348,7 +348,7 @@ translations.da = {
     nm_m1_ready_text: "Først et par små spørgsmål – så vælger vi måltiderne sammen.",
     nm_m1_skip: "Spring over",
     nm_m1_tip_ai: "En madret, der ikke er på listen? Senere kan du skrive den med dine egne ord under »Byt« – og AI regner den ud. Og nu vælger vi sammen, hvad du skal spise hver dag.",
-    nm_m1_tip_love: "Og hvis du ikke elsker noget – du kan altid bytte det ud med AI. Det er lige meget hvilken mad – elsker du den, bliver den på menuen.",
+    nm_m1_tip_love: "Og hvis du i sidste ende ikke kunne lide det – du kan altid bytte det ud med AI. Det er lige meget hvilken mad – elsker du den, bliver den på menuen.",
     nm_m1_tip_rice: "Ris elsker jeg mest – det bliver min base, så jeg vælger det. Jeg anbefaler at gå efter det, der er kendt og lækkert.",
     faq_a_shop_basics: "Når Indkøbslisten er helt tom – for eksempel helt i starten – vises en basisliste at starte med: mælk, brød, æg og mere. Et tryk på en vare føjer den til listen, og »Tilføj alle« tilføjer det hele på én gang. Så snart der står noget på listen, forsvinder basislisten.",
     faq_q_shop_basics: "Hvad er basislisten i en tom Indkøbsliste?",

@@ -348,7 +348,7 @@ translations.pl = {
     nm_m1_ready_text: "Najpierw kilka małych pytań – potem razem wybierzemy posiłki.",
     nm_m1_skip: "Pomiń",
     nm_m1_tip_ai: "Danie, którego nie ma na liście? Później, w „Zamień”, możesz opisać je własnymi słowami – a AI je przeliczy. A teraz wybierzmy razem, co jeść każdego dnia.",
-    nm_m1_tip_love: "A jeśli czegoś nie lubisz – zawsze możesz to zamienić z pomocą AI. Nieważne, jakie jedzenie – jeśli je kochasz, zostaje w menu.",
+    nm_m1_tip_love: "A jeśli w końcu ci nie zasmakuje – zawsze możesz to zamienić z pomocą AI. Nieważne, jakie jedzenie – jeśli je kochasz, zostaje w menu.",
     nm_m1_tip_rice: "Najbardziej lubię ryż – będzie moją bazą, więc go wybiorę. Polecam stawiać na to, co znane i smaczne.",
     faq_a_shop_basics: "Gdy Lista Zakupów jest zupełnie pusta – na przykład na samym początku – pojawia się podstawowa lista na początek: mleko, chleb, jajka i więcej. Dotknięcie produktu dodaje go do listy, a „Dodaj wszystkie” dodaje wszystko naraz. Gdy tylko coś jest na liście, podstawowa lista znika.",
     faq_q_shop_basics: "Co to jest podstawowa lista w pustej Liście Zakupów?",

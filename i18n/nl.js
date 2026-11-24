@@ -348,7 +348,7 @@ translations.nl = {
     nm_m1_ready_text: "Eerst een paar kleine vragen – daarna kiezen we samen de maaltijden.",
     nm_m1_skip: "Overslaan",
     nm_m1_tip_ai: "Eten dat niet op de lijst staat? Later kun je het bij \"Wisselen\" in je eigen woorden opschrijven – en AI rekent het uit. En nu kiezen we samen wat je elke dag eet.",
-    nm_m1_tip_love: "En als je ergens niet van houdt – je kunt het altijd met AI wisselen. Het maakt niet uit welk eten – als je ervan houdt, blijft het op het menu.",
+    nm_m1_tip_love: "En als je het uiteindelijk niet lekker vond – je kunt het altijd met AI wisselen. Het maakt niet uit welk eten – als je ervan houdt, blijft het op het menu.",
     nm_m1_tip_rice: "Ik hou het meest van rijst – dat wordt mijn basis, dus die kies ik. Ik raad aan om te gaan voor wat vertrouwd en lekker is.",
     faq_a_shop_basics: "Als de Boodschappenlijst helemaal leeg is – bijvoorbeeld helemaal aan het begin – verschijnt er een basislijst om mee te beginnen: melk, brood, eieren en meer. Een tik op een product zet het op de lijst, en ‘Alles toevoegen’ voegt alles in één keer toe. Zodra er iets op de lijst staat, verdwijnt de basislijst.",
     faq_q_shop_basics: "Wat is de basislijst in een lege Boodschappenlijst?",

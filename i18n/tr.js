@@ -348,7 +348,7 @@ translations.tr = {
     nm_m1_ready_text: "Önce birkaç küçük soru – sonra öğünleri birlikte seçeceğiz.",
     nm_m1_skip: "Atla",
     nm_m1_tip_ai: "Listede olmayan bir yiyecek mi? Sonra \"Değiştir\" bölümünde kendi sözlerinle yazabilirsin – AI hesaplar. Şimdi de her gün ne yiyeceğini birlikte seçelim.",
-    nm_m1_tip_love: "Ve bir şeyi sevmezsen – onu her zaman AI ile değiştirebilirsin. Hangi yemek olduğu fark etmez – seviyorsan menüde kalır.",
+    nm_m1_tip_love: "Ve sonunda sevmediysen – onu her zaman AI ile değiştirebilirsin. Hangi yemek olduğu fark etmez – seviyorsan menüde kalır.",
     nm_m1_tip_rice: "En çok pilavı seviyorum – benim temelim o olacak, bu yüzden onu seçeceğim. Tanıdık ve lezzetli olanı seçmeni öneririm.",
     faq_a_shop_basics: "Alışveriş Listesi tamamen boşken – örneğin en başta – başlamak için temel bir liste görünür: süt, ekmek, yumurta ve daha fazlası. Bir ürüne dokunmak onu listeye ekler, “Hepsini ekle” ise hepsini bir kerede ekler. Listede bir şey olur olmaz bu liste kaybolur.",
     faq_q_shop_basics: "Boş bir Alışveriş Listesi'ndeki temel liste nedir?",

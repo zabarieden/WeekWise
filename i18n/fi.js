@@ -348,7 +348,7 @@ translations.fi = {
     nm_m1_ready_text: "Ensin muutama pieni kysymys – sitten valitsemme ateriat yhdessä.",
     nm_m1_skip: "Ohita",
     nm_m1_tip_ai: "Ruoka, jota ei ole listalla? Myöhemmin voit kirjoittaa sen omin sanoin kohdassa \"Vaihda\" – ja AI laskee sen. Ja nyt valitaan yhdessä, mitä syöt joka päivä.",
-    nm_m1_tip_love: "Ja jos et rakasta jotakin – voit aina vaihtaa sen AI:n avulla. Ei ole väliä, mikä ruoka – jos rakastat sitä, se pysyy ruokalistalla.",
+    nm_m1_tip_love: "Ja jos et lopulta pitänyt siitä – voit aina vaihtaa sen AI:n avulla. Ei ole väliä, mikä ruoka – jos rakastat sitä, se pysyy ruokalistalla.",
     nm_m1_tip_rice: "Rakastan riisiä eniten – siitä tulee pohjani, joten valitsen sen. Suosittelen valitsemaan tuttua ja hyvää.",
     faq_a_shop_basics: "Kun Ostoslista on aivan tyhjä – esimerkiksi ihan alussa – näkyviin tulee peruslista alkuun: maito, leipä, kananmunat ja muuta. Napautus tuotteeseen lisää sen listalle, ja ”Lisää kaikki” lisää kaiken kerralla. Heti kun listalla on jotain, peruslista katoaa.",
     faq_q_shop_basics: "Mikä on peruslista tyhjässä Ostoslistassa?",
