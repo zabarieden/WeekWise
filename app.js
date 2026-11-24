@@ -5271,11 +5271,64 @@ async function applyOneTimeScheduleEvents(events) {
         reminder_text: aiReminderText || null,
     }));
     if (!rows.length) return [];
-    await supabaseClient.from('calendar_events').insert(rows);
+    const { data: created } = await supabaseClient.from('calendar_events').insert(rows).select('id, event_date, event_time, reminder_minutes');
+    if (created) scheduleAiCreated.calendar.push(...created);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
     return rows.map(r => r.event_date);
+}
+
+// 📅 מה שהעוזר הוסיף עכשיו (בקשתה 2026-11-24): "לראות ביומן" פותח את הלוח החודשי בדיוק על היום הזה, והעוזר שואל אם לשים
+// תזכורת. מתמלא בכל הוספה (גם אחרי שאלת הבהרה), ומתאפס בכל בקשה חדשה (parseScheduleWithAI)
+let scheduleAiCreated = { calendar: [], weekly: [] };
+function scheduleAiResultDate() {
+    const c = scheduleAiCreated;
+    const today = getLocalDateString();
+    const dates = c.calendar.map(r => r.event_date).filter(Boolean).sort();
+    if (dates.length) return dates.find(d => d >= today) || dates[0];
+    if (c.weekly.length) return nextDateForDayOfWeek(c.weekly[0].day_of_week);
+    return null;
+}
+async function openCalendarAtDate(dateStr) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) dateStr = getLocalDateString();
+    switchToTab('schedule-section');
+    const monthlyCard = document.querySelector('#schedule-section .card');
+    if (monthlyCard && !monthlyCard.classList.contains('expanded')) {
+        const header = monthlyCard.querySelector('.collapsible-header');
+        if (header) toggleCardSection(header);
+    }
+    viewedCalendarMonthKey = dateStr.slice(0, 7);
+    await loadMonthlyCalendarGrid();
+    await selectCalendarDay(dateStr);
+    const detail = document.getElementById('monthly-calendar-day-detail');
+    if (detail) {
+        detail.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        detail.classList.add('is-flash');
+        setTimeout(() => detail.classList.remove('is-flash'), 1800);
+    }
+}
+// מה שנוסף עכשיו עם שעה ובלי תזכורת - על זה שואלים (בלי שעה אין לתזכורת ממה למדוד)
+function scheduleAiReminderCandidates() {
+    const c = scheduleAiCreated;
+    const calendarIds = c.calendar.filter(r => r.event_time && !(r.reminder_minutes > 0)).map(r => r.id);
+    const weeklyIds = c.weekly.filter(r => r.time_of_day && !(r.reminder_minutes > 0)).map(r => r.id);
+    return calendarIds.length || weeklyIds.length ? { calendarIds, weeklyIds } : null;
+}
+async function setScheduleAiReminder(cand, minutes) {
+    if (!supabaseClient || !currentUserId || !cand) return false;
+    const jobs = [];
+    if (cand.calendarIds.length) jobs.push(supabaseClient.from('calendar_events').update({ reminder_minutes: minutes }).eq('user_id', currentUserId).in('id', cand.calendarIds));
+    if (cand.weeklyIds.length) jobs.push(supabaseClient.from('weekly_schedule').update({ reminder_minutes: minutes }).eq('user_id', currentUserId).in('id', cand.weeklyIds));
+    const results = await Promise.all(jobs);
+    if (results.some(r => r && r.error)) return false;
+    scheduleAiCreated.calendar.forEach(r => { if (cand.calendarIds.includes(r.id)) r.reminder_minutes = minutes; });
+    scheduleAiCreated.weekly.forEach(r => { if (cand.weeklyIds.includes(r.id)) r.reminder_minutes = minutes; });
+    loadCalendarEvents();
+    loadMonthlyCalendarGrid();
+    loadTodayTasks();
+    if (cand.weeklyIds.length) loadWeeklySchedule();
+    return true;
 }
 
 // התאריך הקרוב ביותר (כולל היום עצמו) שחל בו יום-השבוע הנתון - נקודת
@@ -5328,7 +5381,8 @@ async function applyBoundedRecurringScheduleEvents(events) {
         });
     });
     if (!rows.length) return [];
-    await supabaseClient.from('calendar_events').insert(rows);
+    const { data: created } = await supabaseClient.from('calendar_events').insert(rows).select('id, event_date, event_time, reminder_minutes');
+    if (created) scheduleAiCreated.calendar.push(...created);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
@@ -5380,7 +5434,8 @@ async function applyParsedScheduleEvents(allEvents) {
             reminder_minutes: aiEventReminderMinutes(ev, aiReminderMinutes) || null,
             reminder_text: aiReminderText || null,
         }));
-        await supabaseClient.from('weekly_schedule').insert(rows);
+        const { data: created } = await supabaseClient.from('weekly_schedule').insert(rows).select('id, day_of_week, time_of_day, reminder_minutes');
+        if (created) scheduleAiCreated.weekly.push(...created);
     }
     await loadWeeklySchedule();
     return { recurringCount: events.length, oneTimeDates: allOneTimeDates };
@@ -5574,6 +5629,7 @@ async function parseScheduleWithAI() {
     if (submitBtn) submitBtn.disabled = true;
 
     const loadingTimer = setTimeout(showScheduleAiLoading, 5000);
+    scheduleAiCreated = { calendar: [], weekly: [] };
     try {
         const { data: sessionData } = await supabaseClient.auth.getSession();
         const token = sessionData && sessionData.session ? sessionData.session.access_token : null;
@@ -6503,6 +6559,13 @@ const ACH_LEVELS = [
     { at: 0, icon: '🕯️' }, { at: 10, icon: '🌰' }, { at: 30, icon: '🌱' }, { at: 60, icon: '👣' },
     { at: 100, icon: '🛤️' }, { at: 160, icon: '🌉' }, { at: 240, icon: '🏔️' }, { at: 350, icon: '🌟' },
 ];
+// 🏆 גביע אחד לכל ההישגים (בחירתה 2026-11-24: גביע 35 - להבה שעולה מתוך הגביע, עם נצנצים - בזהב), במקום אימוג'י שונה לכל
+// רמה ולכל תג: בהישגים, בחלון ההישג ובתמונת השיתוף, ובתווית הרמה ובשביל של "היעדים שלי". הרמות נבדלות בשם ובנקודות
+const ACH_TROPHY_SRC = 'trophy.svg?v=1';
+function achTrophyHtml(cls) { return `<img class="ach-trophy${cls ? ' ' + cls : ''}" src="${ACH_TROPHY_SRC}" alt="" aria-hidden="true" draggable="false">`; }
+function achTrophyImage() {
+    return new Promise(res => { const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = ACH_TROPHY_SRC; });
+}
 let achPoints = null;
 let achLevelCheckedAt = 0;
 function achLevelIndex(p) { let i = 0; ACH_LEVELS.forEach((l, j) => { if (p >= l.at) i = j; }); return i; }
@@ -6523,7 +6586,7 @@ function renderAchChip() {
     const chip = document.getElementById('gv-level-chip');
     if (!chip || achPoints == null) return;
     const i = achLevelIndex(achPoints);
-    chip.textContent = `${ACH_LEVELS[i].icon} ${achLevelLabel(i)}`;
+    chip.innerHTML = `${achTrophyHtml('is-chip')}<span>${glassAchEsc(achLevelLabel(i))}</span>`;
     chip.classList.remove('hidden');
 }
 // עלייה ברמה: הרמה הידועה נשמרת ב-user_badges (level_N) - בפעם הראשונה נקבעת בשקט, בלי חגיגה על מה שכבר היה
@@ -6565,7 +6628,7 @@ async function openAchievements() {
     document.querySelectorAll('.ach-overlay').forEach(x => x.remove());
     const ov = document.createElement('div');
     ov.className = 'ach-overlay';
-    ov.innerHTML = `<div class="ach-sheet" role="dialog" aria-modal="true" aria-label="${glassAchEsc(t('ach_title'))}"><div class="ach-head"><h2>🏅 ${glassAchEsc(t('ach_title'))}</h2><button type="button" class="ach-x" aria-label="${glassAchEsc(t('close_btn'))}">${ACH_X_SVG}</button></div><div class="ach-body"><div class="ach-loading" aria-hidden="true"></div></div></div>`;
+    ov.innerHTML = `<div class="ach-sheet" role="dialog" aria-modal="true" aria-label="${glassAchEsc(t('ach_title'))}"><div class="ach-head"><h2>${achTrophyHtml('is-head')} ${glassAchEsc(t('ach_title'))}</h2><button type="button" class="ach-x" aria-label="${glassAchEsc(t('close_btn'))}">${ACH_X_SVG}</button></div><div class="ach-body"><div class="ach-loading" aria-hidden="true"></div></div></div>`;
     const close = () => ov.remove();
     ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('.ach-x')) close(); });
     ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
@@ -6602,14 +6665,14 @@ async function openAchievements() {
     });
     body.innerHTML = `
         <div class="ach-level">
-            <span class="ach-level-icon" aria-hidden="true">${ACH_LEVELS[i].icon}</span>
+            <span class="ach-level-icon" aria-hidden="true">${achTrophyHtml()}</span>
             <div class="ach-level-text"><b>${glassAchEsc(achLevelLabel(i))}</b><span>${glassAchEsc(t('ach_points').replace('{n}', p))}</span></div>
         </div>
         <div class="ach-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>
         <p class="ach-next">${glassAchEsc(next ? t('ach_next').replace('{n}', next.at - p).replace('{name}', achLevelName(i + 1)) : t('ach_max'))}</p>
         <ol class="ach-ladder">${ACH_LEVELS.map((l, j) => j <= i
-            ? `<li class="is-glass${j === i ? ' is-now' : ''}" style="--d:${(-j * 0.9).toFixed(1)}s"><button type="button" class="ach-lvl" data-j="${j}">${achGlassBits(j)}<span class="ach-lvl-icon" aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small></button></li>`
-            : `<li class="is-fog"><span class="ach-lvl-icon" aria-hidden="true">${l.icon}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small><span class="ach-fog" aria-hidden="true"></span></li>`).join('')}</ol>
+            ? `<li class="is-glass${j === i ? ' is-now' : ''}" style="--d:${(-j * 0.9).toFixed(1)}s"><button type="button" class="ach-lvl" data-j="${j}">${achGlassBits(j)}<span class="ach-lvl-icon" aria-hidden="true">${achTrophyHtml()}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small></button></li>`
+            : `<li class="is-fog"><span class="ach-lvl-icon" aria-hidden="true">${achTrophyHtml()}</span><b>${glassAchEsc(achLevelName(j))}</b><small>${l.at}</small><span class="ach-fog" aria-hidden="true"></span></li>`).join('')}</ol>
         <h3 class="ach-sub">${glassAchEsc(t('ach_badges'))}</h3>
         <div class="ach-tiles">${tiles.map((b, k) => goalTiles.includes(k) ? '' : achTileHtml(b, k)).join('')}</div>
         ${goalTiles.length ? `<h3 class="ach-sub">${glassAchEsc(t('ach_goals'))}</h3><div class="ach-tiles">${goalTiles.map(k => achTileHtml(tiles[k], k, true)).join('')}</div>` : ''}`;
@@ -6632,8 +6695,8 @@ function achGlassBits(seed) {
     return `<span class="ach-glitter" aria-hidden="true">${glitter}</span><span class="ach-shine" aria-hidden="true"></span>`;
 }
 function achTileHtml(b, k, isGoal) {
-    if (!b.on) return `<button type="button" class="ach-tile is-locked" data-k="${k}" aria-disabled="true" aria-label="${glassAchEsc(b.desc ? `${b.title}: ${b.desc}` : b.title)}"><span class="ach-tile-icon" aria-hidden="true">${b.icon}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span><span class="ach-fog" aria-hidden="true"></span></button>`;
-    return `<button type="button" class="ach-tile is-glass${isGoal ? ' is-goal' : ''}" data-k="${k}" style="--d:${(-k * 0.8).toFixed(1)}s">${achGlassBits(k + 3)}<span class="ach-tile-icon" aria-hidden="true">${b.icon}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${isGoal && b.desc ? `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>` : ''}</button>`;
+    if (!b.on) return `<button type="button" class="ach-tile is-locked" data-k="${k}" aria-disabled="true" aria-label="${glassAchEsc(b.desc ? `${b.title}: ${b.desc}` : b.title)}"><span class="ach-tile-icon" aria-hidden="true">${achTrophyHtml()}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span><span class="ach-fog" aria-hidden="true"></span></button>`;
+    return `<button type="button" class="ach-tile is-glass${isGoal ? ' is-goal' : ''}" data-k="${k}" style="--d:${(-k * 0.8).toFixed(1)}s">${achGlassBits(k + 3)}<span class="ach-tile-icon" aria-hidden="true">${achTrophyHtml()}</span><span class="ach-tile-title">${glassAchEsc(b.title)}</span>${isGoal && b.desc ? `<span class="ach-tile-desc">${glassAchEsc(b.desc)}</span>` : ''}</button>`;
 }
 
 async function loadTodayTasks() {
@@ -6771,10 +6834,10 @@ function openGlassAchievement(o) {
         ${o.eyebrow ? `<div class="glass-ach-eyebrow">${glassAchEsc(o.eyebrow)}</div>` : ''}
         <div class="glass-ach-card">
             <div class="glass-ach-glitter" aria-hidden="true">${glitter}</div><span class="glass-ach-shine" aria-hidden="true"></span>
-            <div class="glass-ach-icon" aria-hidden="true">${glassAchEsc(o.icon || '')}</div>
+            <div class="glass-ach-icon" aria-hidden="true">${achTrophyHtml('is-glass')}</div>
             <h3 class="glass-ach-title">${glassAchEsc(o.title)}</h3>
             ${o.desc ? `<p class="glass-ach-desc">${glassAchEsc(o.desc)}</p>` : ''}
-            ${o.more && o.more.length ? `<ul class="glass-ach-more">${o.more.map(m => `<li><span aria-hidden="true">${glassAchEsc(m.icon)}</span>${glassAchEsc(m.title)}</li>`).join('')}</ul>` : ''}
+            ${o.more && o.more.length ? `<ul class="glass-ach-more">${o.more.map(m => `<li><span aria-hidden="true">${achTrophyHtml('is-mini')}</span>${glassAchEsc(m.title)}</li>`).join('')}</ul>` : ''}
             <span class="glass-ach-brand">NOT10.ai · ${glassAchEsc(glassAchDate())}</span>
         </div>
         <div class="glass-ach-actions">
@@ -6842,9 +6905,11 @@ async function drawGlassAchievement(o) {
     g.beginPath(); g.arc(W / 2, Y + 330, 150, 0, Math.PI * 2);
     g.fillStyle = 'rgba(255,255,255,0.16)'; g.fill();
     g.lineWidth = 3; g.strokeStyle = 'rgba(255,255,255,0.5)'; g.stroke();
-    g.font = `150px ${font}`; g.textBaseline = 'middle'; g.fillStyle = '#ffffff';
-    g.fillText(o.icon || '', W / 2, Y + 340);
-    g.textBaseline = 'alphabetic';
+    // 🏆 הגביע האחד (במקום האימוג'י) - ואם התמונה לא נטענה, האימוג'י כמו קודם
+    const trophy = await achTrophyImage();
+    if (trophy) g.drawImage(trophy, W / 2 - 140, Y + 330 - 140, 280, 280);
+    else { g.font = `150px ${font}`; g.textBaseline = 'middle'; g.fillStyle = '#ffffff'; g.fillText(o.icon || '', W / 2, Y + 340); }
+    g.textBaseline = 'alphabetic'; g.fillStyle = '#ffffff';
     const wrap = (text, size, weight, y, maxLines, alpha) => {
         g.font = `${weight} ${size}px ${font}`; g.globalAlpha = alpha;
         const words = String(text || '').split(/\s+/); let line = '', lines = [];
@@ -22533,7 +22598,7 @@ function renderVisionGoalsList() {
             card.type = 'button';
             card.className = 'gv-achieved-card' + (selected && selected.id === goal.id ? ' selected' : '');
             const date = goal.achieved_at ? new Date(goal.achieved_at).toLocaleDateString(currentLang, { day: 'numeric', month: 'short', year: 'numeric' }) : '';
-            card.innerHTML = `<span class="gv-achieved-trophy" aria-hidden="true">🏆</span><span class="gv-achieved-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><span class="gv-achieved-name">${visionEsc(goal.title)}</span>${date ? `<span class="gv-achieved-date">${visionEsc(date)}</span>` : ''}`;
+            card.innerHTML = `<span class="gv-achieved-trophy" aria-hidden="true">${achTrophyHtml()}</span><span class="gv-achieved-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><span class="gv-achieved-name">${visionEsc(goal.title)}</span>${date ? `<span class="gv-achieved-date">${visionEsc(date)}</span>` : ''}`;
             card.onclick = () => selectVisionGoal(goal.id, true);
             achievedList.appendChild(card);
         });
@@ -22792,18 +22857,18 @@ function renderGoalPanel(goal) {
     const head = document.createElement('div');
     head.className = 'gv-goal-head' + (goal.image_url ? ' has-image' : '');
     if (goal.image_url) head.style.setProperty('--gv-goal-image', `url("${String(goal.image_url).replace(/"/g, '%22')}")`);
-    let meta1;
+    let meta1Html;
     if (goal.is_achieved) {
         const date = goal.achieved_at ? new Date(goal.achieved_at).toLocaleDateString(currentLang, { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-        meta1 = `🏆 ${t('gv_achieved_on').replace('{date}', date)}`;
+        meta1Html = `${achTrophyHtml('is-inline')} ${visionEsc(t('gv_achieved_on').replace('{date}', date))}`;
     } else {
-        meta1 = t('gv_journey_day').replace('{n}', visionJourneyDay(goal));
+        meta1Html = visionEsc(t('gv_journey_day').replace('{n}', visionJourneyDay(goal)));
     }
     let meta2 = prog.label;
     if (track === 'steps') meta2 = milestones.length ? t('gv_stations_progress').replace('{done}', milestones.filter(m => m.is_done).length).replace('{total}', milestones.length) : '';
     head.innerHTML = `
         <div class="gv-goal-title-row"><span class="gv-goal-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><h3 class="gv-goal-title">${visionEsc(goal.title)}</h3></div>
-        <div class="gv-meta"><span>${visionEsc(meta1)}</span>${meta2 ? `<span>${visionEsc(meta2)}</span>` : ''}</div>
+        <div class="gv-meta"><span>${meta1Html}</span>${meta2 ? `<span>${visionEsc(meta2)}</span>` : ''}</div>
         ${visionTagsHtml(goal, prog)}`;
     panel.appendChild(head);
     // 💭 ה"למה" חוזר ברגע הקשה (כמו Way of Life, רעיון 8 שבחרה): אחרי כמה ימים בלי צעד ליעד הוא עולה לראש היעד
@@ -23151,7 +23216,7 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
             // where you are now: a warm light at the end of the fireflies (her pick f4, 2026-11-15 - instead of the goal's emoji)
             node.innerHTML = `<span class="gv-here-light" role="img" aria-label="${visionEsc(t('gv_here'))}"></span>`;
         } else {
-            node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">🏆</span>`;
+            node.innerHTML = `<span class="gv-flag${goal.is_achieved ? ' is-reached' : ''}">${achTrophyHtml('is-flag')}</span>`;
             label = model.flag;
         }
         // 🎁 הפרס מחכה בתחנה הזו

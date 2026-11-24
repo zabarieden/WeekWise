@@ -280,9 +280,32 @@ function aiChatPickTool(tool) {
     const i = aiChatEl().querySelector('.ai-chat-input input');
     if (i) i.focus();
 }
+let aiChatReminderAsked = false;
+function aiChatAskReminder(cand) {
+    if (!aiChatIsOpen()) return;
+    const pick = (label, minutes) => ({
+        label, onClick: async () => {
+            if (!minutes) { aiChatSay(t('ai_chat_rem_skip')); return; }
+            const ok = typeof setScheduleAiReminder === 'function' && await setScheduleAiReminder(cand, minutes);
+            if (!aiChatIsOpen()) return;
+            aiChatSay(ok ? `${t('ai_chat_rem_done')} · ${label}` : t('nm_save_error'), null, ok ? 'is-ok' : 'is-error');
+        },
+    });
+    aiChatSay(t('ai_chat_rem_q'), [pick(t('ai_chat_rem_10'), 10), pick(t('ai_chat_rem_30'), 30), pick(t('ai_chat_rem_60'), 60), pick(t('ai_chat_rem_none'), 0)]);
+}
 function aiChatAfterChips(tool) {
     const chips = [{ label: t('ai_chat_more'), onClick: () => { aiChatTool = null; aiChatSyncNote(); aiChatSay(t('ai_chat_hi_again'), aiChatToolChips()); } }];
-    if (tool === 'schedule') chips.push({ label: t('ai_chat_see_calendar'), onClick: () => { closeAiChat(); showTabSection('schedule-section'); } });
+    // 📅 נפתח הלוח החודשי בדיוק על היום של מה שנוסף עכשיו (בקשתה 2026-11-24), ובלי תוצאה - הלוח כרגיל
+    if (tool === 'schedule') chips.push({ label: t('ai_chat_see_calendar'), onClick: () => {
+        closeAiChat();
+        const date = typeof scheduleAiResultDate === 'function' ? scheduleAiResultDate() : null;
+        if (date && typeof openCalendarAtDate === 'function') openCalendarAtDate(date); else showTabSection('schedule-section');
+    } });
+    // ⏰ אחרי שנוסף משהו עם שעה ובלי תזכורת - שאלה אחת: לשים גם תזכורת? (בקשתה 2026-11-24)
+    if (tool === 'schedule' && !aiChatReminderAsked && typeof scheduleAiReminderCandidates === 'function') {
+        const cand = scheduleAiReminderCandidates();
+        if (cand) { aiChatReminderAsked = true; setTimeout(() => aiChatAskReminder(cand), 350); }
+    }
     if (tool === 'money_log') chips.push({ label: t('ai_money_open_budget'), onClick: () => { closeAiChat(); showTabSection('finance-section'); } });
     if (tool === 'food') {
         const entry = aiChatFoodEntry();
@@ -399,6 +422,7 @@ async function aiChatSend() {
     const typing = aiChatBubble(t('ai_chat_working_' + tool), 'bot', 'is-typing');
     aiChatBusy = true;
     aiChatAnswered = false;
+    aiChatReminderAsked = false;
     try {
         if (tool === 'food') {
             document.getElementById('food-quick-add-input').value = text;

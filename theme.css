@@ -12600,3 +12600,20 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 /* ✏️ במקום המילה "החלפה" במטרות של הפוקוס (2026-11-18) */
 .hf-goals-pick.hf-goals-edit { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--focus-neon) 14%, transparent); }
 .hf-goals-edit svg { width: 16px; height: 16px; }
+
+/* 📅 "לראות ביומן" מהעוזר: היום שנפתח מהבהב לרגע בצבע הערכה (2026-11-24) */
+#monthly-calendar-day-detail.is-flash { border-radius: 16px; animation: calDayFlash 1.8s ease; }
+@keyframes calDayFlash { 0%, 100% { box-shadow: none; } 25%, 60% { box-shadow: 0 0 0 2px var(--accent-purple), 0 0 26px color-mix(in srgb, var(--accent-purple) 40%, transparent); } }
+@media (prefers-reduced-motion: reduce) { #monthly-calendar-day-detail.is-flash { animation: none; } }
+
+/* 🏆 גביע אחד לכל ההישגים (בחירתה 2026-11-24: 35 בזהב, trophy.svg) - הגודל לפי font-size של המקום, כמו האימוג'י שהיה */
+.ach-trophy { display: inline-block; width: 1.45em; height: 1.45em; object-fit: contain; vertical-align: -0.35em; pointer-events: none; -webkit-user-drag: none; }
+.ach-trophy.is-chip { width: 1.5em; height: 1.5em; margin-inline-end: 4px; }
+.gv-level-chip { display: inline-flex; align-items: center; gap: 2px; }
+.ach-trophy.is-head { width: 1.5em; height: 1.5em; }
+.ach-trophy.is-glass { width: 1.75em; height: 1.75em; }
+.ach-trophy.is-mini { width: 1.3em; height: 1.3em; vertical-align: middle; }
+.ach-trophy.is-flag { width: 1.6em; height: 1.6em; }
+.ach-trophy.is-inline { width: 1.4em; height: 1.4em; vertical-align: -0.4em; margin-inline-end: 2px; }
+.gv-achieved-title { display: flex; align-items: center; gap: 6px; }
+.gv-achieved-trophy .ach-trophy { width: 1.5em; height: 1.5em; }
