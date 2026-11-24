@@ -3596,6 +3596,16 @@ summary.nm-weight-head .nm-fine { margin-inline-start: auto; }
 .nm-struct-pick { min-height: 48px; padding: 10px 14px; border-radius: 16px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 800; line-height: 1.3; text-align: start; cursor: pointer; }
 .nm-struct-pick.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, var(--bg-row)); }
 .nm-struct-pick:focus-visible, .nm-quiz .nm-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+/* כמה ארוחות ביום 2-5, בלי שעות, ארוחה משלי (2026-11-24) */
+.nm-count-picks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 8px 0 4px; }
+.nm-count-pick { min-height: 52px; border-radius: 16px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 1.25rem; font-weight: 900; cursor: pointer; }
+.nm-count-pick.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, var(--bg-row)); }
+.nm-count-pick:focus-visible, .nm-own-meal-btn:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.nm-notimes-row { margin-bottom: 10px; }
+.nm-notimes-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.nm-notimes-text { margin: 0; font-weight: 700; color: var(--text-primary); overflow-wrap: anywhere; }
+.nm-own-meal-btn { display: block; width: 100%; box-sizing: border-box; margin-top: 8px; min-height: 46px; padding: 10px 14px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent-pink) 55%, var(--border-color)); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 800; text-align: start; cursor: pointer; overflow-wrap: anywhere; }
+.nm-own-fit { margin: 4px 0 6px; font-size: .86rem; font-weight: 700; color: var(--accent-pink); overflow-wrap: anywhere; }
 .nm-quiz .nm-chip.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 16%, var(--bg-row)); font-weight: 700; }
 .nm-quiz .nm-slot-name + .nm-chip-row { margin-top: 8px; }
 .nm-late-q { margin-top: 16px; }
