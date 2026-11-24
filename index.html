@@ -53,7 +53,7 @@
                 // ✦ נצנצים נופלים במקום מסך ריק/לוגו עד שהאפליקציה מוכנה (2026-11-17) - רק כשיש כניסה שמורה במכשיר.
                 // endBootSparkle ב-app.js מסיר אותם; 12 שניות לכל היותר בכל מקרה
                 if (Object.keys(localStorage).some(function (k) { return /^sb-.+-auth-token$/.test(k) && !!localStorage.getItem(k); })) {
-                    document.documentElement.classList.add('booting');
+                    document.documentElement.classList.add('booting'); window.__bootAt = Date.now();
                     setTimeout(function () { document.documentElement.classList.remove('booting'); }, 12000);
                 }
             } catch (e) { /* localStorage חסום/לא זמין - נשאר על ברירת המחדל */ }
@@ -77,8 +77,8 @@
 
     <!-- PWA: הפיכת האתר לאפליקציה שניתן להתקין ממסך הבית -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=9">
-    <link rel="icon" type="image/png" href="favicon.png?v=9">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png?v=10">
+    <link rel="icon" type="image/png" href="favicon.png?v=10">
     <meta name="theme-color" content="#07060a">
     <!-- iOS מתעלם מה-manifest לצורך מצב מסך מלא, וצריך את התגיות הבאות בנפרד -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -123,17 +123,17 @@
         .boot-sparkle i:nth-child(3n+1) { --c: #e9b54d; }
         .boot-sparkle i::before { content: ""; position: absolute; inset: 0; background: var(--c); clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); filter: drop-shadow(0 0 2px rgba(150, 95, 30, .45)); animation: bootTwinkle 1.3s ease-in-out var(--d) infinite alternate; }
         .boot-sparkle i::after { content: ""; position: absolute; inset: -70%; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent), transparent 62%); }
-        .boot-book { position: absolute; left: 50%; top: 46%; z-index: 1; width: min(80vw, 56vh, 460px); transform: translate(-50%, -50%); }
+        .boot-book { position: absolute; left: 50%; top: 50%; z-index: 1; width: min(80vw, 56vh, 460px); transform: translate(-50%, -50%); }
         .boot-book::before { content: ""; position: absolute; inset: -18%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 246, 225, .95), rgba(255, 236, 200, .4) 45%, transparent 70%); animation: bootGlow 3.2s ease-in-out infinite alternate; }
-        .boot-book img { position: relative; display: block; width: 100%; height: auto; filter: drop-shadow(0 22px 26px rgba(92, 52, 20, .35)); animation: bootBookIn .8s cubic-bezier(.2, .9, .25, 1.1) both, bootFloat 3.6s ease-in-out .8s infinite; }
+        .boot-book img { position: relative; display: block; width: 100%; height: auto; filter: drop-shadow(0 22px 26px rgba(92, 52, 20, .35)); animation: bootFloat 3.6s ease-in-out infinite; }
         @keyframes bootFall { from { transform: translate3d(0, 0, 0) rotate(0deg); } to { transform: translate3d(var(--dx), 108vh, 0) rotate(260deg); } }
         @keyframes bootTwinkle { from { opacity: 1; transform: scale(1); } to { opacity: .45; transform: scale(.7); } }
-        @keyframes bootBookIn { from { opacity: 0; transform: translateY(18px) scale(.9); } }
         @keyframes bootFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
         @keyframes bootGlow { from { opacity: .7; transform: scale(.94); } to { opacity: 1; transform: scale(1.04); } }
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img { animation: none; } .boot-sparkle i { top: var(--y); } }
     </style>
-    <link rel="stylesheet" href="theme.css?v=647">
+    <link rel="preload" as="image" href="splash-book.webp?v=2" type="image/webp">
+    <link rel="stylesheet" href="theme.css?v=648">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -4587,7 +4587,7 @@
     <script src="i18n/core.js?v=568"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=8"></script>
-    <script src="app.js?v=678"></script>
+    <script src="app.js?v=679"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="change.js?v=2"></script>

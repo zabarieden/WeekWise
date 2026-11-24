@@ -42,14 +42,15 @@ function getDayName(dayIndex) { return t(dayNameKeys[dayIndex]); }
 // עוד יש כניסה שמורה במכשיר מנסים שוב (עם הפסקות קצרות, ושוב כשהרשת חוזרת), ובינתיים במקום הטופס - "מתחברים...".
 // מסך הכניסה מופיע רק כשבאמת אין כניסה (יציאה, או כניסה ש-Supabase ביטל)
 // ✦ מסך הכניסה: נצנצים נופלים במקום הלוגו (לפי בקשה מפורשת, 2026-11-17), רק למי שכבר מחובר/ת - נעלם ברגע שהאפליקציה מוכנה
-// מ-2026-11-24 יש במרכז את הספר N10 הגדול: נשאר לפחות 1.3 שניות מתחילת הטעינה, שלא "יהבהב" כשהאפליקציה נטענת מהר
+// מ-2026-11-24 יש במרכז את הספר N10 הגדול: הנצנצים והספר נשארים יחד לפחות 1.8 שניות מהרגע שהופיעו (__bootAt בראש index.html),
+// שהספר לא יהיה "רק לפני בהתחלה" (בקשתה) גם כשהאפליקציה נטענת מהר
 function endBootSparkle() {
     const root = document.documentElement;
     const el = document.getElementById('boot-sparkle');
     if (!root.classList.contains('booting') || !el) { root.classList.remove('booting'); if (el) el.remove(); return; }
     if (el.classList.contains('is-out') || el.dataset.ending) return;
     el.dataset.ending = '1';
-    const wait = Math.max(0, 1300 - (window.performance ? performance.now() : 0));
+    const wait = Math.max(0, 1800 - (Date.now() - (window.__bootAt || Date.now())));
     setTimeout(() => {
         el.classList.add('is-out');
         setTimeout(() => { root.classList.remove('booting'); el.remove(); }, 460);
@@ -2651,7 +2652,7 @@ function appTourRender(step) {
     skip.title = t('apptour_skip');
     // מסך הפתיחה מציג את האייקון של האפליקציה; שלב בלי אלמנט מודגש - אייקון גדול באריח
     const hero = layer.querySelector('.app-tour-hero');
-    hero.innerHTML = step.agenda ? '<img src="icon-192.png?v=7" alt="" width="72" height="72">' : (isCenter ? appTourIconHtml(icon || SPARK_SVG) : '');
+    hero.innerHTML = step.agenda ? '<img src="splash-book.webp?v=2" alt="" width="843" height="716">' : (isCenter ? appTourIconHtml(icon || SPARK_SVG) : '');
     hero.classList.toggle('is-brand', !!step.agenda);
     hero.classList.toggle('hidden', !isCenter || !!step.demo);
     const demoEl = layer.querySelector('.app-tour-demo');
