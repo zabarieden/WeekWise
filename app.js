@@ -4517,11 +4517,24 @@ function openQuickDatePeek() {
 }
 
 // --- קיצורי דרך של ה-PWA (manifest.json shortcuts): קפיצה ישירה ללשונית מבוקשת ---
+// 2026-11-24 (בקשתה, צילום של התפריט בלחיצה ארוכה על האייקון: "אין יותר MYWEEK וכל זה"): הקיצורים החדשים -
+// השגרה שלי, היעדים שלי, פתקים ורשימות, מעקב ארוחות. הישנים (?view=...-section) ממשיכים לעבוד בטלפונים שעוד לא התעדכנו
 function applyPwaShortcutDeepLink() {
     const params = new URLSearchParams(window.location.search);
     const view = params.get('view');
+    if (!view) return;
+    const actions = {
+        routine: () => { if (typeof openDailyBoardModal === 'function') openDailyBoardModal(); },
+        goals: () => { if (typeof openGoalsVisionDrawer === 'function') openGoalsVisionDrawer(); },
+        notes: () => navigateFromMenu('my-center-section', 'notes'),
+        meals: () => navigateFromMenu('nutrition-section', 'meals'),
+    };
     const validTargets = ['schedule-section', 'my-center-section', 'nutrition-section', 'finance-section', 'sport-section'];
-    if (view && validTargets.includes(view)) switchToTab(view);
+    if (actions[view]) actions[view]();
+    else if (validTargets.includes(view)) switchToTab(view);
+    else return;
+    // שרענון של הדף לא יפתח שוב את אותו מסך
+    try { params.delete('view'); history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params : '') + location.hash); } catch { /* לא חשוב */ }
 }
 
 
