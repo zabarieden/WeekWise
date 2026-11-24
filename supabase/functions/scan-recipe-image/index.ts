@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
                 : { type: "image", source: { type: "base64", media_type: mt, data: item.base64 } });
         }
         const multiNote = many
-            ? `These ${rawItems.length} files are all parts of ONE single recipe (for example the ingredients photographed separately from the instructions, or several pages of the same recipe). Combine them into one recipe: keep the order of the pages, put every ingredient in "ingredients" and every step in "instructions", and never repeat a line that appears in two of the files.\n\n`
+            ? `These ${rawItems.length} files are all parts of ONE single recipe (for example the ingredients photographed separately from the instructions, or several pages of the same recipe). Combine them into one recipe: keep the order of the pages, put every ingredient from every file in "ingredients" and every step in "instructions". Only skip a line when the very same line was already copied from another file (an overlap between two screenshots) - never drop an ingredient just because a step mentions it.\n\n`
             : "";
 
         const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
             },
             body: JSON.stringify({
                 model: ANTHROPIC_MODEL,
-                max_tokens: many ? 3000 : 1500,
+                max_tokens: many ? 3500 : 2200,
                 messages: [
                     {
                         role: "user",
@@ -174,8 +174,17 @@ Deno.serve(async (req) => {
                                     "ingredients and instructions exactly as written - do not invent, " +
                                     "embellish, or add anything that isn't actually there. If a word is illegible, skip " +
                                     "it rather than guessing.\n\n" +
+                                    "Copy EVERY ingredient line - never stop early. Keep separate sub-lists (for example " +
+                                    "'For the topping:', 'For the sauce:', 'לעיטור מעל:') with their sub-heading as its own line, " +
+                                    "followed by their items. An ingredient that is also mentioned inside a step (an egg, milk) " +
+                                    "is still an ingredient - keep it in the list, and if the same ingredient is listed twice " +
+                                    "(once in the dough and once for brushing on top), keep both lines.\n\n" +
+                                    "If the source states the number of servings/pieces (e.g. '24 בורקסים', 'serves 4'), " +
+                                    "return it as servings; a stated preparation/total time as prep_minutes; a stated weight " +
+                                    "of one serving as grams_per_serving. Leave them null when not stated.\n\n" +
                                     "For estimated_total_calories: if the source explicitly states a calorie count, use " +
-                                    "that. Otherwise calculate your own best estimate of the TOTAL calories for the " +
+                                    "that (when it is stated PER SERVING and the number of servings is stated, multiply them " +
+                                    "to get the total). Otherwise calculate your own best estimate of the TOTAL calories for the " +
                                     "entire recipe/dish as written (not per serving, not per single ingredient) by " +
                                     "summing standard nutritional values for every listed ingredient at its stated " +
                                     "quantity. Return your best numeric estimate rather than null whenever the " +
@@ -196,6 +205,9 @@ Deno.serve(async (req) => {
                                 estimated_total_calories: { type: ["integer", "null"], description: "Best-effort estimated total calories for the WHOLE recipe as written, summed across all ingredients at their stated quantities - not per serving" },
                                 ingredients: { type: "string", description: "One ingredient per line, newline-separated. Ingredients only - never include instruction/method text here" },
                                 instructions: { type: "string", description: "One step per line, newline-separated. Preparation steps only - never repeat the ingredient list here" },
+                                servings: { type: ["integer", "null"], description: "Number of servings/pieces the recipe makes, only when the source states it" },
+                                prep_minutes: { type: ["integer", "null"], description: "Preparation (or total) time in minutes, only when the source states it" },
+                                grams_per_serving: { type: ["integer", "null"], description: "Weight of one serving in grams, only when the source states it" },
                             },
                             required: ["title", "category", "ingredients", "instructions"],
                         },

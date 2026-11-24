@@ -8792,6 +8792,14 @@ html.light-mode .wx-stars { display: none; }
 .recipe-scan-more { align-self: flex-start; padding: 7px 12px; border-radius: 12px; border: 1.5px dashed color-mix(in srgb, var(--text-primary) 26%, transparent); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 .recipe-scan-part:focus-visible, .recipe-scan-remove:focus-visible, .recipe-scan-more:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
 .recipe-scan-run { width: 100%; margin-top: 8px; }
+/* שאלה אחרי התמונה הראשונה + שאלת המשך אחרי סריקה, ותיבות מצרכים/הכנה שגדלות לפי הטקסט (2026-11-24) */
+.recipe-scan-more-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; }
+.recipe-scan-more-q { font-weight: 700; font-size: .92rem; color: var(--text-primary); overflow-wrap: anywhere; }
+.recipe-scan-followup { margin-top: 10px; padding: 12px; border-radius: 16px; border: 1.5px dashed color-mix(in srgb, var(--accent-purple) 55%, transparent); background: color-mix(in srgb, var(--accent-purple) 10%, transparent); }
+.recipe-scan-followup-q { margin: 0 0 10px; font-weight: 800; color: var(--text-primary); overflow-wrap: anywhere; }
+.recipe-scan-followup-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.recipe-scan-followup-btn { flex: 1 1 140px; min-width: 0; margin: 0 !important; white-space: normal; overflow-wrap: anywhere; }
+#recipe-ingredients-input, #recipe-instructions-input { overflow-y: hidden; resize: none; }
 .recipe-tile { display: flex; flex-direction: column; min-width: 0; padding: 0; border: none; border-radius: 20px; overflow: hidden; background: color-mix(in srgb, var(--text-primary) 6%, transparent); color: var(--text-primary); text-align: start; font-weight: 400; }
 .recipe-tile:active { transform: scale(0.97); }
 .recipe-tile-art { position: relative; display: grid; place-items: center; height: 84px; overflow: hidden; font-size: 46px; line-height: 1; background: linear-gradient(150deg, var(--ra, #a855f7), var(--rb, #ff4fa3)); }

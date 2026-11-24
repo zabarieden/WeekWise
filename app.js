@@ -8724,9 +8724,11 @@ function openAddRecipeForm() {
     document.getElementById('recipe-instructions-input').value = '';
     setRecipeImagePreview('');
     resetRecipeScanTray();
+    hideRecipeScanFollowup();
     setRecipeCaloriesEstimateHint(false);
     updateRecipeCaloriesPerServingHint();
     openModal('modal-add-recipe');
+    requestAnimationFrame(fitRecipeTextareas);
 }
 
 function openEditRecipeForm() {
@@ -8745,9 +8747,11 @@ function openEditRecipeForm() {
     document.getElementById('recipe-ingredients-input').value = recipe.ingredients || '';
     document.getElementById('recipe-instructions-input').value = recipe.instructions || '';
     setRecipeImagePreview(recipe.image_url || '');
+    hideRecipeScanFollowup();
     setRecipeCaloriesEstimateHint(false);
     updateRecipeCaloriesPerServingHint();
     openModal('modal-add-recipe');
+    requestAnimationFrame(fitRecipeTextareas);
 }
 
 // מציגה/מסתירה את אזהרת "קלוריות מוערכות" ליד שדה הקלוריות - רק כשהערך
@@ -13913,6 +13917,7 @@ async function parseRecipeWithAI() {
     // מנקים את תיבת ההדבקה הגולמית אחרי פירוק מוצלח - כדי שהטקסט המקורי
     // הלא-מנותח לא יישאר גלוי בטופס לצד השדות המפורקים שכבר מולאו
     document.getElementById('recipe-ai-raw-input').value = '';
+    fitRecipeTextareas();
 
     await incrementAiUsage();
     showAppToast(t('recipe_ai_parsed_success'));
@@ -13981,24 +13986,115 @@ function renderRecipeScanTray() {
         row.append(thumb, parts, del);
         tray.appendChild(row);
     });
+    // כבר אחרי התמונה הראשונה שואלים אם יש עוד תמונה לאותו מתכון (בקשתה 2026-11-24: "כבר אחרי העלאה ראשונה לשאול
+    // אם לשים עוד תמונה") - שלא ייסרק חצי מתכון ואחר כך עוד חצי בנפרד
     if (recipeScanItems.length && recipeScanItems.length < RECIPE_SCAN_MAX_FILES) {
+        const row = document.createElement('div');
+        row.className = 'recipe-scan-more-row';
+        const q = document.createElement('span');
+        q.className = 'recipe-scan-more-q';
+        q.textContent = t('recipe_scan_more_q');
         const more = document.createElement('button');
         more.type = 'button';
         more.className = 'recipe-scan-more';
         more.textContent = t('recipe_scan_add_more');
         more.onclick = () => document.getElementById('recipe-image-input').click();
-        tray.appendChild(more);
+        row.append(q, more);
+        tray.appendChild(row);
     }
 }
+// התמונה הבאה שנבחרת מתוך שאלת ההמשך ("ומה אופן ההכנה?") כבר מסומנת "הכנה" / "מצרכים"
+let recipeScanNextPart = null;
 function addRecipeScanFiles(files) {
     let tooMany = false;
+    const part = recipeScanNextPart || 'all';
+    recipeScanNextPart = null;
     for (const file of files) {
         if (!file.type.startsWith('image/') && file.type !== 'application/pdf') { showAppToast(t('recipe_scan_unsupported_type'), 'error'); continue; }
         if (recipeScanItems.length >= RECIPE_SCAN_MAX_FILES) { tooMany = true; break; }
-        recipeScanItems.push({ file, part: 'all', url: file.type.startsWith('image/') ? URL.createObjectURL(file) : '' });
+        recipeScanItems.push({ file, part, url: file.type.startsWith('image/') ? URL.createObjectURL(file) : '' });
     }
     if (tooMany) showAppToast(t('recipe_scan_too_many').replace('{n}', RECIPE_SCAN_MAX_FILES), 'error');
+    hideRecipeScanFollowup();
     renderRecipeScanTray();
+}
+
+// 📏 תיבות המצרכים וההכנה גדלות לפי הטקסט - כשהן היו בגובה 4 שורות, שאר המצרכים "נעלמו" בגלילה פנימית
+// והיה נראה שחסרים מצרכים (בקשתה 2026-11-24)
+function fitRecipeTextareas() {
+    ['recipe-ingredients-input', 'recipe-instructions-input'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (!el.dataset.fitWired) { el.dataset.fitWired = '1'; el.addEventListener('input', () => { fitRecipeTextareas(); if (el.value.trim()) hideRecipeScanFollowup(); }); }
+        el.style.height = 'auto';
+        if (el.scrollHeight) el.style.height = (el.scrollHeight + 2) + 'px';
+    });
+}
+
+// ❓ אחרי סריקה שלא מצאה אופן הכנה (או מצרכים) - שואלים, ותמונה שנבחרת משם מסומנת מראש "הכנה"/"מצרכים",
+// ונכנסת רק לשדה הזה בלי לגעת בשאר (בקשתה 2026-11-24: "להוסיף שאלה מה אופן ההכנה... ואז זה יעביר אוטומטית להכנה")
+function hideRecipeScanFollowup() {
+    const box = document.getElementById('recipe-scan-followup');
+    if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
+}
+function renderRecipeScanFollowup() {
+    const box = document.getElementById('recipe-scan-followup');
+    if (!box) return;
+    const noIngr = !document.getElementById('recipe-ingredients-input').value.trim();
+    const noSteps = !document.getElementById('recipe-instructions-input').value.trim();
+    if (!noIngr && !noSteps) { hideRecipeScanFollowup(); return; }
+    const which = noSteps ? 'steps' : 'ingredients';
+    box.innerHTML = '';
+    const q = document.createElement('p');
+    q.className = 'recipe-scan-followup-q';
+    q.textContent = t(which === 'steps' ? 'recipe_scan_followup_steps_q' : 'recipe_scan_followup_ingr_q');
+    const btns = document.createElement('div');
+    btns.className = 'recipe-scan-followup-btns';
+    const photo = document.createElement('button');
+    photo.type = 'button';
+    photo.className = 'btn-secondary recipe-scan-followup-btn';
+    photo.textContent = t(which === 'steps' ? 'recipe_scan_followup_steps_photo' : 'recipe_scan_followup_ingr_photo');
+    photo.onclick = () => { recipeScanNextPart = which; document.getElementById('recipe-image-input').click(); };
+    const write = document.createElement('button');
+    write.type = 'button';
+    write.className = 'btn-secondary recipe-scan-followup-btn';
+    write.textContent = t('recipe_scan_followup_write');
+    write.onclick = () => {
+        hideRecipeScanFollowup();
+        const field = document.getElementById(which === 'steps' ? 'recipe-instructions-input' : 'recipe-ingredients-input');
+        if (field) { field.focus(); field.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+    };
+    btns.append(photo, write);
+    box.append(q, btns);
+    box.classList.remove('hidden');
+}
+
+// 🧩 תוצאת סריקה נכנסת לטופס בלי למחוק מה שכבר יש בו: שדה ריק מתמלא, ובמצרכים/הכנה שכבר מלאים נוספות רק שורות
+// חדשות. כך תמונה שנייה (למשל של אופן ההכנה) משלימה את אותו מתכון ולא מחליפה אותו
+function mergeRecipeScanIntoForm(r) {
+    const val = id => document.getElementById(id).value.trim();
+    const setIfEmpty = (id, v) => { if (v != null && v !== '' && !val(id)) document.getElementById(id).value = v; };
+    const norm = s => s.replace(/\s+/g, ' ').trim();
+    const mergeLines = (id, text) => {
+        const add = (text || '').split('\n').map(s => s.trim()).filter(Boolean);
+        if (!add.length) return;
+        const cur = document.getElementById(id).value.replace(/\s+$/, '');
+        if (!cur.trim()) { document.getElementById(id).value = add.join('\n'); return; }
+        const have = new Set(cur.split('\n').map(norm));
+        const fresh = add.filter(l => !have.has(norm(l)));
+        if (fresh.length) document.getElementById(id).value = cur + '\n' + fresh.join('\n');
+    };
+    if (r.title) setIfEmpty('recipe-title-input', r.title);
+    if (r.category && !getSelectValueWithOther('recipe-category-input')) { setSelectValueWithOther('recipe-category-input', r.category); }
+    updateCustomSelectDisplay('recipe-category-input');
+    setIfEmpty('recipe-calories-input', r.calories || '');
+    setIfEmpty('recipe-servings-input', r.servings || '');
+    setIfEmpty('recipe-minutes-input', r.prep_minutes || '');
+    setIfEmpty('recipe-grams-input', r.grams_per_serving || '');
+    mergeLines('recipe-ingredients-input', r.ingredients);
+    mergeLines('recipe-instructions-input', r.instructions);
+    updateRecipeCaloriesPerServingHint();
+    fitRecipeTextareas();
 }
 async function handleRecipeImageSelected(event) {
     const input = event.target;
@@ -14111,15 +14207,11 @@ async function runLocalRecipeOcrFallback(files) {
         if (!parsed || !parsed.title) return false;
         if (looksLikeGarbledOcrBody(parsed.ingredients) || looksLikeGarbledOcrBody(parsed.instructions)) return false;
         const titleUnclear = looksLikeGarbledOcrTitle(parsed.title);
-        document.getElementById('recipe-title-input').value = titleUnclear ? '' : parsed.title;
-        if (parsed.category) setSelectValueWithOther('recipe-category-input', parsed.category);
-        updateCustomSelectDisplay('recipe-category-input');
-        document.getElementById('recipe-calories-input').value = parsed.calories || '';
-        document.getElementById('recipe-ingredients-input').value = parsed.ingredients;
-        document.getElementById('recipe-instructions-input').value = parsed.instructions;
+        mergeRecipeScanIntoForm({ title: titleUnclear ? '' : parsed.title, category: parsed.category, calories: parsed.calories, ingredients: parsed.ingredients, instructions: parsed.instructions });
         setRecipeCaloriesEstimateHint(parsed.caloriesEstimated);
         document.getElementById('recipe-ai-raw-input').value = '';
         showAppToast(t(titleUnclear ? 'recipe_scan_title_unclear' : 'recipe_scan_ocr_success'), titleUnclear ? 'error' : 'success');
+        renderRecipeScanFollowup();
         return true;
     } catch {
         return false;
@@ -14214,17 +14306,18 @@ async function runRecipeImageScan(fileOrItems) {
             // סינון-רעש הגנתי גם על תוצאת ה-AI (לא רק על ה-OCR המקומי): גם
             // כשה-AI מתבקש במפורש להתעלם מכרום הצ'אט (שעון/תאריך/שם שולח),
             // הוא לפעמים עדיין מדליף שאריות כאלה לתוך אחד השדות - אותו ניקוי
-            // בדיוק כמו ב-parseRecipeText מתמודד עם זה כרשת ביטחון נוספת
-            const cleanTitle = sanitizeOcrText(recipe.title || '');
-            document.getElementById('recipe-title-input').value = cleanTitle;
-            if (recipe.category) setSelectValueWithOther('recipe-category-input', recipe.category);
-            updateCustomSelectDisplay('recipe-category-input');
-            document.getElementById('recipe-calories-input').value = recipe.calories || '';
-            document.getElementById('recipe-ingredients-input').value = sanitizeOcrText(recipe.ingredients || '');
-            document.getElementById('recipe-instructions-input').value = sanitizeOcrText(recipe.instructions || '');
+            // בדיוק כמו ב-parseRecipeText מתמודד עם זה כרשת ביטחון נוספת.
+            // מ-2026-11-24 התוצאה משלימה את הטופס (mergeRecipeScanIntoForm) ולא מוחקת מה שכבר בו
+            mergeRecipeScanIntoForm({
+                ...recipe,
+                title: sanitizeOcrText(recipe.title || ''),
+                ingredients: sanitizeOcrText(recipe.ingredients || ''),
+                instructions: sanitizeOcrText(recipe.instructions || ''),
+            });
             setRecipeCaloriesEstimateHint(false);
             document.getElementById('recipe-ai-raw-input').value = '';
             showAppToast(t('recipe_scan_success'));
+            renderRecipeScanFollowup();
             return true;
         }
 
@@ -14254,8 +14347,9 @@ async function handleAiBrainImageSelected(event) {
     openAddRecipeForm();
     // כמה תמונות (לפי בקשה מפורשת: "כמה תמונות? גם למצרכים וגם להוראות הכנה? בAI?") נכנסות לרשימה שבטופס - שם בוחרים
     // לכל אחת הכל / מצרכים / הכנה ולוחצים "לסרוק" (סריקה אחת). תמונה אחת נסרקת מיד, כמו קודם
-    if (files.length > 1) { addRecipeScanFiles(files); return; }
-    await runRecipeImageScan(files[0]);
+    // מ-2026-11-24 גם תמונה אחת נכנסת לרשימה, ושם נשאלת השאלה "עוד תמונה לאותו מתכון?" (בקשתה: אחרי תמונה אחת זה
+    // נסרק מיד, והתמונה השנייה יצאה מתכון נפרד)
+    addRecipeScanFiles(files);
 }
 
 function showRecipeScanLoading() {

@@ -137,7 +137,7 @@
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img, .boot-book b { animation: none; } .boot-book b { opacity: .85; } .boot-sparkle i { top: var(--y); } }
     </style>
     <link rel="preload" as="image" href="splash-book.webp?v=3" type="image/webp">
-    <link rel="stylesheet" href="theme.css?v=648">
+    <link rel="stylesheet" href="theme.css?v=649">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -4418,6 +4418,8 @@
                 <!-- כמה תמונות למתכון אחד: לכל תמונה הכל / מצרכים / הכנה, ואז סריקה אחת לכולן -->
                 <div id="recipe-scan-tray" class="recipe-scan-tray hidden"></div>
                 <button type="button" id="btn-recipe-scan-run" class="btn-primary recipe-scan-run hidden" onclick="runRecipeScanTray()" data-i18n="recipe_scan_run_btn">Scan the recipe</button>
+                <!-- ❓ אחרי סריקה בלי אופן הכנה / מצרכים: "ומה אופן ההכנה?" + תמונה שמסומנת מראש (renderRecipeScanFollowup ב-app.js) -->
+                <div id="recipe-scan-followup" class="recipe-scan-followup hidden"></div>
                 <div class="recipe-scan-hint" id="recipe-scan-free-hint">5/5 free scans left this month</div>
                 <img id="recipe-image-preview" class="recipe-image-preview hidden" alt="">
                 <input type="hidden" id="recipe-image-url-input">
@@ -4588,10 +4590,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=570"></script>
+    <script src="i18n/core.js?v=571"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=8"></script>
-    <script src="app.js?v=681"></script>
+    <script src="app.js?v=682"></script>
     <script src="ai-chat.js?v=9"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="change.js?v=2"></script>
