@@ -1616,6 +1616,39 @@ function wkFitText(ctx, text, max) {
     while (s.length > 1 && ctx.measureText(s + '…').width > max) s = s.slice(0, -1);
     return s + '…';
 }
+// הרקע המשותף לתמונות השיתוף של האימונים (השבוע והסיכום החודשי): בסיס כהה (או בהיר), כתמי אור בצבעי הערכה ונצנצים
+function wkPaintShareBg(ctx, W, H) {
+    const css = getComputedStyle(document.documentElement);
+    const pink = wkRgb(css.getPropertyValue('--accent-pink').trim() || '#f9a8d4', [249, 168, 212]);
+    const purple = wkRgb(css.getPropertyValue('--accent-purple').trim() || '#c4b5fd', [196, 181, 253]);
+    const light = document.documentElement.classList.contains('light-mode');
+    ctx.fillStyle = light ? '#f7f2ff' : '#1a1030';
+    ctx.fillRect(0, 0, W, H);
+    [[0.12, 0.08, pink, 0.55], [0.92, 0.3, purple, 0.5], [0.3, 0.95, purple, 0.42], [0.85, 0.88, pink, 0.35]].forEach(([fx, fy, c, a]) => {
+        const g = ctx.createRadialGradient(W * fx, H * fy, 0, W * fx, H * fy, W * 0.7);
+        g.addColorStop(0, wkRgba(c, a));
+        g.addColorStop(1, wkRgba(c, 0));
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, H);
+    });
+    for (let i = 0; i < 70; i++) {
+        const x = (((Math.sin(i * 12.9898) * 43758.5453) % 1) + 1) % 1 * W;
+        const y = (((Math.sin(i * 78.233) * 12345.678) % 1) + 1) % 1 * H;
+        ctx.fillStyle = light ? wkRgba(purple, 0.35) : `rgba(255, 255, 255, ${0.25 + (i % 5) * 0.1})`;
+        ctx.beginPath();
+        ctx.arc(x, y, 1.2 + (i % 3) * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    return {
+        pink, purple, light,
+        ink: light ? '#241830' : '#ffffff',
+        sub: light ? 'rgba(36, 24, 48, 0.62)' : 'rgba(255, 255, 255, 0.72)',
+        glass: light ? 'rgba(255, 255, 255, 0.62)' : 'rgba(255, 255, 255, 0.11)',
+        glassEdge: light ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.24)',
+        font: getComputedStyle(document.body).fontFamily || 'sans-serif',
+        rtl: document.documentElement.dir === 'rtl',
+    };
+}
 async function wkRenderWeekImage() {
     try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 800))]); } catch {}
     const W = 1080, H = 1350, PAD = 64;
@@ -1793,6 +1826,199 @@ function printWorkoutWeek() {
 </style></head><body>
 <header><div><h1>${wkEsc(t('workout_plan_title'))}</h1><div class="range">${wkEsc(formatWeekRangeLabel(currentWeekStart()))}</div></div><div class="goal">${wkEsc(wkGoalLine())}</div></header>
 <div class="week">${wkPlanReportHtml()}</div>
+<footer>NOT10.ai · ${wkEsc(SHARE_APP_HOST)}</footer>
+</body></html>`);
+    win.document.close();
+    setTimeout(() => { try { win.focus(); win.print(); } catch (err) {} }, 400);
+}
+
+// ---------- הסיכום החודשי במסך האימונים: שיתוף כתמונה (גם שמירה שלה) ו-PDF להדפסה - במקום הייצוא לטבלת CSV שהיה
+// (לפי בקשה מפורשת, 2026-11-25: "שבשום מקום באפליקציה לא יהיה CSV, תמיד משהו כתמונה או PDF") ----------
+async function wkSportMonthData() {
+    const monthKey = sportSummaryMonthKey || currentMonthKey();
+    const { firstStr, lastStr } = sportMonthRange(monthKey);
+    if (burnWeightKg == null) await refreshBurnWeight();
+    const { data } = await supabaseClient.from('sport_sessions').select('*')
+        .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr)
+        .order('session_date', { ascending: true }).order('created_at', { ascending: true });
+    const rows = data || [];
+    let minutes = 0, km = 0, kcal = 0;
+    const kinds = new Map();
+    rows.forEach(r => {
+        minutes += r.duration_minutes || 0;
+        km += Number(r.distance_km) || 0;
+        kcal += sportSessionKcal(r);
+        // כמה פעמים מכל סוג, בצבע הכוכב שלו
+        const name = splitLeadingEmoji(sportTypeLabel(r), '')[1] || sportTypeLabel(r);
+        const k = kinds.get(name) || { name, color: wkSessionColor(r), count: 0 };
+        k.count++;
+        kinds.set(name, k);
+    });
+    const line = id => { const el = document.getElementById(id); return el ? el.textContent.trim() : ''; };
+    return {
+        monthKey, rows, minutes, km, kcal,
+        kinds: [...kinds.values()].sort((a, b) => b.count - a.count),
+        notes: [line('sport-training-days-label'), line('sport-best-run-label')].filter(Boolean),
+    };
+}
+function wkSportMonthStats(d) {
+    return [
+        [t('sport_total_sessions'), d.rows.length.toLocaleString()],
+        [t('sport_total_minutes'), d.minutes.toLocaleString()],
+        [t('sport_total_km'), d.km.toLocaleString(undefined, { maximumFractionDigits: 1 })],
+        [t('sport_total_kcal'), `~${Math.round(d.kcal).toLocaleString()}`],
+    ];
+}
+async function wkRenderMonthImage(d) {
+    try { await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 800))]); } catch {}
+    const W = 1080, H = 1350, PAD = 64;
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    const s = wkPaintShareBg(ctx, W, H);
+    const { ink, sub, font, rtl } = s;
+    ctx.direction = rtl ? 'rtl' : 'ltr';
+    ctx.textBaseline = 'middle';
+    const startX = rtl ? W - PAD : PAD;
+    // כותרת + החודש
+    ctx.textAlign = 'start';
+    ctx.fillStyle = ink;
+    ctx.font = `800 64px ${font}`;
+    ctx.fillText(wkFitText(ctx, t('sport_summary_title'), W - PAD * 2), startX, 110);
+    ctx.fillStyle = sub;
+    ctx.font = `600 34px ${font}`;
+    ctx.fillText(formatMonthLabel(d.monthKey), startX, 172);
+    // ארבעה כרטיסי זכוכית: אימונים / דקות / ק"מ / שריפה
+    const tileTop = 236, tileH = 196, gap = 20, tileW = (W - PAD * 2 - gap) / 2;
+    wkSportMonthStats(d).forEach(([label, value], i) => {
+        const col = i % 2, row = Math.floor(i / 2);
+        const x = rtl ? W - PAD - tileW - col * (tileW + gap) : PAD + col * (tileW + gap);
+        const y = tileTop + row * (tileH + gap);
+        wkRoundRect(ctx, x, y, tileW, tileH, 30);
+        ctx.fillStyle = s.glass;
+        ctx.fill();
+        ctx.strokeStyle = s.glassEdge;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.textAlign = 'center';
+        ctx.fillStyle = ink;
+        ctx.font = `800 80px ${font}`;
+        // מספרים תמיד משמאל לימין - שה-~ של השריפה יישאר לפני המספר גם בעברית ובערבית
+        ctx.direction = 'ltr';
+        ctx.fillText(wkFitText(ctx, value, tileW - 40), x + tileW / 2, y + 82);
+        ctx.direction = rtl ? 'rtl' : 'ltr';
+        ctx.fillStyle = sub;
+        ctx.font = `600 32px ${font}`;
+        ctx.fillText(wkFitText(ctx, label, tileW - 40), x + tileW / 2, y + 150);
+    });
+    // הסוגים: כוכב בצבע של כל סוג, השם וכמה פעמים - מהנפוץ לנדיר
+    let y = tileTop + tileH * 2 + gap + 40;
+    const footY = H - 48;
+    const noteH = d.notes.length * 52;
+    const kindH = 92, kindGap = 12;
+    const maxKinds = Math.max(1, Math.floor((footY - 60 - noteH - y + kindGap) / (kindH + kindGap)));
+    const kinds = d.kinds.length > maxKinds ? d.kinds.slice(0, maxKinds - 1) : d.kinds;
+    const rest = d.kinds.length - kinds.length;
+    kinds.forEach(k => {
+        wkRoundRect(ctx, PAD, y, W - PAD * 2, kindH, 26);
+        ctx.fillStyle = s.glass;
+        ctx.fill();
+        ctx.strokeStyle = s.glassEdge;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        const cy = y + kindH / 2;
+        wkCanvasStar(ctx, rtl ? W - PAD - 52 : PAD + 52, cy, 40, k.color || '#fbbf24');
+        ctx.textAlign = 'start';
+        ctx.fillStyle = ink;
+        ctx.font = `700 36px ${font}`;
+        ctx.fillText(wkFitText(ctx, k.name, W - PAD * 2 - 230), rtl ? W - PAD - 96 : PAD + 96, cy);
+        ctx.font = `800 38px ${font}`;
+        ctx.direction = 'ltr';
+        ctx.textAlign = rtl ? 'left' : 'right';
+        ctx.fillText(`× ${k.count}`, rtl ? PAD + 32 : W - PAD - 32, cy);
+        ctx.direction = rtl ? 'rtl' : 'ltr';
+        y += kindH + kindGap;
+    });
+    if (rest > 0) {
+        ctx.textAlign = 'center';
+        ctx.fillStyle = sub;
+        ctx.font = `700 32px ${font}`;
+        ctx.fillText(`+${rest}`, W / 2, y + 20);
+        y += 52;
+    }
+    // ימים חזקים / הכי הרבה רצתי
+    ctx.textAlign = 'center';
+    ctx.fillStyle = sub;
+    ctx.font = `600 30px ${font}`;
+    d.notes.forEach(n => { y += 10; ctx.fillText(wkFitText(ctx, n, W - PAD * 2), W / 2, y + 16); y += 42; });
+    // קישור עדין לאפליקציה
+    ctx.font = `600 30px ${font}`;
+    ctx.fillText(SHARE_APP_HOST, W / 2, footY);
+    return new Promise(res => canvas.toBlob(b => res(b), 'image/jpeg', 0.92));
+}
+function wkSportMonthText(d) {
+    const lines = [`${WK_TEXT_ICON} ${shareBold(t('sport_summary_title'))} · ${formatMonthLabel(d.monthKey)}`, ''];
+    wkSportMonthStats(d).forEach(([label, value]) => lines.push(`${label}: ${value}`));
+    if (d.kinds.length) lines.push('', d.kinds.map(k => `${k.name} × ${k.count}`).join(' | '));
+    if (d.notes.length) lines.push('', ...d.notes);
+    lines.push('', t(['sport_share_closing_1', 'sport_share_closing_2', 'sport_share_closing_3'][Math.floor(Math.random() * 3)]));
+    return lines.join('\n');
+}
+async function shareSportMonth() {
+    if (!supabaseClient || !currentUserId) return;
+    const d = await wkSportMonthData();
+    if (!d.rows.length) { showAppToast(t('sport_history_empty'), 'error'); return; }
+    const blob = await wkRenderMonthImage(d);
+    openSharePicker(wkSportMonthText(d), { imageBlob: blob, imageName: `my-workouts-${d.monthKey}.jpg`, subject: `${t('sport_summary_title')} · ${formatMonthLabel(d.monthKey)}` });
+}
+// דף נקי של החודש (המספרים, הסוגים וכל האימונים) בחלון חדש, ודיאלוג ההדפסה - "שמירה כ-PDF" היא אחת האפשרויות
+async function printSportMonth() {
+    if (!supabaseClient || !currentUserId) return;
+    // החלון נפתח מיד (לפני הטעינה) - אחרת דפדפנים חוסמים אותו כחלון קופץ
+    const win = window.open('', '_blank');
+    if (!win) { showAppToast(t('settings_export_data_failed'), 'error'); return; }
+    const d = await wkSportMonthData();
+    if (!d.rows.length) { win.close(); showAppToast(t('sport_history_empty'), 'error'); return; }
+    const rtl = document.documentElement.dir === 'rtl';
+    const stats = wkSportMonthStats(d).map(([label, value]) => `<div class="stat"><b>${wkEsc(value)}</b><span>${wkEsc(label)}</span></div>`).join('');
+    const kinds = d.kinds.map(k => `<span class="kind">${wkStarSvg(k.color || '#fbbf24', 'star')}${wkEsc(k.name)} <b>× ${k.count}</b></span>`).join('');
+    const rows = d.rows.map(r => {
+        const motKey = r.motivation ? `sport_motivation_${r.motivation}` : '';
+        const notes = [motKey ? (t(motKey) === motKey ? r.motivation : t(motKey)) : '', r.notes || ''].filter(Boolean).join(' · ');
+        return `<tr><td>${wkEsc(formatSportDayLabel(r.session_date))}</td><td>${wkStarSvg(wkSessionColor(r), 'star')}${wkEsc(splitLeadingEmoji(sportTypeLabel(r), '')[1] || sportTypeLabel(r))}</td><td>${r.duration_minutes || ''}</td><td>${r.distance_km ? Number(r.distance_km).toLocaleString() : ''}</td><td>~${Math.round(sportSessionKcal(r)).toLocaleString()}</td><td class="notes">${wkEsc(notes)}</td></tr>`;
+    }).join('');
+    win.document.write(`<!DOCTYPE html><html dir="${rtl ? 'rtl' : 'ltr'}" lang="${currentLang}"><head><meta charset="utf-8"><title>NOT10.ai - ${wkEsc(t('sport_summary_title'))} - ${wkEsc(formatMonthLabel(d.monthKey))}</title>
+<style>
+    body { font-family: 'Segoe UI', Arial, Tahoma, sans-serif; margin: 0; padding: 28px; color: #2b2438; background: #fff; }
+    header { border-bottom: 2px solid #efe3fb; padding-bottom: 10px; margin-bottom: 16px; }
+    h1 { margin: 0; font-size: 1.6rem; color: #7c3aed; }
+    .range { color: #8a8399; font-size: 0.95rem; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
+    .stat { border: 1px solid #eadff5; border-radius: 14px; padding: 10px; text-align: center; background: linear-gradient(135deg, #fdf8ff, #fff); }
+    .stat b { display: block; font-size: 1.5rem; color: #4c3b63; }
+    .stat span { color: #8a8399; font-size: 0.85rem; }
+    .kinds { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 10px; font-size: 0.92rem; }
+    .kind { display: inline-flex; align-items: center; gap: 2px; }
+    .notes-lines { color: #6b6478; font-size: 0.88rem; margin: 0 0 14px; }
+    .notes-lines div { margin: 2px 0; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: start; color: #7c3aed; font-weight: 700; border-bottom: 2px solid #efe3fb; padding: 6px 4px; }
+    td { border-bottom: 1px dashed #eee5f7; padding: 6px 4px; vertical-align: top; }
+    td.notes { color: #8a8399; }
+    tr { break-inside: avoid; }
+    footer { margin-top: 18px; text-align: center; color: #b0a8bd; font-size: 0.8rem; }
+    .star { width: 1em; height: 1em; vertical-align: -0.12em; margin-inline-end: 5px; }
+    .star .wk-star-shape { fill: var(--wk-c); stroke: color-mix(in srgb, var(--wk-c) 72%, #000); stroke-width: 1.2; stroke-linejoin: round; }
+    .star .wk-star-shine { fill: #fff; opacity: 0.5; }
+    @media print { body { padding: 12px; } }
+</style></head><body>
+<header><h1>${wkEsc(t('sport_summary_title'))}</h1><div class="range">${wkEsc(formatMonthLabel(d.monthKey))}</div></header>
+<div class="stats">${stats}</div>
+${kinds ? `<div class="kinds">${kinds}</div>` : ''}
+${d.notes.length ? `<div class="notes-lines">${d.notes.map(n => `<div>${wkEsc(n)}</div>`).join('')}</div>` : ''}
+<table><thead><tr><th>${wkEsc(t('sport_csv_date'))}</th><th>${wkEsc(t('sport_csv_type'))}</th><th>${wkEsc(t('sport_csv_duration'))}</th><th>${wkEsc(t('sport_csv_distance'))}</th><th>${wkEsc(t('sport_total_kcal'))}</th><th>${wkEsc(t('sport_csv_notes'))}</th></tr></thead><tbody>${rows}</tbody></table>
 <footer>NOT10.ai · ${wkEsc(SHARE_APP_HOST)}</footer>
 </body></html>`);
     win.document.close();

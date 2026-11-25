@@ -137,7 +137,7 @@
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img, .boot-book b { animation: none; } .boot-book b { opacity: .85; } .boot-sparkle i { top: var(--y); } }
     </style>
     <link rel="preload" as="image" href="splash-book.webp?v=3" type="image/webp">
-    <link rel="stylesheet" href="theme.css?v=659">
+    <link rel="stylesheet" href="theme.css?v=661">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -1337,7 +1337,6 @@
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="sport_summary_title">Monthly Summary</h2>
                             <div class="card-header-actions">
-                                <button class="btn-floating-add sport-export-btn" onclick="event.stopPropagation(); exportSportSessionsCsv();" data-i18n-title="sport_export_title" data-i18n-aria-label="sport_export_title" title="Export to table" aria-label="Export to table"><svg class="sport-share-ico" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></g></svg></button>
                                 <span class="card-toggle-icon">▼</span>
                             </div>
                         </div>
@@ -1368,10 +1367,16 @@
                             </div>
                             <p class="modal-subtitle" id="sport-training-days-label" style="margin-top: 12px;"></p>
                             <p class="modal-subtitle" id="sport-best-run-label"></p>
+                            <!-- שיתוף הסיכום כתמונה (שמירה שלה בבורר השיתוף) ו-PDF להדפסה - אף פעם לא CSV (בקשה מפורשת 2026-11-25) -->
+                            <div class="wk-more-row sport-month-actions" role="group">
+                                <button type="button" class="wk-more-btn" onclick="shareSportMonth()"><span data-i18n="workout_share_btn">Share</span></button>
+                                <button type="button" class="wk-more-btn" onclick="printSportMonth()"><span data-i18n="workout_pdf_btn">PDF to print</span></button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="card expanded">
+                    <!-- ההיסטוריה סגורה כברירת מחדל (בקשה מפורשת 2026-11-25) - נפתחת בהקשה על הכותרת -->
+                    <div class="card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
                             <h2 data-i18n="sport_history_title">History</h2>
                             <span class="card-toggle-icon">▼</span>
@@ -3914,9 +3919,24 @@
                 <div class="routine-days-fill" id="routine-days-fill" role="radiogroup"></div>
                 <div class="routine-template-grid" id="routine-template-days"></div>
                 <p class="routine-templates-sub" data-i18n="routine_templates_ready_label">Ready routines</p>
+                <!-- קטגוריות לשגרות המוכנות (2026-11-25): הכול / עבודה / משפחה וילדים / אימון... - renderRoutineTemplates -->
+                <div class="routine-template-cats" id="routine-template-cats" role="radiogroup"></div>
                 <div class="routine-template-grid" id="routine-template-ready"></div>
                 <div class="action-buttons-wrap" style="margin-top: 12px;">
                     <button type="button" class="btn-clear-specific" onclick="closeModal('modal-routine-add-choice')" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚕️ לפני שגרת החלמה (לפי בקשה מפורשת, 2026-11-25: "כל מה שקשור להחלמה לרשום... להתייעץ עם רופא - חשוב חשוב") -->
+        <div id="modal-routine-medical" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3>⚕️ <span data-i18n="routine_tpl_medical_title">Important before you start</span></h3>
+                <p class="routine-medical-text" data-i18n="routine_tpl_medical_text">This is a general routine, not medical advice.</p>
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-primary" id="routine-medical-ok" data-i18n="routine_tpl_medical_ok">Got it, add it</button>
+                    <button type="button" class="btn-clear-specific" onclick="document.getElementById('modal-routine-medical').classList.remove('open')" data-i18n="cancel_btn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -4672,17 +4692,17 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=582"></script>
+    <script src="i18n/core.js?v=583"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=11"></script>
-    <script src="app.js?v=687"></script>
+    <script src="app.js?v=689"></script>
     <script src="calendar-views.js?v=2"></script>
     <script src="ai-chat.js?v=10"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="change.js?v=2"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=5"></script>
-    <script src="workouts.js?v=12"></script>
+    <script src="workouts.js?v=13"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=10"></script>
     <script src="home.js?v=44"></script>

@@ -13375,7 +13375,7 @@ async function confirmRecurringExpenseImport() {
 }
 
 // --- קטגוריית ספורט: אימונים (ריצה/אופניים/שחייה/אחר חופשי) עם משך, מרחק,
-// ומוטיבציה אופציונלית - סיכום חודשי + היסטוריה + ייצוא לטבלה (CSV), נגישה
+// ומוטיבציה אופציונלית - סיכום חודשי (שיתוף כתמונה / PDF) + היסטוריה, נגישה
 // רק מהתפריט הצדדי (ר' showTabSection). אותו דפוס בדיוק כמו כספים למעלה ---
 let currentSportType = 'running';
 let currentSportMotivation = null;
@@ -13875,40 +13875,8 @@ async function shareSportSession(id) {
     openSharePicker(lines.join('\n'), { photoUrl: row.photo_url || '', subject: sportTypeLabel(row) });
 }
 
-// ייצוא לטבלה (CSV): קובץ נפרד לכל חודש שנצפה כרגע - נפתח ישירות בכל אפליקציית
-// גיליון (Excel/Google Sheets/Numbers), בלי צורך בשום ספרייה חיצונית
-async function exportSportSessionsCsv() {
-    if (!supabaseClient || !currentUserId) return;
-    const monthKey = sportSummaryMonthKey || currentMonthKey();
-    const { firstStr, lastStr } = sportMonthRange(monthKey);
-    const { data } = await supabaseClient.from('sport_sessions').select('*')
-        .eq('user_id', currentUserId).gte('session_date', firstStr).lte('session_date', lastStr)
-        .order('session_date', { ascending: true });
-    if (!data || !data.length) { showAppToast(t('sport_history_empty'), 'error'); return; }
-    const header = [t('sport_csv_date'), t('sport_csv_type'), t('sport_csv_duration'), t('sport_csv_distance'), t('sport_csv_motivation'), t('sport_csv_notes')];
-    const csvRows = data.map(row => [
-        row.session_date,
-        sportTypeLabel(row),
-        row.duration_minutes || '',
-        row.distance_km || '',
-        row.motivation ? t(`sport_motivation_${row.motivation}`) : '',
-        row.notes || '',
-    ]);
-    const csvContent = [header, ...csvRows]
-        .map(cols => cols.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-        .join('\n');
-    // ﻿ (BOM) בתחילת הקובץ - כדי ש-Excel יזהה UTF-8 נכון ולא יהפוך את
-    // הטקסט העברי לג'יבריש כשפותחים את הקובץ (בעיה מוכרת של Excel עם CSV)
-    const blob = new Blob(['﻿' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `sport-${monthKey}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-}
+// הייצוא לטבלת CSV הוסר (לפי בקשה מפורשת, 2026-11-25: "שבשום מקום באפליקציה לא יהיה CSV, תמיד משהו כתמונה או
+// PDF") - הסיכום החודשי משותף עכשיו כתמונה או כ-PDF להדפסה: shareSportMonth / printSportMonth ב-workouts.js
 
 // --- AI Assistant > כספים (פרימיום): "כמה הוצאתי ועל מה, כמה נכנס ומאיפה"
 // בטקסט חופשי - מנתח חוקי-דטרמיניסטי מקומי (בלי LLM), אותו רעיון בדיוק כמו
@@ -19232,19 +19200,63 @@ const ROUTINE_READY_TEMPLATES = [
     { id: 'starter', icon: '🌱', free: true },
     // 🔗 blocks: הדברים שמגיעים כבר מחוברים לבלוק (וי אחד בפוקוס) - לפי שעה מ/עד, והשם מ-routine_block_<name>.
     // לפי שאלה מפורשת, 2026-11-18: "ואם זה טמפלייט מוכן? תסדר אותם פשוט עכשיו? מקסימום אפשר לערוך"
-    { id: 'morning', icon: '🌅', blocks: [{ from: '06:00', to: '09:00', name: 'morning' }] },
-    { id: 'evening', icon: '🌙', blocks: [{ from: '20:00', to: '22:00', name: 'evening' }] },
-    { id: 'workday', icon: '💼', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }] },
+    // cat = הקטגוריה בבוחר (לפי בקשה מפורשת, 2026-11-25: "שיהיה שם קטגוריות שיהיה יותר קל נגיד משפחה \ אימון", בלי קל / בינוני / קשה)
+    { id: 'morning', icon: '🌅', cat: 'mind', blocks: [{ from: '06:00', to: '09:00', name: 'morning' }] },
+    { id: 'evening', icon: '🌙', cat: 'mind', blocks: [{ from: '20:00', to: '22:00', name: 'evening' }] },
+    { id: 'workday', icon: '💼', cat: 'work', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }] },
     // 🏃 יום עבודה + ספורט - השגרה שלה מ-15.11 (הטאב 'התמדה' שנמחק בטעות), עם נסיעה לעבודה מיד אחרי ההליכה (2026-11-17)
-    { id: 'work_sport', icon: '🏃', blocks: [{ from: '07:00', to: '07:35', name: 'morning' }, { from: '16:10', to: '18:00', name: 'after_work' }] },
-    { id: 'home_office', icon: '🏠', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }] },
-    { id: 'study', icon: '📚' },
-    { id: 'workout', icon: '💪', blocks: [{ from: '07:00', to: '09:00', name: 'morning' }, { from: '21:00', to: '22:00', name: 'evening' }] },
-    { id: 'eating', icon: '🥗' },
-    { id: 'calm', icon: '🧘' },
-    { id: 'kids', icon: '🧸', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }, { from: '18:00', to: '20:00', name: 'evening' }] },
-    { id: 'weekend', icon: '🌿' },
+    { id: 'work_sport', icon: '🏃', cat: 'work', blocks: [{ from: '07:00', to: '07:35', name: 'morning' }, { from: '16:10', to: '18:00', name: 'after_work' }] },
+    { id: 'home_office', icon: '🏠', cat: 'work', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }] },
+    { id: 'study', icon: '📚', cat: 'study' },
+    { id: 'workout', icon: '💪', cat: 'sport', blocks: [{ from: '07:00', to: '09:00', name: 'morning' }, { from: '21:00', to: '22:00', name: 'evening' }] },
+    { id: 'eating', icon: '🥗', cat: 'home' },
+    { id: 'calm', icon: '🧘', cat: 'mind' },
+    { id: 'kids', icon: '🧸', cat: 'family', blocks: [{ from: '07:00', to: '08:00', name: 'morning' }, { from: '18:00', to: '20:00', name: 'evening' }] },
+    { id: 'weekend', icon: '🌿', cat: 'special' },
+    // 40 השגרות שהציעו לה (2026-11-24), בלי 12 ו-13 (לפי בחירה מפורשת, 2026-11-25). חלקן בלי שעות - הפריטים נכנסים ל"בלי שעה".
+    // medical = שגרת החלמה: לפני ההוספה פתק "להתייעץ עם רופא / פיזיותרפיסט" ("כל מה שקשור להחלמה... להתייעץ עם רופא - חשוב חשוב")
+    { id: 'wfh_focus', icon: '💻', cat: 'work' },
+    { id: 'office_commute', icon: '🏢', cat: 'work' },
+    { id: 'night_shift', icon: '🌃', cat: 'work' },
+    { id: 'freelance', icon: '🧑‍💻', cat: 'work' },
+    { id: 'manager_meetings', icon: '📋', cat: 'work' },
+    { id: 'pomodoro', icon: '🍅', cat: 'work' },
+    { id: 'exam_period', icon: '📝', cat: 'study' },
+    { id: 'high_school', icon: '🎒', cat: 'study' },
+    { id: 'new_language', icon: '🗣️', cat: 'study' },
+    { id: 'baby', icon: '👶', cat: 'family' },
+    { id: 'kids_morning', icon: '🥣', cat: 'family' },
+    { id: 'summer_kids', icon: '☀️', cat: 'family' },
+    { id: 'couple_evenings', icon: '💑', cat: 'couple' },
+    { id: 'living_alone', icon: '🏡', cat: 'couple' },
+    { id: 'slow_weekend', icon: '☕', cat: 'couple' },
+    { id: 'start_running', icon: '👟', cat: 'sport' },
+    { id: 'gym_3x', icon: '🏋️', cat: 'sport' },
+    { id: 'home_workout', icon: '🤸', cat: 'sport' },
+    { id: 'half_marathon', icon: '🏅', cat: 'sport' },
+    { id: 'yoga_pilates', icon: '🪷', cat: 'sport' },
+    { id: 'more_steps', icon: '🚶', cat: 'sport' },
+    { id: 'knee_recovery', icon: '🦵', cat: 'recovery', medical: true },
+    { id: 'back_pain', icon: '🦴', cat: 'recovery', medical: true },
+    { id: 'after_surgery', icon: '🩹', cat: 'recovery', medical: true },
+    { id: 'after_illness', icon: '🌤️', cat: 'recovery', medical: true },
+    { id: 'better_sleep', icon: '😴', cat: 'mind' },
+    { id: 'calm_morning', icon: '🌸', cat: 'mind' },
+    { id: 'less_screens', icon: '📵', cat: 'mind' },
+    { id: 'short_blocks', icon: '⏱️', cat: 'mind' },
+    { id: 'tidy_home', icon: '🧹', cat: 'home' },
+    { id: 'meal_prep', icon: '🍱', cat: 'home' },
+    { id: 'veg_meals', icon: '🥦', cat: 'home' },
+    { id: 'rest_day', icon: '🕯️', cat: 'special' },
+    { id: 'vacation', icon: '✈️', cat: 'special' },
+    { id: 'retirement', icon: '🌻', cat: 'special' },
+    { id: 'creative', icon: '🎨', cat: 'special' },
+    { id: 'music', icon: '🎹', cat: 'special' },
+    { id: 'early_bird', icon: '🌄', cat: 'special' },
 ];
+const ROUTINE_TEMPLATE_CATS = ['work', 'study', 'family', 'couple', 'sport', 'recovery', 'mind', 'home', 'special'];
+let routineTemplateCat = 'all';
+function setRoutineTemplateCat(cat) { routineTemplateCat = cat; renderRoutineTemplates(); }
 // שם הבלוק של פריט בתבנית מוכנה (או null)
 function routineTemplateBlockFor(tpl, time) {
     const b = (tpl.blocks || []).find(x => time >= x.from && time <= x.to);
@@ -19285,8 +19297,9 @@ function routineDayTemplateLabel(tpl) {
 function parseRoutineTemplateItems(text) {
     const seen = new Set();
     return String(text || '').split('\n').map(line => {
-        const m = line.match(/^\s*(\d{1,2})(?:[:.](\d{2}))?\s*[-–—]?\s*(.+?)\s*$/);
-        if (!m) return null;
+        // שעה = HH:MM בתחילת השורה; שורה בלי שעה (למשל "25 דק׳ עבודה") = פריט בלי שעה (2026-11-25)
+        const m = line.match(/^\s*(\d{1,2})[:.](\d{2})\s*[-–—]?\s*(.+?)\s*$/);
+        if (!m) { const title = line.trim(); return title ? { hour: null, time: null, title } : null; }
         const hour = Number(m[1]), min = m[2] ? Number(m[2]) : 0;
         if (!(hour >= 0 && hour <= 23) || min > 59) return null;
         const time = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
@@ -19325,10 +19338,17 @@ function renderRoutineTemplates() {
         daysGrid.innerHTML = ROUTINE_DAY_TEMPLATES.map(tpl => tile('📅', routineDayTemplateLabel(tpl),
             t('routine_tpl_tabs_count').replace('{n}', tpl.days.length), `applyRoutineDaysTemplate('${tpl.id}')`)).join('');
     }
+    // קטגוריות מעל השגרות המוכנות: הכול / עבודה / משפחה וילדים / אימון... (בלי רמת קושי)
+    const cats = document.getElementById('routine-template-cats');
+    if (cats) {
+        const chip = (cat, label) => `<button type="button" class="calendar-kind-chip routine-cat-chip${routineTemplateCat === cat ? ' on' : ''}" role="radio" aria-checked="${routineTemplateCat === cat}" onclick="setRoutineTemplateCat('${cat}')">${escapeHtmlForReport(label)}</button>`;
+        cats.innerHTML = chip('all', t('routine_cat_all')) + ROUTINE_TEMPLATE_CATS.filter(c => ROUTINE_READY_TEMPLATES.some(tpl => tpl.cat === c)).map(c => chip(c, t('routine_cat_' + c))).join('');
+    }
     const readyGrid = document.getElementById('routine-template-ready');
     if (readyGrid) {
-        readyGrid.innerHTML = ROUTINE_READY_TEMPLATES.map(tpl => tile(tpl.icon, t(`routine_tpl_${tpl.id}`),
-            t('routine_tpl_items_count').replace('{n}', parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).length),
+        const list = routineTemplateCat === 'all' ? ROUTINE_READY_TEMPLATES : ROUTINE_READY_TEMPLATES.filter(tpl => tpl.cat === routineTemplateCat);
+        readyGrid.innerHTML = list.map(tpl => tile(tpl.icon, t(`routine_tpl_${tpl.id}`),
+            tpl.medical ? t('routine_tpl_medical_short') : t('routine_tpl_items_count').replace('{n}', parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).length),
             `applyRoutineReadyTemplate('${tpl.id}')`, tpl.free)).join('');
     }
 }
@@ -19418,11 +19438,21 @@ async function applyRoutineDaysTemplate(templateId) {
     showAppToast(msg);
 }
 
-async function applyRoutineReadyTemplate(templateId) {
+async function applyRoutineReadyTemplate(templateId, medicalOk) {
     const tpl = ROUTINE_READY_TEMPLATES.find(x => x.id === templateId);
     if (!tpl || !supabaseClient || !currentUserId) return;
     if (!isPremiumUser && !tpl.free) { closeModal('modal-routine-add-choice'); openPremiumUpgradeModal(); return; }
-    const items = parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).filter(it => routineBucketOfHour(it.hour));
+    // ⚕️ שגרת החלמה: קודם הפתק "להתייעץ עם רופא / פיזיותרפיסט", ורק אחרי "הבנתי, להוסיף" - ההוספה
+    if (tpl.medical && !medicalOk) {
+        const sheet = document.getElementById('modal-routine-medical');
+        if (sheet) {
+            document.getElementById('routine-medical-ok').onclick = () => { sheet.classList.remove('open'); applyRoutineReadyTemplate(templateId, true); };
+            sheet.classList.add('open');
+            return;
+        }
+    }
+    // פריטים בלי שעה נשארים (נכנסים ל"בלי שעה"); פריט עם שעה - רק בשעות של הלוח (05:00-23:59)
+    const items = parseRoutineTemplateItems(t(`routine_tpl_${tpl.id}_items`)).filter(it => it.hour === null || routineBucketOfHour(it.hour));
     if (!items.length) return;
     const hours = routineHoursForItems(items);
     const name = uniqueRoutineTabName(`${tpl.icon} ${t('routine_tpl_' + tpl.id)}`);
@@ -23356,9 +23386,13 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
     });
     const f = v => Math.round(v * 10) / 10;
     const segs = [];
+    // the trophy at the top has no circle behind it any more (her ask, 2026-11-25: "שלא יהיה את העיגול הזהב מסביב לגביע"),
+    // so the line stops at the trophy's foot instead of running on under it
+    const flagFoot = compact ? 17 : 21;
     for (let i = 0; i < pts.length - 1; i++) {
         const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || pts[i + 1];
-        segs.push(`C ${f(p1.x + (p2.x - p0.x) / 6)} ${f(p1.y + (p2.y - p0.y) / 6)}, ${f(p2.x - (p3.x - p1.x) / 6)} ${f(p2.y - (p3.y - p1.y) / 6)}, ${f(p2.x)} ${f(p2.y)}`);
+        const foot = nodes[i + 1].kind === 'flag' ? flagFoot : 0;
+        segs.push(`C ${f(p1.x + (p2.x - p0.x) / 6)} ${f(p1.y + (p2.y - p0.y) / 6)}, ${f(p2.x - (p3.x - p1.x) / 6)} ${f(p2.y - (p3.y - p1.y) / 6 + foot)}, ${f(p2.x)} ${f(p2.y + foot)}`);
     }
     // "זנב" קצר מתחתית המסגרת אל האבן הראשונה - המסע התחיל עוד קודם
     const head = `M ${f(pts[0].x)} ${H - 8} L ${f(pts[0].x)} ${f(pts[0].y)}`;
