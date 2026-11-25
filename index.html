@@ -137,7 +137,7 @@
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img, .boot-book b { animation: none; } .boot-book b { opacity: .85; } .boot-sparkle i { top: var(--y); } }
     </style>
     <link rel="preload" as="image" href="splash-book.webp?v=3" type="image/webp">
-    <link rel="stylesheet" href="theme.css?v=654">
+    <link rel="stylesheet" href="theme.css?v=655">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -335,7 +335,7 @@
                        "כל האירועים" שני = שמאל, לפי בקשה מפורשת -->
                     <div class="card monthly-calendar-card">
                         <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
-                            <h2 data-i18n="monthly_calendar_title">Monthly Overview</h2>
+                            <h2 id="monthly-calendar-title" data-i18n="monthly_calendar_title">Monthly Overview</h2>
                             <div class="card-header-actions">
                                 <!-- ה-+ שהיה ב"השבוע שלי" (שהוסר) עבר לכאן - פותח את אותו חלון
                                      הוספה כמו ב"כל האירועים", ממולא מראש עם היום שנבחר בלוח
@@ -345,18 +345,40 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="monthly-goal-nav">
-                                <button class="monthly-goal-nav-btn" onclick="navigateMonthlyCalendar(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
-                                <span class="monthly-goal-month-label" id="monthly-calendar-label"></span>
-                                <button class="monthly-goal-nav-btn" onclick="navigateMonthlyCalendar(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
+                            <!-- 📅 תצוגות היומן + כלים (calendar-views.js; לפי בחירה מפורשת מתוך רשימת 45, 2026-11-24) -->
+                            <div class="cal-view-chips" id="cal-view-chips" role="radiogroup" data-i18n-aria-label="calv_views_aria" aria-label="Calendar view">
+                                <button type="button" class="cal-view-chip on" data-view="month" role="radio" aria-checked="true" data-i18n="calv_view_month">Month</button>
+                                <button type="button" class="cal-view-chip" data-view="week" role="radio" aria-checked="false" data-i18n="calv_view_week">Week</button>
+                                <button type="button" class="cal-view-chip" data-view="3day" role="radio" aria-checked="false" data-i18n="calv_view_3day">3 days</button>
+                                <button type="button" class="cal-view-chip" data-view="day" role="radio" aria-checked="false" data-i18n="calv_view_day">Day</button>
+                                <button type="button" class="cal-view-chip" data-view="year" role="radio" aria-checked="false" data-i18n="calv_view_year">Year</button>
+                                <button type="button" class="cal-view-chip" data-view="list" role="radio" aria-checked="false" data-i18n="calv_view_list">List</button>
                             </div>
-                            <div class="monthly-calendar-weekdays">
-                                <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
+                            <div class="cal-tools">
+                                <button type="button" class="cal-tool" onclick="calGoToday()" data-i18n="calv_today">Today</button>
+                                <button type="button" class="cal-tool" onclick="calOpenFreeTime()" data-i18n="calv_free">Free time</button>
+                                <button type="button" class="cal-tool cal-tool-icon" id="cal-tool-search" onclick="calToggleSearch()" aria-expanded="false" data-i18n-aria-label="calv_search" data-i18n-title="calv_search" aria-label="Search the calendar" title="Search the calendar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+                                <button type="button" class="cal-tool cal-tool-icon" onclick="calOpenSettings()" data-i18n-aria-label="calv_settings" data-i18n-title="calv_settings" aria-label="Calendar settings" title="Calendar settings"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
                             </div>
-                            <div class="monthly-calendar-grid" id="monthly-calendar-grid"></div>
-                            <!-- מקרא לסימנים בלוח (🎯 תאריך יעד · 📖 סיום ספר) - מוצג רק כשיש כאלה בחודש -->
-                            <div id="monthly-calendar-legend" class="monthly-calendar-legend hidden"></div>
-                            <div id="monthly-calendar-day-detail" class="monthly-calendar-day-detail"></div>
+                            <div id="cal-search-panel" class="cal-search-panel hidden">
+                                <input type="search" id="cal-search-input" class="cal-search-input" oninput="calOnSearchInput()" autocomplete="off" data-i18n-placeholder="calv_search_ph" placeholder="Search by a word – also in the past">
+                                <div id="cal-search-results" class="cal-search-results"></div>
+                            </div>
+                            <div id="cal-month-view">
+                                <div class="monthly-goal-nav">
+                                    <button class="monthly-goal-nav-btn" onclick="navigateMonthlyCalendar(-1)" data-i18n-title="monthly_goal_prev_month" title="Previous month">‹</button>
+                                    <span class="monthly-goal-month-label" id="monthly-calendar-label"></span>
+                                    <button class="monthly-goal-nav-btn" onclick="navigateMonthlyCalendar(1)" data-i18n-title="monthly_goal_next_month" title="Next month">›</button>
+                                </div>
+                                <div class="monthly-calendar-weekdays" id="monthly-calendar-weekdays">
+                                    <span data-i18n="weekday_short_sun">Sun</span><span data-i18n="weekday_short_mon">Mon</span><span data-i18n="weekday_short_tue">Tue</span><span data-i18n="weekday_short_wed">Wed</span><span data-i18n="weekday_short_thu">Thu</span><span data-i18n="weekday_short_fri">Fri</span><span data-i18n="weekday_short_sat">Sat</span>
+                                </div>
+                                <div class="monthly-calendar-grid" id="monthly-calendar-grid"></div>
+                                <!-- מקרא לסימנים בלוח (🎯 תאריך יעד · 📖 סיום ספר) - מוצג רק כשיש כאלה בחודש -->
+                                <div id="monthly-calendar-legend" class="monthly-calendar-legend hidden"></div>
+                                <div id="monthly-calendar-day-detail" class="monthly-calendar-day-detail"></div>
+                            </div>
+                            <div id="cal-alt-view" class="cal-alt-view hidden"></div>
                         </div>
                     </div>
                     <!-- 🗓️ טבלה שבועית (לפי בקשה מפורשת, 2026-10-20: "ליד החודשית למי שרוצה להביט - שתהיה גם מקופלת"):
@@ -1896,6 +1918,11 @@
             <span id="app-toast-icon">✅</span>
             <span id="app-toast-text"></span>
         </div>
+        <!-- ↩️ "ביטול" אחרי מחיקה ביומן (calendar-views.js: calShowUndo) -->
+        <div id="cal-undo-toast" class="app-toast cal-undo-toast" role="status">
+            <span id="cal-undo-text"></span>
+            <button type="button" class="cal-undo-btn" onclick="calUndoNow()" data-i18n="calv_undo">Undo</button>
+        </div>
 
         <!-- חלון צף: הוספת פריט לרשימות (משימות/מטרות), במקום prompt() הדפדפן -->
         <div id="modal-add-center-item" class="apple-modal">
@@ -2896,6 +2923,12 @@
                 <div id="settings-subscreen-personalization" class="settings-subscreen hidden">
                     <button type="button" class="settings-back-btn" onclick="backToSettingsMain()">🔙 <span data-i18n="settings_back_btn">Back</span></button>
                     <h3 data-i18n="settings_cat_personalization">Personalization &amp; Calendar</h3>
+                    <!-- 📅 הגדרות יומן (calendar-views.js) - אותו חלון כמו ⚙️ ביומן -->
+                    <button type="button" class="settings-category-row cal-settings-row" onclick="calOpenSettings()">
+                        <span class="settings-category-icon">📅</span>
+                        <span class="settings-category-label" data-i18n="calv_settings">Calendar settings</span>
+                        <span class="settings-category-chevron">‹</span>
+                    </button>
                     <!-- קובע איזה ערך "לפי מדינה" ייבחר עבור מנות רשתות מזון (ר'
                          kcalPerUnitByCountry ב-FOOD_CALORIE_DB) - נבחר במפורש, לא לפי
                          שפת הממשק, כי משתמשת יכולה לכתוב בעברית אבל לגור בארה"ב וכו' -->
@@ -3929,6 +3962,9 @@
                         <button type="button" class="btn-clear-specific" onclick="routineAiShowStep('name')" data-i18n="apptour_back">Back</button>
                     </div>
                 </div>
+                <!-- 💪 לפני שסוגרים (לפי בקשה מפורשת, 2026-11-25): "לחבר אימון לשגרת האימונים?" - נגיעה בפריטים מהשגרה,
+                     אימון חדש, או לא עכשיו (routineAiAskWorkout ב-app.js) -->
+                <div id="routine-ai-step-workout" class="routine-ai-step hidden"></div>
             </div>
         </div>
 
@@ -3940,7 +3976,7 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 id="routine-item-modal-title" data-i18n="daily_board_add_item_title">Add item</h3>
-                <div class="routine-item-time-row"><button type="button" class="nm-time-btn" id="routine-item-time-btn" data-time-id="routine-item" aria-expanded="false" data-i18n-aria-label="nm_time_hour" aria-label="Time" onclick="nmToggleTimePicker(this)"><bdi dir="ltr">--:--</bdi></button></div>
+                <div class="routine-item-time-row"><button type="button" class="nm-time-btn" id="routine-item-time-btn" data-time-id="routine-item" aria-expanded="false" data-i18n-aria-label="nm_time_hour" aria-label="Time" onclick="nmToggleTimePicker(this)"><bdi dir="ltr">--:--</bdi></button><button type="button" class="routine-item-notime" id="routine-item-notime" aria-pressed="false" onclick="routineItemToggleNoTime()" data-i18n="routine_item_no_time">No time</button></div>
                 <input type="text" id="routine-item-title-input" autocomplete="off" data-i18n-placeholder="daily_board_item_title_placeholder" placeholder="e.g. Breakfast">
                 <!-- ✨ במקום להקליד - עוזר השגרה, עם שם הטאב הנוכחי (לפי בקשה מפורשת, 2026-11-15: "שיהיה בתוך ההוספה") -->
                 <button type="button" class="routine-item-ai-link" onclick="openRoutineAiModal(routineActiveTabName())"><i class="ic-spark" aria-hidden="true"></i> <span data-i18n="routine_ai_item_link">Or tell the routine assistant</span></button>
@@ -4264,6 +4300,8 @@
                             <input type="text" id="calendar-event-time-input" data-i18n-placeholder="calendar_event_time_placeholder" placeholder="Time - optional, e.g. 09:00">
                             <input type="text" id="calendar-event-end-time-input" class="calendar-meeting-only hidden" data-i18n-placeholder="calendar_meeting_end_placeholder" placeholder="Ends at – e.g. 10:00 (optional)">
                         </div>
+                        <!-- 🌍 השעה באזור הזמן הנוסף (הגדרות יומן) - "= 10:00 ב-New York" -->
+                        <div id="calendar-event-tz2" class="calendar-event-tz2 hidden"></div>
                         <input type="text" id="calendar-event-with-input" class="calendar-meeting-only hidden" maxlength="120" data-i18n-placeholder="calendar_meeting_with_placeholder" placeholder="With whom? (optional)">
                         <input type="text" id="calendar-event-location-input" class="calendar-meeting-only hidden" maxlength="300" data-i18n-placeholder="calendar_meeting_location_placeholder" placeholder="Place or link – address, Zoom, Meet… (optional)">
                         <textarea id="calendar-event-notes-input" class="calendar-meeting-only hidden" rows="2" maxlength="1000" data-i18n-placeholder="calendar_meeting_notes_placeholder" placeholder="Notes (optional)"></textarea>
@@ -4288,6 +4326,39 @@
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="cancel_btn">Cancel</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- ⚠️ חפיפה ביומן: נפתח מעל חלון ההוספה כשבאותו זמן כבר יש משהו (calendar-views.js: calConfirmOverlap) -->
+        <div id="modal-cal-overlap" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calv_overlap_title">At this time there is already:</h3>
+                <div id="cal-overlap-list" class="cal-overlap-list"></div>
+                <div class="action-buttons-wrap">
+                    <button type="button" class="btn-primary" onclick="calOverlapAnswer(true)" data-i18n="calv_overlap_add">Add anyway</button>
+                    <button type="button" class="btn-clear-specific" onclick="calOverlapAnswer(false)" data-i18n="calv_overlap_change">Change the time</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ⚙️ הגדרות יומן (calendar-views.js: calRenderSettings) - נפתח מהיומן ומההגדרות -->
+        <div id="modal-cal-settings" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calv_settings">Calendar settings</h3>
+                <div id="cal-settings-body" class="cal-settings-body"></div>
+                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 12px;" onclick="calCloseSettings()" data-i18n="close_btn">Close</button>
+            </div>
+        </div>
+
+        <!-- 🕓 זמן פנוי השבוע (calendar-views.js: calRenderFreeTime) -->
+        <div id="modal-cal-free" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calv_free_title">Free time this week</h3>
+                <div id="cal-free-body" class="cal-free-body"></div>
+                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 12px;" onclick="closeModal('modal-cal-free')" data-i18n="close_btn">Close</button>
             </div>
         </div>
 
@@ -4593,16 +4664,17 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=576"></script>
+    <script src="i18n/core.js?v=578"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=9"></script>
-    <script src="app.js?v=684"></script>
+    <script src="app.js?v=685"></script>
+    <script src="calendar-views.js?v=1"></script>
     <script src="ai-chat.js?v=10"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="change.js?v=2"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=5"></script>
-    <script src="workouts.js?v=11"></script>
+    <script src="workouts.js?v=12"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=10"></script>
     <script src="home.js?v=44"></script>

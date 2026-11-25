@@ -3631,7 +3631,10 @@ summary.nm-weight-head .nm-fine { margin-inline-start: auto; }
 .nm-time-btn.is-open { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 18%, var(--bg-row)); }
 .nm-time-btn:disabled { opacity: 0.5; cursor: default; }
 /* השגרה שלי: השעה בחלון של הפריט - אותו בורר */
-.routine-item-time-row { display: flex; justify-content: center; margin: 2px 0 10px; }
+.routine-item-time-row { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; margin: 2px 0 10px; }
+.routine-item-notime { min-height: 40px; padding: 6px 14px; border-radius: 999px; border: 1px dashed var(--border-color); background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.84rem; font-weight: 600; cursor: pointer; }
+.routine-item-notime.on { border-style: solid; border-color: color-mix(in srgb, var(--accent-pink) 55%, var(--border-color)); background: color-mix(in srgb, var(--accent-pink) 14%, transparent); color: var(--text-primary); }
+.nm-time-btn.is-off { opacity: 0.45; }
 .routine-item-time-row + .nm-time-picker { margin-bottom: 6px; }
 .nm-time-btn:focus-visible, .nm-time-chip:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
 .nm-time-picker { display: flex; flex-direction: column; gap: 6px; padding: 2px 0 14px; animation: nmTimeIn 0.18s ease-out; }
@@ -11209,7 +11212,7 @@ button.nmg-me-card:active { transform: scale(.97); }
 .weekly-table-time { flex: none; font-size: .76rem; font-weight: 800; color: var(--accent-purple-light-text); font-variant-numeric: tabular-nums; }
 .weekly-table-empty { color: var(--text-secondary); opacity: .6; padding: 4px 6px; }
 @media (min-width: 900px) {
-    .weekly-table-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .weekly-table-grid { display: grid; grid-template-columns: repeat(var(--wt-cols, 7), minmax(0, 1fr)); }
     .weekly-table-day { grid-template-columns: 1fr; min-height: 120px; padding-inline-end: 10px; }
 }
 /* 📝🛒 הכפתור הקטן ליד הפוקוס - תפריט קטן (2026-10-20) */
@@ -12627,3 +12630,132 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .ach-trophy.is-inline { width: 1.4em; height: 1.4em; vertical-align: -0.4em; margin-inline-end: 2px; }
 .gv-achieved-title { display: flex; align-items: center; gap: 6px; }
 .gv-achieved-trophy .ach-trophy { width: 1.5em; height: 1.5em; }
+
+/* ===== 📅 תצוגות יומן והגדרות יומן (calendar-views.js, לפי בחירה מפורשת מתוך רשימת 45, 2026-11-24) ===== */
+.cal-view-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.cal-view-chip { flex: 1 1 0; min-width: max-content; padding: 7px 8px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-secondary); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition); }
+.cal-view-chip.on { background: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 22%, transparent); border-color: var(--tile-accent, var(--accent-gold)); color: var(--text-primary); }
+.cal-tools { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-bottom: 10px; }
+.cal-tool { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 32px; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.76rem; font-weight: 600; cursor: pointer; }
+.cal-tool-icon { width: 34px; padding: 0; color: var(--tile-accent, var(--accent-gold)); }
+.cal-tool[aria-expanded="true"] { background: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 18%, transparent); }
+.cal-search-panel { margin-bottom: 12px; }
+.cal-search-input { width: 100%; box-sizing: border-box; }
+.cal-search-results { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; max-height: 50vh; overflow-y: auto; }
+.cal-search-group { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); margin: 8px 2px 2px; }
+.cal-weeknum, .cal-weeknum-head { display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: var(--text-secondary); opacity: 0.75; }
+.cal-alt-view.is-flash { animation: calDayFlash 1.6s ease; }
+.cal-alt-weeknum { font-weight: 500; opacity: 0.8; }
+.calendar-event-tz2 { font-size: 0.74rem; color: var(--text-secondary); margin: -2px 4px 6px; }
+
+/* רשת שעות: יום / 3 ימים / שבוע */
+.cal-tg { --cal-line: color-mix(in srgb, var(--text-secondary) 18%, transparent); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--bg-row) 60%, transparent); }
+.cal-tg-head, .cal-tg-allday, .cal-tg-body { display: grid; grid-template-columns: var(--cal-cols); }
+.cal-tg-head { border-bottom: 1px solid var(--cal-line); }
+.cal-tg-dayhead { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0 5px; background: none; border: none; color: var(--text-secondary); font: inherit; cursor: pointer; min-width: 0; }
+.cal-tg-dayhead small { font-size: 0.66rem; font-weight: 600; }
+.cal-tg-dayhead b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 0.86rem; color: var(--text-primary); }
+.cal-tg-dayhead.today small { color: var(--tile-accent, var(--accent-gold)); }
+.cal-tg-dayhead.today b { background: var(--tile-accent, var(--accent-gold)); color: #fff; }
+.cal-tg-allday { border-bottom: 1px solid var(--cal-line); min-height: 8px; }
+.cal-tg-allday-col { display: flex; flex-direction: column; gap: 2px; padding: 3px 2px; min-width: 0; border-inline-start: 1px solid var(--cal-line); }
+.cal-tg-chip { display: block; width: 100%; text-align: start; padding: 2px 5px; border-radius: 6px; border: none; font: inherit; font-size: 0.66rem; line-height: 1.3; color: var(--text-primary); background: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 26%, transparent); cursor: pointer; overflow-wrap: anywhere; }
+.cal-tg-scroll { max-height: min(62vh, 560px); overflow-y: auto; overscroll-behavior: contain; position: relative; }
+.cal-tg-body { position: relative; }
+.cal-tg-gutter { position: relative; }
+.cal-tg-hour { position: absolute; inset-inline: 0; transform: translateY(-0.5em); text-align: center; font-size: 0.6rem; color: var(--text-secondary); line-height: 1.1; display: flex; flex-direction: column; align-items: center; }
+.cal-tg-hour:first-child { transform: none; padding-top: 2px; }
+.cal-tg-hour small { font-size: 0.54rem; opacity: 0.75; }
+.cal-tg-col { position: relative; min-width: 0; border-inline-start: 1px solid var(--cal-line); background-image: repeating-linear-gradient(to bottom, var(--cal-line) 0 1px, transparent 1px var(--cal-hour)); cursor: pointer; touch-action: pan-y; }
+.cal-tg-col.today { background-color: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 6%, transparent); }
+.cal-tg-col.is-drop { background-color: color-mix(in srgb, var(--accent-pink) 14%, transparent); }
+.cal-ev { --ev: var(--tile-accent, var(--accent-gold)); position: absolute; box-sizing: border-box; display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 2px 4px; border: none; border-inline-start: 3px solid var(--ev); border-radius: 6px; background: color-mix(in srgb, var(--ev) 30%, transparent); color: var(--text-primary); font: inherit; text-align: start; overflow: hidden; cursor: pointer; z-index: 1; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.cal-ev-time { font-size: 0.56rem; opacity: 0.8; line-height: 1.2; white-space: nowrap; }
+.cal-ev-title { font-size: 0.66rem; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.cal-ev.is-short { flex-direction: row; gap: 4px; align-items: center; }
+.cal-ev.is-short .cal-ev-time { display: none; }
+.cal-ev.kind-event, .cal-tg-chip.kind-event { --ev: var(--accent-purple); }
+.cal-tg-chip.kind-event { background: color-mix(in srgb, var(--accent-purple) 26%, transparent); }
+.cal-ev.kind-meeting, .cal-tg-chip.kind-meeting { --ev: var(--accent-pink); }
+.cal-tg-chip.kind-meeting { background: color-mix(in srgb, var(--accent-pink) 26%, transparent); }
+.cal-ev.kind-fixed { --ev: var(--text-secondary); background: color-mix(in srgb, var(--text-secondary) 14%, transparent); border-inline-start-style: dashed; }
+.cal-tg-chip.kind-fixed { background: color-mix(in srgb, var(--text-secondary) 16%, transparent); }
+.cal-ev.is-done, .cal-tg-chip.is-done { opacity: 0.55; }
+.cal-ev.is-done .cal-ev-title, .cal-tg-chip.is-done { text-decoration: line-through; }
+.cal-ev.is-dragging { opacity: 0.35; }
+.cal-ev-ghost { box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45); transform: scale(1.04); opacity: 0.95; }
+.cal-tg-now { position: absolute; inset-inline: 0; height: 2px; background: var(--accent-pink); z-index: 2; pointer-events: none; }
+.cal-tg-now::before { content: ""; position: absolute; inset-inline-start: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent-pink); }
+.cal-tg-day .cal-ev-title { font-size: 0.78rem; }
+.cal-tg-day .cal-ev-time { font-size: 0.66rem; }
+
+/* שנה */
+.cal-year { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px 12px; }
+.cal-y-title { display: block; width: 100%; background: none; border: none; padding: 2px 0 4px; font: inherit; font-size: 0.82rem; font-weight: 700; color: var(--tile-accent, var(--accent-gold)); text-align: start; cursor: pointer; }
+.cal-y-grid { display: grid; gap: 1px; }
+.cal-y-wd { text-align: center; font-size: 0.54rem; color: var(--text-secondary); font-weight: 600; }
+.cal-y-day { aspect-ratio: 1 / 1; display: grid; place-items: center; padding: 0; border: none; border-radius: 50%; background: none; color: var(--text-primary); font: inherit; font-size: 0.6rem; cursor: pointer; position: relative; }
+.cal-y-day.has::after { content: ""; position: absolute; bottom: 1px; width: 3px; height: 3px; border-radius: 50%; background: var(--tile-accent, var(--accent-gold)); }
+.cal-y-day.today { background: var(--tile-accent, var(--accent-gold)); color: #fff; font-weight: 700; }
+
+/* רשימה + תוצאות חיפוש */
+.cal-list { display: flex; flex-direction: column; gap: 10px; }
+.cal-list-day { display: flex; flex-direction: column; gap: 4px; }
+.cal-list-day.is-past { opacity: 0.7; }
+.cal-list-date { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; background: none; border: none; padding: 2px 2px; font: inherit; color: var(--text-primary); text-align: start; cursor: pointer; }
+.cal-list-date b { font-size: 0.84rem; }
+.cal-list-day.today .cal-list-date b { color: var(--tile-accent, var(--accent-gold)); }
+.cal-list-date small { font-size: 0.72rem; color: var(--tile-accent, var(--accent-gold)); font-weight: 600; }
+.cal-list-item { --ev: var(--tile-accent, var(--accent-gold)); display: grid; grid-template-columns: minmax(64px, auto) 1fr; gap: 10px; align-items: start; width: 100%; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border-color); border-inline-start: 3px solid var(--ev); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; }
+.cal-list-item.kind-event { --ev: var(--accent-purple); }
+.cal-list-item.kind-meeting { --ev: var(--accent-pink); }
+.cal-list-item.kind-fixed { --ev: var(--text-secondary); border-inline-start-style: dashed; }
+.cal-list-item.is-done .cal-list-text > span { text-decoration: line-through; opacity: 0.6; }
+.cal-list-time { font-size: 0.74rem; color: var(--text-secondary); font-weight: 600; }
+.cal-list-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 0.84rem; overflow-wrap: anywhere; }
+.cal-list-text small { font-size: 0.72rem; color: var(--text-secondary); }
+.cal-list-more { align-self: center; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; }
+.cal-list-more.is-earlier { align-self: flex-start; color: var(--text-secondary); border-style: dashed; }
+
+/* הגדרות יומן + זמן פנוי */
+.cal-settings-body, .cal-free-body { display: flex; flex-direction: column; gap: 6px; text-align: start; }
+.cal-set-label { font-size: 0.8rem; font-weight: 700; color: var(--text-primary); margin-top: 8px; }
+.cal-chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.cal-chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.78rem; cursor: pointer; }
+.cal-chip.on { background: color-mix(in srgb, var(--tile-accent, var(--accent-gold)) 24%, transparent); border-color: var(--tile-accent, var(--accent-gold)); font-weight: 700; }
+.cal-days-row .cal-chip { min-width: 40px; text-align: center; }
+.cal-num-input { max-width: 180px; }
+.cal-set-toggle { margin-top: 8px; }
+.cal-tz-device { font-size: 0.8rem; color: var(--text-secondary); }
+.cal-tz-search { width: 100%; box-sizing: border-box; }
+.cal-tz-results { display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+.cal-tz-row { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 0.8rem; text-align: start; cursor: pointer; }
+.cal-tz-row small { color: var(--text-secondary); flex: none; }
+.cal-free-hours { display: flex; align-items: center; gap: 8px; }
+.cal-free-hours input { width: 90px; text-align: center; }
+.cal-free-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.cal-free-date { font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
+.cal-free-slot { border-style: dashed; }
+
+/* חפיפה + ביטול */
+.cal-overlap-list { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 14px; }
+.cal-overlap-row { display: flex; gap: 10px; align-items: baseline; padding: 9px 12px; border-radius: 12px; background: var(--bg-row); border: 1px solid var(--border-color); font-size: 0.86rem; text-align: start; }
+.cal-overlap-row bdi { flex: none; font-weight: 700; color: var(--tile-accent, var(--accent-gold)); }
+.cal-undo-toast { justify-content: space-between; z-index: 4600; }
+.cal-undo-toast.show { pointer-events: auto; bottom: 150px; }
+.cal-undo-btn { flex: none; padding: 6px 14px; border-radius: 999px; border: 1px solid currentColor; background: transparent; color: var(--text-primary); font: inherit; font-weight: 700; cursor: pointer; }
+#modal-add-calendar-event.is-duplicating #btn-add-calendar-event,
+#modal-add-calendar-event.is-duplicating #btn-delete-calendar-event { display: none; }
+.cal-dup-btn { font-size: 0.95rem; }
+.cal-ev.is-stacked { box-shadow: 0 0 0 1px var(--bg-row), -2px 2px 8px rgba(0, 0, 0, 0.35); }
+.cal-tg-week .cal-ev-time { display: none; }
+.cal-tg-week .cal-ev-title { font-size: 0.62rem; }
+.cal-ev { background: linear-gradient(color-mix(in srgb, var(--ev) 30%, transparent), color-mix(in srgb, var(--ev) 30%, transparent)), var(--bg-main, #1a1a1a); }
+.cal-ev.kind-fixed { background: linear-gradient(color-mix(in srgb, var(--text-secondary) 16%, transparent), color-mix(in srgb, var(--text-secondary) 16%, transparent)), var(--bg-main, #1a1a1a); }
+/* 💪 שאלת האימון בסוף עוזר השגרה */
+#routine-ai-step-workout .action-buttons-wrap { flex-direction: column; align-items: stretch; }
+#routine-ai-step-workout .action-buttons-wrap > button { width: 100%; margin: 0; }
+.routine-ai-wk-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+.routine-ai-wk-chips.hidden { display: none; }
+.routine-ai-wk-chip { text-align: start; }
+.routine-ai-wk-more { display: block; margin: 2px 0 4px; }

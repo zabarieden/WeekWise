@@ -49,7 +49,8 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 // block: שם הבלוק כשהמשתמש/ת כתבו את הדברים תחת כותרת ("בוקר: ...") - כמה דברים ביחד עם וי אחד בפוקוס (2026-11-18)
-type Item = { time: string; hour: number; title: string; block?: string };
+// time: null = פריט בלי שעה (לפי בקשה מפורשת, 2026-11-25: "הוספתי משהו ללא שעה והוא פשוט לא הוסיף את זה לשגרה")
+type Item = { time: string | null; hour: number | null; title: string; block?: string };
 
 // "16:10" / "8:05" / "16" → "16:10" / "08:05" / "16:00"; מחוץ ל-05:00–23:59 → null
 function cleanTime(it: any): string | null {
@@ -71,14 +72,24 @@ function cleanTabs(raw: any[], forcedDays: number[] | null) {
         const seen = new Set<string>();
         const items: Item[] = [];
         for (const it of Array.isArray(tab?.items) ? tab.items : []) {
-            const time = cleanTime(it);
             const title = String(it?.title || "").trim().slice(0, 80);
-            if (!title || !time || seen.has(time)) continue;
-            seen.add(time);
+            if (!title) continue;
             const block = String(it?.block || "").trim().slice(0, 40);
+            // בלי שעה בכלל (time ריק) - נשאר, בלי שעה; שעה לא תקינה או בין חצות ל-05:00 - יוצאת כמו קודם
+            const noTime = String(it?.time ?? "").trim() === "" && (it?.hour === undefined || it?.hour === null || it?.hour === "");
+            if (noTime) {
+                const key = "notime|" + title.toLowerCase();
+                if (seen.has(key)) continue;
+                seen.add(key);
+                items.push({ time: null, hour: null, title, ...(block ? { block } : {}) });
+                continue;
+            }
+            const time = cleanTime(it);
+            if (!time || seen.has(time)) continue;
+            seen.add(time);
             items.push({ time, hour: Number(time.slice(0, 2)) + (Number(time.slice(3)) >= 30 && Number(time.slice(0, 2)) < 23 ? 1 : 0), title, ...(block ? { block } : {}) });
         }
-        items.sort((a, b) => a.time.localeCompare(b.time));
+        items.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
         if (items.length) tabs.push({ name, weekdays, items });
         if (forcedDays) break;
     }
@@ -147,7 +158,8 @@ Deno.serve(async (req) => {
                         "wrote - never round it: \"16:10\" stays \"16:10\", \"17:30\" stays \"17:30\", \"wake up at 8\" is \"08:00\". " +
                         "Times like \"at 4\" or \"at 7\" without am/pm are read the way people mean them in a daily routine. " +
                         "If two activities have the same time, combine them into one short title (\"Shower + breakfast\") instead " +
-                        "of dropping one. Leave out anything between midnight and 05:00.\n" +
+                        "of dropping one. Leave out anything between midnight and 05:00. An activity the user wrote WITHOUT any time " +
+                        "(\"drink water\", \"read 10 pages\") is kept with time \"\" (empty) - never invent a time for it and never drop it.\n" +
                         "- An activity that spans a range (\"work 9–17\") goes at its start time; keep the end in the title only when " +
                         "it helps (\"Work until 17:00\").\n" +
                         "- Titles are short and keep the user's own language and wording. Never invent activities that weren't " +
@@ -176,7 +188,7 @@ Deno.serve(async (req) => {
                                             items: {
                                                 type: "object",
                                                 properties: {
-                                                    time: { type: "string", description: "HH:MM, 24-hour clock, exactly as the user wrote it" },
+                                                    time: { type: "string", description: "HH:MM, 24-hour clock, exactly as the user wrote it; an empty string when the user gave no time" },
                                                     title: { type: "string" },
                                                     block: { type: "string", description: "The heading the user wrote this item under (e.g. \"Morning\"), or empty" },
                                                 },

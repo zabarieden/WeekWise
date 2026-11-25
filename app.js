@@ -5299,6 +5299,15 @@ async function openCalendarAtDate(dateStr) {
         if (header) toggleCardSection(header);
     }
     viewedCalendarMonthKey = dateStr.slice(0, 7);
+    // תצוגה אחרת מ"חודש" (שבוע / יום / רשימה...) - קופצים אליה על התאריך הזה
+    if (typeof calActiveView === 'function' && calActiveView() !== 'month') {
+        calAnchor = dateStr;
+        selectedCalendarDay = dateStr;
+        await loadMonthlyCalendarGrid();
+        const alt = document.getElementById('cal-alt-view');
+        if (alt) { alt.scrollIntoView({ block: 'start', behavior: 'smooth' }); alt.classList.add('is-flash'); setTimeout(() => alt.classList.remove('is-flash'), 1800); }
+        return;
+    }
     await loadMonthlyCalendarGrid();
     await selectCalendarDay(dateStr);
     const detail = document.getElementById('monthly-calendar-day-detail');
@@ -7166,6 +7175,11 @@ async function loadMonthlyCalendarGrid() {
     const grid = document.getElementById('monthly-calendar-grid');
     const label = document.getElementById('monthly-calendar-label');
     if (!grid || !label) return;
+    // 📅 תצוגות היומן (calendar-views.js): יום / 3 ימים / שבוע / שנה / רשימה - כל רענון של הלוח
+    // (אחרי הוספה, עריכה, מחיקה) מצייר את התצוגה שנבחרה; "חודש" ממשיך כאן כמו קודם
+    if (typeof calLoadServerPrefs === 'function') await calLoadServerPrefs();
+    if (typeof calActiveView === 'function' && calActiveView() !== 'month') { calRenderAlt(); renderWeeklyTable(); return; }
+    if (typeof calSyncViewChrome === 'function') calSyncViewChrome();
     if (!viewedCalendarMonthKey) viewedCalendarMonthKey = currentMonthKey();
     label.textContent = formatMonthLabel(viewedCalendarMonthKey);
 
@@ -7196,17 +7210,23 @@ async function loadMonthlyCalendarGrid() {
     const startWeekday = firstDate.getDay();
     const daysInMonth = lastDate.getDate();
 
-    let html = '';
-    for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const cellHtml = (day, dateStr) => {
         const isToday = dateStr === todayStr;
         const isSelected = dateStr === selectedCalendarDay;
         const hasEvents = markedDates.has(dateStr) || recurringDays.has(dbDaysMap[new Date(y, m - 1, day).getDay()]);
-        html += `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}')">
+        return `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}')">
             <span class="monthly-calendar-day-num">${day}</span>
             ${hasEvents ? '<span class="monthly-calendar-dot"></span>' : ''}
         </button>`;
+    };
+    let html = '';
+    if (typeof calMonthGridHtml === 'function') {
+        // היום הראשון בשבוע, ימים מוסתרים ומספרי שבועות - לפי הגדרות היומן
+        calApplyMonthHeader();
+        html = calMonthGridHtml(y, m, (d, dateStr) => cellHtml(d.getDate(), dateStr));
+    } else {
+        for (let i = 0; i < startWeekday; i++) html += `<div class="monthly-calendar-cell empty"></div>`;
+        for (let day = 1; day <= daysInMonth; day++) html += cellHtml(day, `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
     }
     grid.innerHTML = html;
     refreshCalendarDeadlineMarks();
@@ -7229,13 +7249,15 @@ function toggleWeeklyTableCard(headerEl) {
     toggleCardSection(headerEl);
     if (document.getElementById('weekly-table-card')?.classList.contains('expanded')) renderWeeklyTable();
 }
+// תחילת השבוע של היומן - לפי "היום הראשון בשבוע" בהגדרות היומן (calendar-views.js)
+function calWs() { return typeof calCurrentWeekStart === 'function' ? calCurrentWeekStart() : currentWeekStart(); }
 function navigateWeeklyTable(delta) {
-    viewedWeeklyTableStart = addDaysToDateStr(viewedWeeklyTableStart || currentWeekStart(), delta * 7);
+    viewedWeeklyTableStart = addDaysToDateStr(viewedWeeklyTableStart || calWs(), delta * 7);
     renderWeeklyTable();
 }
 // ה-＋ בכותרת: היום אם הוא בשבוע שמוצג, אחרת היום הראשון של השבוע (אחרי השמירה הטבלה מתרעננת דרך loadMonthlyCalendarGrid)
 function openAddEventForWeeklyTable() {
-    const start = viewedWeeklyTableStart || currentWeekStart(), today = getLocalDateString();
+    const start = viewedWeeklyTableStart || calWs(), today = getLocalDateString();
     openAddEventForDate(today >= start && today <= addDaysToDateStr(start, 6) ? today : start);
 }
 let weeklyTableItems = {};
@@ -7244,7 +7266,7 @@ async function renderWeeklyTable() {
     const grid = document.getElementById('weekly-table-grid');
     const label = document.getElementById('weekly-table-label');
     if (!grid || !label || !card || !card.classList.contains('expanded') || !supabaseClient || !currentUserId) return;
-    if (!viewedWeeklyTableStart) viewedWeeklyTableStart = currentWeekStart();
+    if (!viewedWeeklyTableStart) viewedWeeklyTableStart = calWs();
     const start = viewedWeeklyTableStart, end = addDaysToDateStr(start, 6);
     const fmt = (s, opts) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(currentLang, opts); };
     label.textContent = `${fmt(start, { day: 'numeric', month: 'short' })} – ${fmt(end, { day: 'numeric', month: 'short' })}`;
@@ -7257,6 +7279,7 @@ async function renderWeeklyTable() {
     let html = '';
     for (let i = 0; i < 7; i++) {
         const dateStr = addDaysToDateStr(start, i);
+        if (typeof calIsShown === 'function' && !calIsShown(dateStr)) continue;
         const [y, m, d] = dateStr.split('-').map(Number);
         const wd = new Date(y, m - 1, d).getDay();
         const items = [
@@ -7266,10 +7289,11 @@ async function renderWeeklyTable() {
         items.forEach(it => { weeklyTableItems[`${it.kind}:${it.id}:${dateStr}`] = it; });
         html += `<div class="weekly-table-day${dateStr === today ? ' today' : ''}">
             <div class="weekly-table-day-head"><span>${escapeHtmlForReport(t(dayNameKeys[wd]))}</span><small>${escapeHtmlForReport(fmt(dateStr, { day: 'numeric', month: 'numeric' }))}</small><button type="button" class="weekly-table-add" data-wt-add="${dateStr}" aria-label="${escapeHtmlForReport(`${t('calendar_event_add_title')} · ${t(dayNameKeys[wd])} ${fmt(dateStr, { day: 'numeric', month: 'numeric' })}`)}">＋</button></div>
-            <div class="weekly-table-items">${items.length ? items.map(it => `<button type="button" class="weekly-table-item${it.done ? ' is-done' : ''}${it.kind === 'fixed' ? ' is-fixed' : ''}" data-wt="${it.kind}:${it.id}:${dateStr}">${it.time ? `<bdi class="weekly-table-time" dir="ltr">${escapeHtmlForReport(String(it.time).slice(0, 5))}</bdi>` : ''}<span>${escapeHtmlForReport(it.title)}</span></button>`).join('') : '<span class="weekly-table-empty">—</span>'}</div>
+            <div class="weekly-table-items">${items.length ? items.map(it => `<button type="button" class="weekly-table-item${it.done ? ' is-done' : ''}${it.kind === 'fixed' ? ' is-fixed' : ''}" data-wt="${it.kind}:${it.id}:${dateStr}">${it.time ? `<bdi class="weekly-table-time" dir="ltr">${escapeHtmlForReport(typeof calFmtTime === 'function' ? calFmtTime(String(it.time).slice(0, 5)) : String(it.time).slice(0, 5))}</bdi>` : ''}<span>${escapeHtmlForReport(it.title)}</span></button>`).join('') : '<span class="weekly-table-empty">—</span>'}</div>
         </div>`;
     }
     grid.innerHTML = html;
+    grid.style.setProperty('--wt-cols', String(grid.children.length || 7));
     grid.querySelectorAll('[data-wt-add]').forEach(b => b.addEventListener('click', () => openAddEventForDate(b.dataset.wtAdd)));
     grid.querySelectorAll('[data-wt]').forEach(b => b.addEventListener('click', () => {
         const it = weeklyTableItems[b.dataset.wt];
@@ -7466,6 +7490,14 @@ async function renderSelectedCalendarDay() {
         editBtn.className = 'btn-edit-item';
         editBtn.innerHTML = EDIT_ICON_SVG;
         editBtn.onclick = () => openEditCalendarEvent(item);
+        // ⧉ שכפול מהיר לתאריך אחר (calendar-views.js: calQuickDuplicate)
+        const dupBtn = document.createElement('button');
+        dupBtn.type = 'button';
+        dupBtn.className = 'btn-edit-item cal-dup-btn';
+        dupBtn.textContent = '⧉';
+        dupBtn.title = t('calv_dup_title');
+        dupBtn.setAttribute('aria-label', t('calv_dup_title'));
+        dupBtn.onclick = () => calQuickDuplicate(item);
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-delete-item';
@@ -7481,6 +7513,7 @@ async function renderSelectedCalendarDay() {
         }
         row.appendChild(textSpan);
         row.appendChild(editBtn);
+        if (typeof calQuickDuplicate === 'function') row.appendChild(dupBtn);
         row.appendChild(deleteBtn);
         detail.appendChild(row);
     });
@@ -7604,7 +7637,9 @@ async function moveCalendarTaskToDate(itemId, itemType, targetDateStr) {
 
 async function deleteRecurringScheduleItem(id) {
     if (!supabaseClient) return;
+    const { data: deletedRow } = typeof calShowUndo === 'function' ? await supabaseClient.from('weekly_schedule').select('*').eq('id', id).maybeSingle() : { data: null };
     await supabaseClient.from('weekly_schedule').delete().eq('id', id);
+    if (deletedRow) calShowUndo(t('calv_deleted'), calRestoreFixedFn(deletedRow));
     await Promise.all([loadMonthlyCalendarGrid(), loadWeeklySchedule(), loadTodayTasks()]);
 }
 
@@ -7721,7 +7756,7 @@ let meetingsWeekStart = null;
 async function loadMeetingsWeek() {
     const diary = document.getElementById('meetings-diary');
     if (!diary || !supabaseClient || !currentUserId) return;
-    if (!meetingsWeekStart) meetingsWeekStart = currentWeekStart();
+    if (!meetingsWeekStart) meetingsWeekStart = calWs();
     const start = meetingsWeekStart;
     const label = document.getElementById('meetings-week-label');
     if (label) label.textContent = formatWeekRangeLabel(start);
@@ -7824,7 +7859,7 @@ function buildMeetingDiaryEntry(mt) {
     return entry;
 }
 function navigateMeetingsWeek(delta) {
-    meetingsWeekStart = addDaysToDateStr(meetingsWeekStart || currentWeekStart(), delta * 7);
+    meetingsWeekStart = addDaysToDateStr(meetingsWeekStart || calWs(), delta * 7);
     loadMeetingsWeek();
 }
 
@@ -8171,6 +8206,9 @@ async function openEditCalendarEvent(item) {
     }
     editingCalendarEventId = item.id;
     editingCalendarEventGroupId = null;
+    // לאזהרת החפיפה: מזהירים רק כשהתאריך או השעה השתנו
+    calendarEventEditOrig = { date: item.event_date, time: item.event_time || '', end: item.end_time || '' };
+    calClearDupMode();
     document.getElementById('calendar-event-title-input').value = item.event_title;
     document.getElementById('calendar-event-date-input').value = item.event_date;
     updateDateFieldDisplay('calendar-event-date-input');
@@ -8193,7 +8231,16 @@ async function openEditCalendarEvent(item) {
     // בכוונה - מחיקת סדרה שלמה היא פעולה נפרדת עם הכפתור הייעודי שלה ברשימה
     document.getElementById('btn-delete-calendar-event').classList.remove('hidden');
     document.getElementById('btn-duplicate-calendar-event').classList.remove('hidden');
+    if (typeof calUpdateEventTz2Hint === 'function') calUpdateEventTz2Hint();
     openModal('modal-add-calendar-event');
+}
+// ⧉ מצב "שכפול" (calQuickDuplicate): הכותרת "שכפול", רק כפתור השכפול - בלי עדכון ומחיקה של המקורי
+let calendarEventEditOrig = null;
+function calClearDupMode() {
+    const modal = document.getElementById('modal-add-calendar-event');
+    if (modal) modal.classList.remove('is-duplicating');
+    const dup = document.getElementById('btn-duplicate-calendar-event');
+    if (dup) { dup.classList.remove('btn-primary'); dup.classList.add('btn-secondary'); }
 }
 
 function openEditCalendarEventSeries(groupId, currentTitle) {
@@ -8228,7 +8275,8 @@ function calendarKindIcon(item) { const kind = calendarKindOf(item); return kind
 function meetingTimeRange(item) {
     if (!item || !item.event_time) return '';
     const end = item.end_time && item.end_time > item.event_time ? item.end_time : null;
-    return String.fromCharCode(0x2066) + item.event_time + (end ? `–${end}` : '') + String.fromCharCode(0x2069);
+    const f = typeof calFmtTime === 'function' ? calFmtTime : (x => x);
+    return String.fromCharCode(0x2066) + f(item.event_time) + (end ? `–${f(end)}` : '') + String.fromCharCode(0x2069);
 }
 function isMeetingLink(text) { return /^https?:\/\//i.test(text || '') || /(^|\.)(zoom\.us|meet\.google\.com|teams\.microsoft\.com|teams\.live\.com|webex\.com|whereby\.com)\b/i.test(text || ''); }
 function meetingLinkHref(text) { const s = String(text || '').trim(); return /^https?:\/\//i.test(s) ? s : `https://${s}`; }
@@ -8278,6 +8326,8 @@ function openAddMeeting() {
 function resetCalendarEventModal() {
     editingCalendarEventId = null;
     editingCalendarEventGroupId = null;
+    calendarEventEditOrig = null;
+    calClearDupMode();
     document.getElementById('calendar-event-title-input').value = '';
     document.getElementById('calendar-event-date-input').value = '';
     updateDateFieldDisplay('calendar-event-date-input');
@@ -8292,7 +8342,9 @@ function resetCalendarEventModal() {
     updateCustomSelectDisplay('calendar-event-duration-input');
     toggleRecurringOptionsVisibility();
     document.querySelector('.calendar-event-recurring-toggle').classList.remove('hidden');
-    setReminderSelectValue('calendar-event-reminder', 0);
+    // תזכורת ברירת המחדל מהגדרות היומן (calendar-views.js) - לכל אירוע חדש
+    setReminderSelectValue('calendar-event-reminder', (typeof calPrefs !== 'undefined' && calPrefs.rem) || 0);
+    if (typeof calUpdateEventTz2Hint === 'function') setTimeout(calUpdateEventTz2Hint, 0);
     document.getElementById('calendar-event-reminder-text').value = '';
     document.getElementById('calendar-event-reminder-wrap').classList.remove('hidden');
     document.getElementById('btn-delete-calendar-event').classList.add('hidden');
@@ -8340,6 +8392,15 @@ async function addCalendarEventImpl() {
         if (!meeting) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
         if (meeting.kind === 'meeting' && !eventTime) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
         if (meeting.end_time && eventTime && meeting.end_time <= eventTime) { showAppToast(t('calendar_meeting_end_before_start'), 'error'); return; }
+    }
+    // ⚠️ חפיפה: כבר יש משהו באותו זמן - שואלים לפני ששומרים (calendar-views.js). בעריכה - רק אם התאריך או השעה השתנו
+    if (!editingCalendarEventGroupId && eventTime && date && typeof calFindOverlaps === 'function') {
+        const orig = calendarEventEditOrig;
+        const changed = !orig || orig.date !== date || orig.time !== eventTime || (orig.end || '') !== (meeting.end_time || '');
+        if (changed) {
+            const overlaps = await calFindOverlaps(date, eventTime, meeting.end_time, editingCalendarEventId);
+            if (overlaps.length && !(await calConfirmOverlap(overlaps))) return;
+        }
     }
 
     if (editingCalendarEventGroupId) {
@@ -8452,7 +8513,10 @@ async function deleteCalendarEvent(id) {
     // משימה של צעד מיעד (📅) - משימה חד-פעמית מוחקת גם את הצעד עצמו (והמחיקה מתגלגלת,
     // ON DELETE CASCADE, לשאר המשימות שלו); מופע של תזכורת שבועית מוחק רק את אותו שבוע
     const linkedToStep = await handleLinkedStepTaskDelete(id);
+    // ↩️ "ביטול" לכמה שניות אחרי המחיקה (calendar-views.js) - לא למשימה של צעד מיעד, שנמחקת יחד עם הצעד
+    const { data: deletedRows } = linkedToStep || typeof calShowUndo !== 'function' ? { data: null } : await supabaseClient.from('calendar_events').select('*').eq('id', id);
     await supabaseClient.from('calendar_events').delete().eq('id', id);
+    if (deletedRows && deletedRows.length) calShowUndo(t('calv_deleted'), calRestoreEventsFn(deletedRows));
     if (linkedToStep) loadVisionStepEvents().then(renderVisionGoalsList);
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
@@ -8465,7 +8529,9 @@ async function deleteCalendarEvent(id) {
 // לפי בקשה מפורשת ("שאוכל לראות שעשיתי את זה בעבר" גם אחרי מחיקה)
 async function deleteRecurringSeries(groupId) {
     const todayStr = getLocalDateString();
+    const { data: deletedRows } = typeof calShowUndo === 'function' ? await supabaseClient.from('calendar_events').select('*').eq('recurrence_group_id', groupId).gte('event_date', todayStr) : { data: null };
     await supabaseClient.from('calendar_events').delete().eq('recurrence_group_id', groupId).gte('event_date', todayStr);
+    if (deletedRows && deletedRows.length) calShowUndo(t('calv_deleted'), calRestoreEventsFn(deletedRows));
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
@@ -8474,7 +8540,9 @@ async function deleteRecurringSeries(groupId) {
 // מוחקת מופע ספציפי אחד בלבד מתוך סדרה חוזרת - כל שאר המופעים (כולל עתידיים)
 // נשארים במקום, בניגוד ל-deleteRecurringSeries שמפסיקה את כולם מהיום והלאה
 async function deleteSingleSeriesOccurrence(id) {
+    const { data: deletedRows } = typeof calShowUndo === 'function' ? await supabaseClient.from('calendar_events').select('*').eq('id', id) : { data: null };
     await supabaseClient.from('calendar_events').delete().eq('id', id);
+    if (deletedRows && deletedRows.length) calShowUndo(t('calv_deleted'), calRestoreEventsFn(deletedRows));
     loadCalendarEvents();
     loadMonthlyCalendarGrid();
     loadTodayTasks();
@@ -10521,7 +10589,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_cart', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
     { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
     { tab: 'general', head: 'faq_cat_books', ids: ['books_what', 'books_deadline', 'books_home_chip', 'book_quotes'] },
-    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'task_not_done_by_eod'] },
+    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
@@ -18769,7 +18837,14 @@ function routineSlotTime(h) { return typeof h === 'number' ? `${String(h).padSta
 function routineSlotMinutes(h) { const [hh, mm] = routineSlotTime(h).split(':').map(Number); return (hh || 0) * 60 + (mm || 0); }
 function routineSlotHour(h) { return typeof h === 'number' ? h : Number(String(h || '').slice(0, 2)); }
 // השעה של פריט שחזר מה-AI: "HH:MM" כשיש, ואחרת השעה העגולה (תשובות ישנות של הפונקציה)
-function routineItemTime(it) { const tm = String((it && it.time) || ''); return /^([01]\d|2[0-3]):[0-5]\d$/.test(tm) ? tm : `${String(it.hour).padStart(2, '0')}:00`; }
+// null = פריט בלי שעה (לפי בקשה מפורשת, 2026-11-25: "הוספתי משהו ללא שעה והוא פשוט לא הוסיף את זה לשגרה") - מופיע
+// בחלק "בלי שעה" בראש השגרה, וב"היום שלי" למעלה עם מה שאין לו שעה
+function routineItemTime(it) {
+    const tm = String((it && it.time) || '');
+    if (/^([01]\d|2[0-3]):[0-5]\d$/.test(tm)) return tm;
+    const h = Number(it && it.hour);
+    return it && it.hour !== null && it.hour !== undefined && it.hour !== '' && Number.isInteger(h) && h >= 0 && h <= 23 ? `${String(h).padStart(2, '0')}:00` : null;
+}
 let dailyBoardItemsCache = [];   // הפריטים של הטאב הפעיל (מהרינדור האחרון) - בשביל פאנל השעות
 
 // לכל טאב יש שעות בלוקים משלו (לא גלובלי לכל הטאבים) - לפי בקשה מפורשת
@@ -19388,7 +19463,7 @@ function routineHoursForItems(items) {
     const hours = { morning: [], noon: [], afternoon: [], evening: [] };
     items.forEach(it => {
         const time = routineItemTime(it);
-        if (!time.endsWith(':00')) return;
+        if (!time || !time.endsWith(':00')) return;
         const h = Number(time.slice(0, 2));
         const b = routineBucketOfHour(h);
         if (b && !hours[b].includes(h)) hours[b].push(h);
@@ -19402,7 +19477,7 @@ async function insertRoutineItemsAtHours(tabId, items) {
     const inserts = [];
     for (const it of items) {
         const time = routineItemTime(it);
-        const ex = byTime.get(time);
+        const ex = time ? byTime.get(time) : null;
         if (ex) await supabaseClient.from('routine_items').update({ title: it.title }).eq('id', ex.id);
         else inserts.push({ tab_id: tabId, user_id: currentUserId, title: it.title, time, kind: 'scheduled' });
     }
@@ -19508,6 +19583,63 @@ function openRoutineAiModal(prefillName) {
 function routineAiShowStep(step) {
     document.getElementById('routine-ai-step-name').classList.toggle('hidden', step !== 'name');
     document.getElementById('routine-ai-step-text').classList.toggle('hidden', step !== 'text');
+    document.getElementById('routine-ai-step-workout')?.classList.toggle('hidden', step !== 'workout');
+}
+
+// 💪 לפני שסוגרים את עוזר השגרה (לפי בקשה מפורשת, 2026-11-25: "לשאול שאלה לפני סגירה: האם תרצה לחבר אימון לשגרת
+// האימונים? ותיתן אפשרויות שילחץ על מה שהוא רוצה"): הפריטים שנראים כמו אימון (ריצה, הליכה, חדר כושר...) כבר מסומנים,
+// "עוד מהשגרה" מראה את כל השאר, "➕ אימון חדש" פותח את שגרת האימונים, ו"לא עכשיו" סוגר. מחזיר true כשהשאלה מוצגת
+function routineAiAskWorkout(inserted) {
+    const box = document.getElementById('routine-ai-step-workout');
+    if (!box || typeof routineItemToWorkoutFor !== 'function') return false;
+    const rows = (inserted || []).filter(it => it && it.id && String(it.title || '').trim());
+    const looks = rows.filter(it => wkGuessKind(it.title));
+    const others = rows.filter(it => !wkGuessKind(it.title));
+    const picked = new Set(looks.map(it => it.id));
+    const esc = escapeHtmlForReport;
+    const chip = it => `<button type="button" class="calendar-kind-chip routine-ai-wk-chip${picked.has(it.id) ? ' on' : ''}" data-wk-item="${esc(it.id)}" aria-pressed="${picked.has(it.id) ? 'true' : 'false'}">${it.time ? `<bdi dir="ltr">${esc(String(it.time).slice(0, 5))}</bdi> ` : ''}${esc(it.title)}</button>`;
+    box.innerHTML = `<p class="routine-ai-bubble">${esc(t('routine_ai_wk_q'))}</p>
+        <div class="routine-ai-wk-chips">${looks.map(chip).join('')}</div>
+        ${others.length ? `<button type="button" class="btn-link-action routine-ai-wk-more" aria-expanded="${looks.length ? 'false' : 'true'}">${esc(t('routine_ai_wk_more'))}</button>
+        <div class="routine-ai-wk-chips routine-ai-wk-others${looks.length ? ' hidden' : ''}">${others.map(chip).join('')}</div>` : ''}
+        <div class="action-buttons-wrap" style="margin-top: 12px;">
+            <button type="button" class="btn-primary routine-ai-wk-link"${picked.size ? '' : ' disabled'}>${esc(t('routine_ai_wk_link').replace('{n}', picked.size))}</button>
+            <button type="button" class="btn-secondary routine-ai-wk-new">${esc(t('routine_ai_wk_new'))}</button>
+            <button type="button" class="btn-clear-specific routine-ai-wk-skip">${esc(t('routine_ai_wk_skip'))}</button>
+        </div>`;
+    const linkBtn = box.querySelector('.routine-ai-wk-link');
+    const syncLink = () => { linkBtn.disabled = !picked.size; linkBtn.textContent = t('routine_ai_wk_link').replace('{n}', picked.size); };
+    box.querySelectorAll('[data-wk-item]').forEach(b => b.addEventListener('click', () => {
+        const id = b.dataset.wkItem;
+        if (picked.has(id)) picked.delete(id); else picked.add(id);
+        b.classList.toggle('on', picked.has(id));
+        b.setAttribute('aria-pressed', picked.has(id) ? 'true' : 'false');
+        syncLink();
+    }));
+    const more = box.querySelector('.routine-ai-wk-more');
+    if (more) more.addEventListener('click', () => {
+        const list = box.querySelector('.routine-ai-wk-others');
+        const open = list.classList.toggle('hidden') === false;
+        more.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    linkBtn.addEventListener('click', async () => {
+        linkBtn.disabled = true;
+        let n = 0;
+        for (const it of rows.filter(r => picked.has(r.id))) { if (await routineItemToWorkoutFor(it, true)) n++; }
+        closeModal('modal-routine-ai');
+        if (n) showAppToast(t('routine_ai_wk_done').replace('{n}', n));
+        if (typeof renderDailyBoard === 'function') renderDailyBoard();
+        if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    });
+    box.querySelector('.routine-ai-wk-new').addEventListener('click', () => {
+        closeModal('modal-routine-ai');
+        closeModal('modal-daily-board');
+        if (typeof navigateFromMenu === 'function') navigateFromMenu('sport-section');
+        setTimeout(() => { if (typeof openWorkoutEditor === 'function') openWorkoutEditor(null); }, 300);
+    });
+    box.querySelector('.routine-ai-wk-skip').addEventListener('click', () => closeModal('modal-routine-ai'));
+    routineAiShowStep('workout');
+    return true;
 }
 function routineAiNext() {
     const nameInput = document.getElementById('routine-ai-name');
@@ -19537,8 +19669,9 @@ async function routineAddAiItems(tab, items) {
         // 🔗 "בוקר: ..." - העוזר מחבר לבלוק את מה שנכתב תחת כותרת (2026-11-18)
         block_name: String(it.block || '').trim().slice(0, 40) || null,
     }));
-    const { error } = await supabaseClient.from('routine_items').insert(rows);
+    const { data, error } = await supabaseClient.from('routine_items').insert(rows).select('*');
     if (error) throw error;
+    return data || [];
 }
 
 async function createRoutineWithAI() {
@@ -19556,6 +19689,7 @@ async function createRoutineWithAI() {
     const items = aiTabs.flatMap(ai => (ai.items || []).map(it => ({ ...it, days: perItemDays ? days(ai) : null })));
     if (!items.length) { showAppToast(t('routine_ai_failed'), 'error'); return; }
     let tab = existing;
+    let inserted = [];
     try {
         if (!tab) {
             const weekdays = aiTabs.length === 1 ? days(aiTabs[0]) : null;
@@ -19568,16 +19702,17 @@ async function createRoutineWithAI() {
             dailyBoardTabs.push(data);
             tab = data;
         }
-        await routineAddAiItems(tab, items);
+        inserted = await routineAddAiItems(tab, items);
     } catch (e) {
         showAppToast(t('error_adding_item') + (e && e.message ? e.message : ''), 'error');
     }
-    closeModal('modal-routine-ai');
-    if (!tab) return;
+    if (!tab) { closeModal('modal-routine-ai'); return; }
     await finishRoutineTabsChange(tab.id);
     const blocksMade = new Set(items.map(it => String(it.block || '').trim()).filter(Boolean)).size;
     showAppToast((existing ? t('routine_ai_added').replace('{n}', items.length).replace('{name}', tab.name) : t('routine_ai_done').replace('{name}', tab.name))
         + (blocksMade ? ` · ${t('routine_ai_blocks').replace('{n}', blocksMade)}` : ''));
+    // 💪 לפני שסוגרים: לחבר אימון לשגרת האימונים?
+    if (!(inserted.length && routineAiAskWorkout(inserted))) closeModal('modal-routine-ai');
 }
 
 // 🌱 טאב ריק מציע את "התחלה פשוטה" - נגיעה אחת ממלאת אותו (פריטים רגילים, אפשר לערוך הכל)
@@ -24722,8 +24857,9 @@ async function renderDailyBoard() {
         card.appendChild(inner);
         return card;
     };
-    const bucketOrder = ['morning', 'noon', 'afternoon', 'evening'];
-    const bucketLabelKeys = { morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
+    // "בלי שעה" ראשון - פריטים בלי שעה (מהעוזר או מ"בלי שעה" בחלון הפריט), כמו ב"היום שלי"
+    const bucketOrder = ['anytime', 'morning', 'noon', 'afternoon', 'evening'];
+    const bucketLabelKeys = { anytime: 'routine_bucket_anytime', morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
     const activeTab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);
     const todayIdx = new Date().getDay();
@@ -24737,6 +24873,7 @@ async function renderDailyBoard() {
         // השורות: השעות שנבחרו לטאב + כל שעה שיש בה פריט (גם מדויקת, כמו 16:10) - כך פריט לא נעלם לעולם
         const slots = new Set((customHours[key] || []).map(routineSlotTime));
         boardItems.forEach(it => { const tm = String(it.time || '').slice(0, 5); if (tm && routineBucketOfHour(tm) === key) slots.add(tm); });
+        if (key === 'anytime' && (itemsByTime[''] || []).length) slots.add('');
         const bucketTimes = [...slots].sort((a, b) => routineSlotMinutes(a) - routineSlotMinutes(b));
         if (!bucketTimes.length) return;
         const section = document.createElement('div');
@@ -24968,7 +25105,25 @@ function routineItemSetTimeBtn(time) {
     if (typeof nmCloseTimePickers === 'function') nmCloseTimePickers();
     const btn = document.getElementById('routine-item-time-btn');
     if (btn) btn.querySelector('bdi').textContent = time || '--:--';
-    if (typeof nmTimePickHandlers !== 'undefined') nmTimePickHandlers['routine-item'] = v => { pendingRoutineItemTime = v; };
+    if (time) routineItemLastTime = time;
+    routineItemSyncNoTimeChip();
+    if (typeof nmTimePickHandlers !== 'undefined') nmTimePickHandlers['routine-item'] = v => { pendingRoutineItemTime = v; routineItemLastTime = v; routineItemSyncNoTimeChip(); };
+}
+// "בלי שעה" ליד השעה בחלון הפריט: נגיעה מורידה את השעה (הפריט עובר ל"בלי שעה" בראש השגרה), נגיעה נוספת מחזירה אותה
+let routineItemLastTime = '08:00';
+function routineItemSyncNoTimeChip() {
+    const chip = document.getElementById('routine-item-notime');
+    const none = !pendingRoutineItemTime;
+    if (chip) { chip.classList.toggle('on', none); chip.setAttribute('aria-pressed', none ? 'true' : 'false'); }
+    const btn = document.getElementById('routine-item-time-btn');
+    if (btn) btn.classList.toggle('is-off', none);
+}
+function routineItemToggleNoTime() {
+    if (typeof nmCloseTimePickers === 'function') nmCloseTimePickers();
+    pendingRoutineItemTime = pendingRoutineItemTime ? null : (routineItemLastTime || '08:00');
+    const btn = document.getElementById('routine-item-time-btn');
+    if (btn) btn.querySelector('bdi').textContent = pendingRoutineItemTime || '--:--';
+    routineItemSyncNoTimeChip();
 }
 // 📅 הימים של הפריט בחלון שלו - אותם צ'יפים כמו "ימים לטאב". רק הימים של הטאב (אם נבחרו לו), ולפחות
 // אחד מהם נשאר מסומן; בטאב של יום אחד אין מה לבחור, אז השורה מוסתרת
@@ -25134,10 +25289,11 @@ async function saveRoutineItem() {
     const days = [...pendingRoutineItemDays].filter(d => d >= 0 && d <= 6).sort((a, b) => a - b);
     const itemDays = days.length ? days : ROUTINE_ALL_DAYS;
     // פריט אחר בטאב הזה באותה שעה ובאחד מאותם ימים - שואלים מה לעשות
-    const clash = routineClashAllowBoth ? null : dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId && routineItemsOverlap(it, itemDays));
+    // (פריט בלי שעה לא "מתנגש" באף אחד)
+    const clash = routineClashAllowBoth || !pendingRoutineItemTime ? null : dailyBoardItemsCache.find(it => String(it.time || '').slice(0, 5) === String(pendingRoutineItemTime || '').slice(0, 5) && it.id !== editingRoutineItemId && routineItemsOverlap(it, itemDays));
     if (clash) { showRoutineClash(clash); return; }
     hideRoutineClash();
-    const payload = { title, time: pendingRoutineItemTime, days_of_week: itemDays.join(','), block_name: routineItemBlockValue() };
+    const payload = { title, time: pendingRoutineItemTime || null, days_of_week: itemDays.join(','), block_name: routineItemBlockValue() };
     if (editingRoutineItemId) {
         await supabaseClient.from('routine_items').update(payload).eq('id', editingRoutineItemId);
         if (typeof syncRoutineEditToWorkout === 'function') await syncRoutineEditToWorkout(editingRoutineItemId, payload);

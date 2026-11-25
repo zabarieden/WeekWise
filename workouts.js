@@ -779,6 +779,13 @@ async function routineItemToWorkout() {
         setTimeout(() => openWorkoutEditor(linked.id), 250);
         return;
     }
+    if (await routineItemToWorkoutFor(item)) renderRoutineItemWorkoutBtn();
+}
+// פריט שגרה → אימון בשגרת האימונים (גם מהשאלה בסוף עוזר השגרה - quiet: בלי הודעה לכל פריט). true = נוסף
+async function routineItemToWorkoutFor(item, quiet) {
+    if (!supabaseClient || !currentUserId || !item) return false;
+    if (!workoutPlanLoaded) await loadWorkoutPlan();
+    if (workoutForRoutineItem(item.id)) return false;
     const [, name] = splitLeadingEmoji(item.title || '', '');
     const kind = wkGuessKind(item.title);
     const tab = typeof dailyBoardTabs !== 'undefined' ? dailyBoardTabs.find(tb => tb.id === item.tab_id) : null;
@@ -792,14 +799,14 @@ async function routineItemToWorkout() {
         routine_item_id: item.id, sort_order: workoutPlan.length,
     };
     const { error } = await supabaseClient.from('workout_plan').insert(row);
-    if (error) { showAppToast(t('sport_add_failed'), 'error'); return; }
+    if (error) { showAppToast(t('sport_add_failed'), 'error'); return false; }
     await loadWorkoutPlan();
-    showAppToast(t('routine_to_workout_done'));
-    renderRoutineItemWorkoutBtn();
+    if (!quiet) showAppToast(t('routine_to_workout_done'));
     scheduleWorkoutGcalSync();
     renderWorkoutPlan();
     renderMyDayWorkoutChip();
     if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    return true;
 }
 // הכפתור בחלון של פריט שגרה: רק בעריכה של פריט קיים; "להוסיף" או "לפתוח" לפי אם הוא כבר אימון
 function renderRoutineItemWorkoutBtn() {
