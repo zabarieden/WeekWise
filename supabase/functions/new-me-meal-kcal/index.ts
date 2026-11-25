@@ -69,8 +69,14 @@ Deno.serve(async (req) => {
         if (meal.length < 2) return jsonResponse({ error: "missing_meal" }, 400);
         const intro = fit
             ? `A user of a diet app is building their OWN meal for one meal of the day, with a budget of about ${budget} kcal: "${meal}" (UI language: ${language}). ` +
-              "Keep exactly the foods they wrote - do not add or remove foods. Choose the portion of every component so the whole meal is close to " +
-              `${budget} kcal (within about 5%); if they wrote amounts that are too big or too small for that, change the amounts. `
+              "Keep exactly the foods they wrote - do not add or remove foods. " +
+              // 2026-11-25 (her report: "3 בורקסים כל בורקס 60 קלוריות" came back as 8 burekas): what the user wrote is kept as written
+              "If they gave an amount for a food (\"3 burekas\", \"2 slices\", \"150 g\", \"a cup\"), KEEP THAT AMOUNT EXACTLY - never multiply or shrink it. " +
+              "If they gave the calories of a food (\"each one 60 kcal\"), use those calories. " +
+              `Only for foods written WITHOUT an amount, choose a sensible everyday portion so the whole meal comes as close as reasonable to ${budget} kcal - ` +
+              "never an odd or unhealthy portion (like 8 pastries, a whole cake or half a kilo of pasta). " +
+              `If the amounts they wrote make the meal much smaller or bigger than ${budget} kcal, keep them anyway and report the real total - ` +
+              "the app balances the other meals of the day. "
             : `A user of a diet app wants to eat this meal instead of a planned one: "${meal}" (UI language: ${language}). ` +
               "Estimate the calories and protein of exactly what is described. Use the amounts written; where no amount is given, " +
               "assume one typical home portion for a person on a weight-loss plan (not a restaurant portion). ";

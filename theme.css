@@ -12608,8 +12608,10 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .chg-planb b { color: var(--text-primary); }
 .chg-check { display: flex; flex-direction: column; gap: 8px; color: var(--text-primary); }
 /* ◎ ו-☰ במסך הבית גדולים יותר (לפי בקשה מפורשת, 2026-11-18: "להגדיל את הכפתורים של המצב פוקוס והרשימות לידו") */
-#btn-home-focus, #btn-home-lists { width: 54px; height: 54px; }
+#btn-home-focus, #btn-home-lists, #btn-newme-shortcut { width: 54px; height: 54px; }
 #btn-home-focus svg, #btn-home-lists svg { width: 26px; height: 26px; }
+/* 💎 NOT10 Nourish+ באותו גודל כמו ◎ ו-☰ (לפי בקשה מפורשת, 2026-11-25: "הוא קטן ולא באותו הגודל של הפוקוס והפתקים") */
+#btn-newme-shortcut .nm-icon { width: 25px; height: 25px; }
 /* ✏️ במקום המילה "החלפה" במטרות של הפוקוס (2026-11-18) */
 .hf-goals-pick.hf-goals-edit { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--focus-neon) 14%, transparent); }
 .hf-goals-edit svg { width: 16px; height: 16px; }
@@ -12769,3 +12771,13 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .cal-search-field input::placeholder { color: var(--text-secondary); opacity: 0.85; }
 .cal-search-field input::-webkit-search-decoration, .cal-search-field input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
 .cal-tz-results { margin-top: 6px; }
+
+/* ✏️ עריכת יעד ברורה (לפי דיווח מפורש, 2026-11-25): כפתור "עריכה" ליד שם היעד, ועיפרון ליד כל תחנה / משימה */
+.gv-goal-title { cursor: pointer; }
+.gv-goal-edit-top { flex: none; margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 5px 12px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple) 45%, var(--border-color)); background: color-mix(in srgb, var(--accent-purple) 12%, transparent); color: var(--text-primary); font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.gv-goal-edit-top svg { width: 14px; height: 14px; }
+.has-image .gv-goal-edit-top { background: rgba(0, 0, 0, 0.35); border-color: rgba(255, 255, 255, 0.45); color: #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.vision-milestone-row .vision-milestone-text { cursor: text; }
+.vision-milestone-edit { flex: none; opacity: 0.75; }
+.vision-milestone-edit svg { width: 15px; height: 15px; }
+.vision-milestone-input { flex: 1 1 auto; min-width: 0; min-height: 36px; padding: 6px 12px; border-radius: 12px; border: 1.5px solid var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-row)); color: var(--text-primary); font: inherit; font-size: 0.9rem; outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple) 16%, transparent); }

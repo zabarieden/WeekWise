@@ -10594,7 +10594,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
-    { tab: 'general', head: 'faq_cat_goals', ids: ['change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
+    { tab: 'general', head: 'faq_cat_goals', ids: ['goal_edit', 'change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
     { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week', 'achievements'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
     { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_money', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
@@ -22938,9 +22938,61 @@ function buildVisionMilestoneRow(goalId, goalTitle, milestone) {
 
     row.appendChild(checkbox);
     row.appendChild(span);
+    row.appendChild(visionMilestoneEditBtn(milestone, span));
     row.appendChild(buildVisionRoutineButton(milestone));
     row.appendChild(scheduleBtn);
     return row;
+}
+
+// ✏️ ליד כל תחנה / משימה בתוכנית: נגיעה הופכת את הטקסט לשדה - Enter או נגיעה בחוץ שומרים, Esc מבטל
+// (לפי דיווח מפורש, 2026-11-25: "ביעדים שלי אני לא יודעת איך לשנות או לערוך"). גם נגיעה בטקסט עצמו
+function visionMilestoneEditBtn(milestone, span) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-edit-item vision-milestone-edit';
+    btn.innerHTML = EDIT_ICON_SVG;
+    btn.title = t('vision_step_edit_title');
+    btn.setAttribute('aria-label', `${t('vision_step_edit_title')}: ${milestone.title}`);
+    const start = e => { if (e) e.stopPropagation(); visionMilestoneInlineEdit(milestone, span, btn); };
+    btn.onclick = start;
+    span.classList.add('vision-milestone-text');
+    span.onclick = start;
+    return btn;
+}
+function visionMilestoneInlineEdit(milestone, span, btn) {
+    if (!span.isConnected || span.parentElement.querySelector('.vision-milestone-input')) return;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'vision-milestone-input';
+    input.maxLength = 200;
+    input.value = milestone.title;
+    input.setAttribute('aria-label', t('vision_step_edit_title'));
+    span.replaceWith(input);
+    btn.classList.add('hidden');
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = async save => {
+        if (done) return;
+        done = true;
+        const title = input.value.trim();
+        if (save && title && title !== milestone.title && supabaseClient) {
+            const { error } = await supabaseClient.from('vision_goal_milestones').update({ title }).eq('id', milestone.id);
+            if (error) { showAppToast(t('nm_save_error'), 'error'); }
+            else {
+                const cached = visionMilestonesCache.find(m => m.id === milestone.id);
+                if (cached) cached.title = title;
+                milestone.title = title;
+                showAppToast(t('vision_step_edit_saved'));
+            }
+        }
+        renderVisionGoalsList();
+    };
+    input.onkeydown = e => {
+        if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+        else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    };
+    input.onblur = () => finish(true);
 }
 
 // 🔁 הוספת צעד/משימה יומית ל"השגרה שלי" - ואם כבר מקושר, מוצגת השעה שלו בשגרה
@@ -22973,6 +23025,7 @@ function buildVisionDayTaskRow(goal, milestone) {
     };
     row.appendChild(checkbox);
     row.appendChild(span);
+    if (!goal.is_achieved) row.appendChild(visionMilestoneEditBtn(milestone, span));
     row.appendChild(buildVisionRoutineButton(milestone));
     return row;
 }
@@ -23001,10 +23054,17 @@ function renderGoalPanel(goal) {
     }
     let meta2 = prog.label;
     if (track === 'steps') meta2 = milestones.length ? t('gv_stations_progress').replace('{done}', milestones.filter(m => m.is_done).length).replace('{total}', milestones.length) : '';
+    // ✏️ עריכה גלויה ליד השם (לפי דיווח מפורש, 2026-11-25: "ביעדים שלי אני לא יודעת איך לשנות או לערוך זה לא מובן") -
+    // עד עכשיו "עריכה" היה רק בתחתית, אחרי השביל והתוכנית. גם נגיעה בשם היעד פותחת את העריכה
     head.innerHTML = `
-        <div class="gv-goal-title-row"><span class="gv-goal-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><h3 class="gv-goal-title">${visionEsc(goal.title)}</h3></div>
+        <div class="gv-goal-title-row"><span class="gv-goal-icon" aria-hidden="true">${visionEsc(visionGoalIcon(goal))}</span><h3 class="gv-goal-title" role="button" tabindex="0">${visionEsc(goal.title)}</h3><button type="button" class="gv-goal-edit-top">${EDIT_ICON_SVG}<span>${visionEsc(t('edit_btn'))}</span></button></div>
         <div class="gv-meta"><span>${meta1Html}</span>${meta2 ? `<span>${visionEsc(meta2)}</span>` : ''}</div>
         ${visionTagsHtml(goal, prog)}`;
+    const openEdit = () => openVisionGoalModal(goal.id);
+    head.querySelector('.gv-goal-edit-top').onclick = openEdit;
+    const titleEl = head.querySelector('.gv-goal-title');
+    titleEl.onclick = openEdit;
+    titleEl.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openEdit(); } };
     panel.appendChild(head);
     // 💭 ה"למה" חוזר ברגע הקשה (כמו Way of Life, רעיון 8 שבחרה): אחרי כמה ימים בלי צעד ליעד הוא עולה לראש היעד
     const whyPop = buildGoalWhyPop(goal);

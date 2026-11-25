@@ -1706,7 +1706,10 @@ function nmOwnMealOpen(slot) {
                 <span class="nm-option-name">${SPARK_ICON} ${nmEsc(result.name)}</span>
                 ${result.description ? `<span class="nm-option-text">${nmEsc(result.description)}</span>` : ''}
                 <span class="nm-option-meta">${nmMeta({ kcal: result.kcal, protein: Math.round(result.protein) })}${result.rough ? ` · ${nmEsc(t('nm_swap_ai_rough'))}` : ''}</span>
-                ${result.rough ? '' : `<p class="nm-own-fit">✓ ${nmTpl('nm_own_meal_fit', { n: nmFmt(target) })}</p>`}
+                ${result.rough ? '' : Math.abs(result.kcal - target) <= target * 0.12
+                    ? `<p class="nm-own-fit">✓ ${nmTpl('nm_own_meal_fit', { n: nmFmt(target) })}</p>`
+                    // הכמויות שנכתבו נשמרות כמו שהן (2026-11-25) - ואם יצא רחוק מהארוחה, אומרים שההפרש עובר לשאר הארוחות
+                    : `<p class="nm-own-fit is-kept">✓ ${nmTpl('nm_own_meal_kept', { n: nmFmt(target) })}</p>`}
                 <button type="button" class="nm-btn-primary" data-add>${nmEsc(t('nm_own_meal_add'))}</button>
             </div>` : ''}
             <button type="button" class="nm-btn-ghost" data-close>${nmEsc(t('nm_back'))}</button>`;
