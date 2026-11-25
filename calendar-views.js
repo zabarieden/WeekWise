@@ -59,6 +59,9 @@ function calTzValid(tz) {
     try { new Intl.DateTimeFormat('en', { timeZone: tz }); return true; } catch { return false; }
 }
 
+// זכוכית מגדלת מצוירת בצבע הערכה - בשדות החיפוש של היומן (חיפוש ביומן, אזור זמן נוסף)
+const CAL_SEARCH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>';
+
 // ---------- עזרי תאריך ושעה ----------
 function calDate(dateStr) { const [y, m, d] = dateStr.split('-').map(Number); return new Date(y, m - 1, d); }
 function calWeekday(dateStr) { return calDate(dateStr).getDay(); }
@@ -768,7 +771,7 @@ function calRenderSettings() {
         <div class="cal-tz-device"><bdi>${calEsc(deviceTz ? calTzLabel(deviceTz) : '—')}</bdi></div>
         <div class="cal-set-label">${calEsc(t('calv_set_tz2'))}</div>
         <div class="cal-chip-row">${chip('data-tz2', '', !p.tz2, calEsc(t('calv_tz2_none')))}${p.tz2 ? chip('data-tz2', p.tz2, true, `<bdi>${calEsc(calTzLabel(p.tz2))}</bdi>`) : ''}</div>
-        <input type="search" id="cal-tz2-search" class="cal-tz-search" placeholder="${calEsc(t('calv_tz2_search'))}" autocomplete="off">
+        <label class="cal-search-field">${CAL_SEARCH_ICON}<input type="search" id="cal-tz2-search" placeholder="${calEsc(t('calv_tz2_search'))}" aria-label="${calEsc(t('calv_tz2_search'))}" autocomplete="off" enterkeyhint="search"></label>
         <div id="cal-tz2-results" class="cal-tz-results"></div>`;
     box.querySelectorAll('[data-first]').forEach(b => b.addEventListener('click', () => { calSavePrefs({ firstDay: Number(b.dataset.first) }); calRenderSettings(); }));
     box.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => {

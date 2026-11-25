@@ -12759,3 +12759,13 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .routine-ai-wk-chips.hidden { display: none; }
 .routine-ai-wk-chip { text-align: start; }
 .routine-ai-wk-more { display: block; margin: 2px 0 4px; }
+
+/* 🔍 שדה החיפוש של היומן ושל אזור הזמן הנוסף (לפי בקשה מפורשת, 2026-11-25: "שיהיה יותר מתאים לנראות של האפליקציה"):
+   גלולה עגולה בצבע הערכה עם זכוכית מגדלת מצוירת, בלי הקופסה האפורה של הדפדפן */
+.cal-search-field { display: flex; align-items: center; gap: 9px; width: 100%; box-sizing: border-box; min-height: 46px; margin: 2px 0 4px; padding: 0 16px; border-radius: 999px; border: 1.5px solid color-mix(in srgb, var(--tile-accent, var(--accent-purple)) 40%, var(--border-color)); background: color-mix(in srgb, var(--tile-accent, var(--accent-purple)) 7%, var(--bg-row)); color: var(--text-secondary); cursor: text; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.cal-search-field:focus-within { border-color: var(--tile-accent, var(--accent-purple)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tile-accent, var(--accent-purple)) 18%, transparent); }
+.cal-search-field svg { flex: none; width: 18px; height: 18px; color: var(--tile-accent, var(--accent-purple)); }
+.cal-search-field input { flex: 1 1 auto; min-width: 0; margin: 0; padding: 11px 0; border: none !important; border-radius: 0; background: transparent !important; box-shadow: none !important; outline: none; color: var(--text-primary); font: inherit; font-size: 0.92rem; -webkit-appearance: none; appearance: none; }
+.cal-search-field input::placeholder { color: var(--text-secondary); opacity: 0.85; }
+.cal-search-field input::-webkit-search-decoration, .cal-search-field input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.cal-tz-results { margin-top: 6px; }
