@@ -106,6 +106,58 @@ function wkStarSvg(color, cls) {
     return `<svg class="wk-star${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true" style="--wk-c:${color}"><path class="wk-star-shape" d="${WK_STAR_D}"/><ellipse class="wk-star-shine" cx="9.7" cy="10.3" rx="1.5" ry="0.85" transform="rotate(-35 9.7 10.3)"/></svg>`;
 }
 function wkStar(row, cls) { const c = wkColor(row); return c ? wkStarSvg(c, cls) : ''; }
+
+// ---------- ⭐⭐ כוכב כפול (הבחירה שלה, 2026-11-25: 14 "חופפים · כמעט אחד"): אותו סוג אימון פעמיים באותו יום = שני כוכבים
+// כמעט זה על זה - מאחור בצבע הרגיל, מלפנים בגוון כהה יותר של אותו צבע (הליכה ירוק → ירוק כהה, ריצה ורוד → ורוד כהה).
+// שלוש פעמים ומעלה - שלושה כוכבים באותו סגנון. בצנצנת, בטבלה (ציר הזמן והלוח), בכרטיס של היום ובתמונת השיתוף ----------
+function wkDarker(hex, amount = 0.27) {
+    const m = String(hex || '').match(/^#?([0-9a-f]{6})$/i);
+    if (!m) return hex;
+    const n = parseInt(m[1], 16);
+    let r = (n >> 16) / 255, g = ((n >> 8) & 255) / 255, b = (n & 255) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+        h /= 6;
+    }
+    l = Math.max(0.16, l - amount);
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+    const f = tt => { tt = (tt + 1) % 1; return tt < 1 / 6 ? p + (q - p) * 6 * tt : tt < 0.5 ? q : tt < 2 / 3 ? p + (q - p) * (2 / 3 - tt) * 6 : p; };
+    return '#' + [f(h + 1 / 3), f(h), f(h - 1 / 3)].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
+}
+// הצבעים מאחור → מלפנים
+function wkMultiColors(color, n) { return n >= 3 ? [color, wkDarker(color, 0.13), wkDarker(color)] : [color, wkDarker(color)]; }
+const WK_MULTI_DX = 3.84, WK_MULTI_DY = 2.88; // ההזזה בין כוכב לכוכב (ביחידות של כוכב 24)
+// הכוכבים עצמם (בלי ה-svg) - בפינה (0,0), ברוחב 24 + DX·(n-1) ובגובה 24 + DY·(n-1)
+function wkMultiStarParts(color, n) {
+    const cols = wkMultiColors(color, n);
+    const k = cols.length - 1;
+    return cols.map((c, i) => {
+        const x = (WK_MULTI_DX * (k - i)).toFixed(2), y = (WK_MULTI_DY * i).toFixed(2);
+        const shine = i === k ? '<ellipse class="wk-star-shine" cx="9.7" cy="10.3" rx="1.5" ry="0.85" transform="rotate(-35 9.7 10.3)"/>' : '';
+        return `<g transform="translate(${x} ${y})" style="--wk-c:${c}"><path class="wk-star-shape" d="${WK_STAR_D}"/>${shine}</g>`;
+    }).join('');
+}
+function wkMultiStarSvg(color, n, cls) {
+    const k = Math.min(3, n) - 1;
+    return `<svg class="wk-star wk-star-multi${cls ? ' ' + cls : ''}" viewBox="0 0 ${(24 + WK_MULTI_DX * k).toFixed(2)} ${(24 + WK_MULTI_DY * k).toFixed(2)}" aria-hidden="true" style="--wk-c:${color}">${wkMultiStarParts(color, n)}</svg>`;
+}
+// כמה אימונים מאותו סוג (אותו צבע) נרשמו בתאריך הזה השבוע
+function wkSameKindCount(date, color) {
+    if (!color) return 0;
+    return workoutWeekSessions.filter(s => s.session_date === date && wkSessionColor(s) === color).length;
+}
+// הכוכב של אימון בטבלה ביום מסוים: כפול/משולש כשהסוג הזה נעשה כמה פעמים באותו יום - על האימון הראשון מהסוג הזה ביום
+function wkDayStar(w, date, dayItems, cls) {
+    const c = wkColor(w);
+    if (!c) return '';
+    const n = wkSameKindCount(date, c);
+    const first = (dayItems || []).find(x => wkColor(x) === c);
+    return n >= 2 && (!first || first === w) ? wkMultiStarSvg(c, n, cls) : wkStarSvg(c, cls);
+}
 // אייקונים קטנים (SVG, בצבע הטקסט) במקום תווים - כך הם תמיד במרכז הכפתור ונראים אותו דבר בכל טלפון
 const WK_ICONS = {
     play: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.6 5.6v12.8a1 1 0 0 0 1.52.85l10.2-6.4a1 1 0 0 0 0-1.7L9.12 4.75A1 1 0 0 0 7.6 5.6z"/></svg>',
@@ -303,14 +355,30 @@ function wkJarDropOffset(id) {
 }
 function wkJarSvg(sessions, progress, full) {
     const clip = 'wkjar' + (++wkJarUid);
+    // אותו סוג פעמיים באותו יום = כוכב כפול אחד (הבחירה שלה, 14 "חופפים · כמעט אחד"); הוא "נופל" מחדש כשנוסף הכוכב השני
+    const units = [];
+    const byKey = new Map();
+    sessions.forEach(s => {
+        const color = wkSessionColor(s);
+        const key = `${s.session_date}|${color}`;
+        const u = byKey.get(key);
+        if (u) { u.n++; u.id = s.id; return; }
+        const nu = { color, n: 1, id: s.id };
+        byKey.set(key, nu);
+        units.push(nu);
+    });
     // שורות של שלושה מלמטה למעלה, קצת מוזזים וסובבים - כמו ערימה אמיתית
-    const stars = sessions.slice(0, WK_JAR_MAX_STARS).map((s, i) => {
+    const stars = units.slice(0, WK_JAR_MAX_STARS).map((s, i) => {
         const row = Math.floor(i / 3), col = i % 3;
         const x = 18.2 + col * 11.8 + [0, 1.4, -1.1, 0.7, -1.4][(i * 7) % 5];
         const y = 64.2 - row * 10.6 + [0, -0.8, 0.6][(i * 5) % 3];
         const r = [-18, 12, -6, 22, -26, 8][(i * 11) % 6];
-        const drop = wkJarDropOffset(s.id);
-        return `<g class="wk-jar-star${drop !== null ? ' is-new' : ''}" style="--wk-c:${wkSessionColor(s)}${drop !== null ? `;animation-delay:-${drop}ms` : ''}"><g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r}) scale(0.62) translate(-12 -12.4)"><path class="wk-star-shape" d="${WK_STAR_D}"/></g></g>`;
+        const drop = wkJarDropOffset(s.n > 1 ? `${s.id}|${s.n}` : s.id);
+        const k = Math.min(3, s.n) - 1;
+        const shape = s.n > 1
+            ? `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r}) scale(0.55) translate(${(-12 - WK_MULTI_DX * k / 2).toFixed(2)} ${(-12.4 - WK_MULTI_DY * k / 2).toFixed(2)})">${wkMultiStarParts(s.color, s.n)}</g>`
+            : `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${r}) scale(0.62) translate(-12 -12.4)"><path class="wk-star-shape" d="${WK_STAR_D}"/></g>`;
+        return `<g class="wk-jar-star${s.n > 1 ? ' is-multi' : ''}${drop !== null ? ' is-new' : ''}" style="--wk-c:${s.color}${drop !== null ? `;animation-delay:-${drop}ms` : ''}">${shape}</g>`;
     }).join('');
     // הכוכבים שכבר היו כשהמסך נפתח לא נופלים - רק מה שנרשם מעכשיו
     if (workoutWeekLoadedFor) wkJarPrimed = true;
@@ -430,7 +498,7 @@ function wkTodayHtml() {
     return `
         <div class="wk-today${done ? ' is-done' : ''}"${wkCVar(main)}>
             <div class="wk-today-top"><span class="wk-today-when">${wkEsc(whenLabel)}</span><button type="button" class="wk-edit-btn" data-wk-edit="${main.id}" aria-label="${wkEsc(t('workout_edit_title'))}: ${wkEsc(wkName(main))}">${WK_ICONS.pen}<span>${wkEsc(t('edit_btn'))}</span></button></div>
-            <span class="wk-today-icon" aria-hidden="true">${wkStar(main)}</span>
+            <span class="wk-today-icon" aria-hidden="true">${wkDayStar(main, today, null)}</span>
             <b class="wk-today-name">${wkEsc(wkName(main))}</b>
             <span class="wk-today-meta">${wkMetaLine(main, null, !timed)}${main.intensity ? ' ' + wkIntensityChip(main.intensity) : ''}</span>
             ${ex.length ? `
@@ -472,7 +540,7 @@ function wkTimelineHtml() {
             return `
                 <li class="wk-row${isToday ? ' is-today' : ''}${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}${isPast ? ' is-past' : ''}" data-day="${dayIdx}"${wkCVar(w)}>
                     <b class="wk-day">${i === 0 ? dayLabel : ''}</b>
-                    ${rest ? '<span class="wk-dot" aria-hidden="true"></span>' : `<span class="wk-node" aria-hidden="true">${wkStar(w)}</span>`}
+                    ${rest ? '<span class="wk-dot" aria-hidden="true"></span>' : `<span class="wk-node" aria-hidden="true">${wkDayStar(w, date, items)}</span>`}
                     ${rest ? '<span class="wk-time"></span>' : `<button type="button" class="wk-time wk-time-btn${w.time ? '' : ' is-empty'}" data-wk-edit-time="${w.id}" aria-label="${wkEsc(t('workout_time_label'))} – ${wkEsc(wkName(w))}${w.time ? ': ' + wkEsc(w.time) : ''}">${w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : WK_ICONS.clock}</button>`}
                     <button type="button" class="wk-row-main" data-wk-edit="${w.id}" aria-label="${wkEsc(t('workout_edit_title'))}: ${wkEsc(wkName(w))}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
                         <span class="wk-row-name">${wkEsc(wkName(w))}${!rest && w.duration_minutes ? ` · <bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''}</span>
@@ -536,13 +604,14 @@ function wkBoardHtml() {
     const today = getLocalDateString();
     const cols = wkWeekDates().map(date => {
         const dayIdx = wkDayIdxOf(date);
-        const cards = wkOnDay(dayIdx).map(w => {
+        const dayItems = wkOnDay(dayIdx);
+        const cards = dayItems.map(w => {
             const rest = wkIsRest(w);
             const done = !rest && wkIsDone(w.id, date);
             const canCheck = !rest && date <= today;
             return `
                 <div class="wk-card${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}"${wkCVar(w)} role="button" tabindex="0" data-wk-card="${w.id}" data-day="${dayIdx}" aria-label="${wkEsc(wkName(w))}${w.time && !rest ? ' ' + wkEsc(w.time) : ''}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
-                    <span class="wk-card-name">${wkStar(w, 'wk-star-inline')}${wkEsc(wkName(w))}</span>
+                    <span class="wk-card-name">${wkDayStar(w, date, dayItems, 'wk-star-inline')}${wkEsc(wkName(w))}</span>
                     <span class="wk-card-meta">${rest ? '' : [w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : '', w.duration_minutes ? `<bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''].filter(Boolean).join(' · ')}<span class="wk-card-pen" aria-hidden="true">${WK_ICONS.pen}</span></span>
                     ${canCheck ? `<button type="button" class="wk-card-check" data-wk-check="${w.id}" data-wk-date="${date}" aria-pressed="${done}" aria-label="${wkEsc(t('workout_check_aria'))} – ${wkEsc(wkName(w))}, ${wkEsc(t(dayNameKeys[dayIdx]))}">${done ? WK_ICONS.check : ''}</button>` : ''}
                     ${w.routine_item_id ? `<span class="wk-card-routine" aria-hidden="true">${WK_ICONS.routine}</span>` : ''}
@@ -1610,6 +1679,15 @@ function wkCanvasStar(ctx, cx, cy, size, color) {
     ctx.stroke(p);
     ctx.restore();
 }
+// כוכב כפול/משולש בקנבס (אותו ציור כמו wkMultiStarSvg), במרכז (cx, cy) - כל כוכב בגודל size קצת קטן יותר שהכול ייכנס
+function wkCanvasMultiStar(ctx, cx, cy, size, color, n) {
+    const cols = wkMultiColors(color, n);
+    const k = cols.length - 1;
+    const s = size * 0.96;
+    const dx = WK_MULTI_DX * s / 24, dy = WK_MULTI_DY * s / 24;
+    const x0 = cx - (s + dx * k) / 2 + s / 2, y0 = cy - (s + dy * k) / 2 + s / 2;
+    cols.forEach((c, i) => wkCanvasStar(ctx, x0 + dx * (k - i), y0 + dy * i, s, c));
+}
 function wkFitText(ctx, text, max) {
     if (ctx.measureText(text).width <= max) return text;
     let s = text;
@@ -1741,8 +1819,11 @@ async function wkRenderWeekImage() {
         shown.forEach((it, k) => {
             const ly = shown.length === 1 ? y + rowH / 2 : y + 42 + k * 48;
             const color = wkColor(it.w);
-            // כוכב בצבע של האימון בתחילת השורה (ליום מנוחה - בלי)
-            if (color) wkCanvasStar(ctx, rtl ? textStart - 16 : textStart + 16, ly, 32, color);
+            // כוכב בצבע של האימון בתחילת השורה (ליום מנוחה - בלי); אותו סוג כמה פעמים באותו יום - כוכב כפול
+            const same = color ? wkSameKindCount(r.date, color) : 0;
+            const firstOfKind = r.items.find(x => wkColor(x.w) === color) === it;
+            if (color && same >= 2 && firstOfKind) wkCanvasMultiStar(ctx, rtl ? textStart - 16 : textStart + 16, ly, 32, color, same);
+            else if (color) wkCanvasStar(ctx, rtl ? textStart - 16 : textStart + 16, ly, 32, color);
             const tx = color ? (rtl ? textStart - 44 : textStart + 44) : textStart;
             ctx.fillStyle = wkIsRest(it.w) ? sub : ink;
             ctx.font = `${wkIsRest(it.w) ? 600 : 700} 34px ${font}`;
