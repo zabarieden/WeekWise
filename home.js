@@ -1412,6 +1412,10 @@ function renderHomeChips() {
             chips.push(`<div class="home-chip home-chip-good home-chip-ask" role="group" aria-label="${myDayEsc(t('good_things_ask'))}">${HOME_MOON_SVG}<span>${myDayEsc(t('good_things_ask'))}</span><button type="button" class="home-chip-ask-btn is-yes" onclick="openGoodThings()">${myDayEsc(t('good_things_yes'))}</button><button type="button" class="home-chip-ask-btn" onclick="skipGoodThingsTonight()">${myDayEsc(t('good_things_no'))}</button></div>`);
         }
     }
+    // 🏆 "השנה שלי ב-NOT10" - בדצמבר ועד 10 בינואר (share-cards.js, לפי בקשה מפורשת 2026-11-25); כל השנה - בהגדרות
+    if (typeof scYearChipVisible === 'function' && scYearChipVisible() && currentUserId) {
+        chips.push(`<button type="button" class="home-chip home-chip-year" onclick="scShareYear()">${typeof achTrophyHtml === 'function' ? achTrophyHtml('is-chip') : ''}<span>${myDayEsc(t('sc_y_title'))}</span></button>`);
+    }
     box.innerHTML = chips.join('');
     box.classList.toggle('hidden', !chips.length);
     if (box.querySelector('.home-chip-good')) setTimeout(maybeIntroGoodThings, 1200);

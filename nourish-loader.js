@@ -6,10 +6,10 @@
 // ⚠️ When one of these files changes, bump its ?v= HERE (they are no longer in index.html).
 const NOURISH_SCRIPTS = [
     'new-me-data.js?v=27',
-    'new-me.js?v=92',
+    'new-me.js?v=93',
     'new-me-challenges.js?v=15',
     'secret-room.js?v=39',
-    'secret-places.js?v=34',
+    'secret-places.js?v=35',
     'new-me-game.js?v=20',
     'world3d.js?v=16',
     'world-map.js?v=1',

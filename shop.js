@@ -539,6 +539,11 @@ function shareShoppingList() {
         lines.push('', `🚚 ${shareBold(t('shop_share_transit'))}`);
         transit.forEach(it => lines.push(`• ${it.content}${qty(it)}`));
     }
+    // גם כתמונה מסודרת לפי מחלקות (share-cards.js, לפי בקשה מפורשת 2026-11-25) - לשלוח למי שהולך לקנות
+    if (typeof scShopImage === 'function') {
+        scShopImage(groups, transit, heads).catch(() => null).then(blob => openSharePicker(lines.join('\n'), { subject: `🛒 ${t('general_title')}`, imageBlob: blob, imageName: 'shopping-list.jpg' }));
+        return;
+    }
     openSharePicker(lines.join('\n'), { subject: `🛒 ${t('general_title')}` });
 }
 

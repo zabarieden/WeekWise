@@ -2583,6 +2583,7 @@ function nmRenderDay(root) {
                 ${nmChallengeStripHtml()}
                 <div class="nm-section-head">
                     <h3>${nmEsc(t('nm_tile_menu'))}</h3>
+                    ${typeof scShareNmMenu === 'function' ? `<button type="button" class="nm-menu-share" onclick="scShareNmMenu()" aria-label="${nmEsc(t('share_picker_title'))}" title="${nmEsc(t('share_picker_title'))}">${typeof SPORT_SHARE_ICON !== 'undefined' ? SPORT_SHARE_ICON : '↗'}</button>` : ''}
                     <span class="nm-total-chip${warn ? ' warn' : ''}" title="${nmEsc(t('nm_menu_total_title'))}"><bdi dir="ltr">~${nmFmt(menuTotal)} / ${nmFmt(plan)}</bdi></span>
                 </div>
                 ${warn ? `<p class="nm-soft-warn">${nmEsc(t('nm_menu_over_warn').replace('{n}', nmFmt(over)))}</p>` : ''}

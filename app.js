@@ -9326,6 +9326,11 @@ function shareRecipe() {
     const steps = listLines(recipe.instructions);
     if (steps.length) lines.push('', `🧑‍🍳 ${shareBold(label('recipe_instructions_label'))}`, ...(steps.length > 1 ? steps.map((x, i) => `${i + 1}. ${x}`) : steps));
     lines.push('', `${t('recipe_share_enjoy')} 😋`);
+    // כרטיס מתכון כתמונה (על לוח בצבע של הערכה) + PDF להדפסה - share-cards.js (לפי בקשה מפורשת, 2026-11-25)
+    if (typeof scRecipeImage === 'function') {
+        scRecipeImage(recipe).catch(() => null).then(blob => openSharePicker(lines.join('\n'), { photoUrl: blob ? '' : (recipe.image_url || ''), subject: `🍽️ ${recipe.title}`, imageBlob: blob, imageName: 'recipe.jpg', pdf: () => scPrintRecipe(recipe) }));
+        return;
+    }
     openSharePicker(lines.join('\n'), { photoUrl: recipe.image_url || '', subject: `🍽️ ${recipe.title}` });
 }
 
@@ -10131,7 +10136,10 @@ let pendingShare = { text: '', photoUrl: '', footer: 'full', subject: '', imageB
 
 // footer: 'full' = קו דק + "נשלח מ-NOT10.ai" + קישור; 'link' = רק הקישור (בהזמנה לאפליקציה עצמה)
 function openSharePicker(text, options = {}) {
-    pendingShare = { text: text || '', photoUrl: options.photoUrl || '', footer: options.footer || 'full', subject: options.subject || '', imageBlob: options.imageBlob || null, imageName: options.imageName || 'not10.png' };
+    pendingShare = { text: text || '', photoUrl: options.photoUrl || '', footer: options.footer || 'full', subject: options.subject || '', imageBlob: options.imageBlob || null, imageName: options.imageName || 'not10.png', pdf: typeof options.pdf === 'function' ? options.pdf : null };
+    // "PDF להדפסה" בבורר, כשלשיתוף הזה יש גם דף (מתכון, יומן, התפריט של NOT10 Nourish+) - share-cards.js
+    const pdfBtn = document.getElementById('share-picker-pdf');
+    if (pdfBtn) pdfBtn.classList.toggle('hidden', !pendingShare.pdf);
     // שיתוף עם תמונה (למשל טבלת האימונים כתמונה זכוכיתית): תצוגה מקדימה וכפתור לשמירת התמונה
     const preview = document.getElementById('share-picker-image');
     const saveBtn = document.getElementById('share-picker-save-image');
@@ -10147,6 +10155,11 @@ function openSharePicker(text, options = {}) {
 function shareImageFile() {
     if (!pendingShare.imageBlob) return null;
     try { return new File([pendingShare.imageBlob], pendingShare.imageName, { type: pendingShare.imageBlob.type || 'image/png' }); } catch { return null; }
+}
+function sharePickerPdf() {
+    const fn = pendingShare.pdf;
+    closeModal('modal-share-picker');
+    if (fn) fn();
 }
 function saveShareImage(silent) {
     if (!pendingShare.imageBlob) return;
@@ -10586,7 +10599,7 @@ document.addEventListener('pointerdown', e => {
     setTimeout(() => host.classList.remove('bin-open'), 650);
 }, { passive: true });
 const HELP_FAQ_GROUPS = [
-    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'app_icon'] },
+    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'share_images', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
     { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_recipes_shortcut', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
     { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'routine_blocks', 'routine_day_note', 'habits_streaks', 'routine_nudge'] },
@@ -23792,6 +23805,8 @@ function buildGoalActions(goal) {
     // 👥 חבר מלווה (כמו Coach.me, רעיון 14 שבחרה): קישור לצפייה בלבד בשביל של היעד
     const shared = visionGoalShare(goal.id);
     add(shared ? 'is-friend-on' : 'is-friend', `<span aria-hidden="true">👥</span><span>${visionEsc(t(shared ? 'gv_friend_on' : 'gv_friend_btn'))}</span>`, () => openGoalFriend(goal));
+    // 🖼️ השביל כתמונה לשיתוף (share-cards.js, לפי בקשה מפורשת 2026-11-25)
+    if (typeof scShareGoal === 'function') add('is-share', `${SPORT_SHARE_ICON}<span>${visionEsc(t('workout_share_btn'))}</span>`, () => scShareGoal(goal.id));
     add('is-delete', BIN_SVG, () => deleteVisionGoal(goal.id), t('vision_goal_delete_btn_title'));
     return row;
 }

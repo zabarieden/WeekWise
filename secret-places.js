@@ -1844,7 +1844,7 @@ function srRenderQuotes(wrap, ov) {
             <figure class="sr-quote">
                 <blockquote>${srEsc(q.quote)}</blockquote>
                 ${q.book_title || q.author ? `<figcaption>${srEsc([q.book_title, q.author].filter(Boolean).join(' · '))}</figcaption>` : ''}
-                <div class="sr-quote-tools"><button type="button" data-qedit="${q.id}" aria-label="${srEsc(t('edit_btn'))}" title="${srEsc(t('edit_btn'))}">✏️</button><button type="button" data-qdel="${q.id}" aria-label="${srEsc(t('room_quote_delete'))}" title="${srEsc(t('room_quote_delete'))}">🗑️</button></div>
+                <div class="sr-quote-tools">${typeof scShareQuote === 'function' ? `<button type="button" class="sr-quote-share" data-qshare="${q.id}" aria-label="${srEsc(t('share_picker_title'))}" title="${srEsc(t('share_picker_title'))}">${typeof SPORT_SHARE_ICON !== 'undefined' ? SPORT_SHARE_ICON : '↗'}</button>` : ''}<button type="button" data-qedit="${q.id}" aria-label="${srEsc(t('edit_btn'))}" title="${srEsc(t('edit_btn'))}">✏️</button><button type="button" data-qdel="${q.id}" aria-label="${srEsc(t('room_quote_delete'))}" title="${srEsc(t('room_quote_delete'))}">🗑️</button></div>
             </figure>`).join('') : `<p class="sr-quotes-empty">${srEsc(t('room_quotes_empty'))}</p>`}</div>
         <button type="button" class="nm-btn-primary" data-qadd>${srEsc(t('room_quotes_add'))}</button>
         ${inShelf ? '' : `<button type="button" class="nm-btn-ghost" data-close>${srEsc(t('close_btn'))}</button>`}`;
@@ -1860,6 +1860,8 @@ function srRenderQuotes(wrap, ov) {
     }));
     wrap.querySelector('[data-qadd]').addEventListener('click', () => srQuoteForm(wrap, ov, null));
     wrap.querySelectorAll('[data-qedit]').forEach(b => b.addEventListener('click', () => srQuoteForm(wrap, ov, list.find(q => q.id === b.dataset.qedit))));
+    // 🖼️ כרטיס ציטוט כתמונה (share-cards.js, לפי בקשה מפורשת 2026-11-25)
+    wrap.querySelectorAll('[data-qshare]').forEach(b => b.addEventListener('click', () => scShareQuote(list.find(q => q.id === b.dataset.qshare))));
     wrap.querySelectorAll('[data-qdel]').forEach(b => b.addEventListener('click', () => {
         const q = list.find(x => x.id === b.dataset.qdel);
         if (!q) return;

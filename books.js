@@ -333,7 +333,18 @@ function buildBookShelf(books) {
     const line = document.createElement('p');
     line.className = 'books-year-line';
     line.textContent = `📚 ${t('books_year_line').replace('{year}', new Date().getFullYear()).replace('{books}', bookFmt(year.length)).replace('{pages}', bookFmt(pages))}`;
-    wrap.appendChild(line);
+    // 🖼️ המדף כתמונה לשיתוף (share-cards.js, לפי בקשה מפורשת 2026-11-25)
+    if (typeof scShareShelf === 'function') {
+        const head = document.createElement('div');
+        head.className = 'books-year-head';
+        const share = document.createElement('button');
+        share.type = 'button';
+        share.className = 'books-shelf-share';
+        share.innerHTML = `${typeof SPORT_SHARE_ICON !== 'undefined' ? SPORT_SHARE_ICON : ''}<span>${bookEsc(t('workout_share_btn'))}</span>`;
+        share.onclick = () => scShareShelf();
+        head.append(line, share);
+        wrap.appendChild(head);
+    } else wrap.appendChild(line);
     const sorted = books.slice().sort((a, b) => String(b.finished_at || '').localeCompare(String(a.finished_at || '')));
     const listEl = document.getElementById('books-list');
     const perRow = Math.max(5, Math.floor(((listEl && listEl.clientWidth) || 320) / 40));

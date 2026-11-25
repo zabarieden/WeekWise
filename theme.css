@@ -12799,3 +12799,19 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .routine-template-cats { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
 .routine-cat-chip { font-size: 0.8rem; }
 .routine-medical-text { margin: 4px 0 14px; font-size: 0.92rem; line-height: 1.55; color: var(--text-primary); text-align: start; }
+
+/* 🖼️ כרטיסי שיתוף כתמונה / PDF (share-cards.js, לפי בקשה מפורשת 2026-11-25: "1 עד 10 מצויין תבנה את כולם") */
+.gv-action-btn.is-share .sport-share-ico { width: 16px; height: 16px; }
+.books-year-head { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px 10px; margin: 2px 0 10px; }
+.books-year-head .books-year-line { margin: 0; }
+.books-shelf-share, .good-things-share, .water-month-share { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-glass, transparent); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.books-shelf-share .sport-share-ico, .good-things-share .sport-share-ico, .water-month-share .sport-share-ico { width: 15px; height: 15px; }
+.good-things-share, .water-month-share { margin: 12px auto 0; }
+.good-things-share { display: flex; }
+.water-month-share { display: flex; }
+.sr-quote-tools .sr-quote-share { display: inline-grid; place-items: center; color: inherit; }
+.sr-quote-tools .sr-quote-share .sport-share-ico { width: 16px; height: 16px; }
+.nm-menu-share { display: inline-grid; place-items: center; width: 34px; height: 34px; padding: 0; margin-inline-start: auto; border-radius: 50%; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); cursor: pointer; flex: none; }
+.nm-menu-share .sport-share-ico { width: 16px; height: 16px; }
+.nm-section-head .nm-menu-share + .nm-total-chip { margin-inline-start: 0; }
+.home-chip-year .ach-trophy.is-chip { width: 1.3em; height: 1.3em; }
