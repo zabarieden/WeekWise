@@ -20,6 +20,9 @@ self.addEventListener('push', (event) => {
     // וכל תזכורת פעם אחת) - ר' notificationclick למטה לטיפול בלחיצה עליהם
     if (payload.actions) options.actions = payload.actions;
     if (payload.data) options.data = payload.data;
+    // 🌙 תזכורת: באנדרואיד, כשפותחים את ההתראה - רצועה רחבה עם השעון הסגול על רקע לילה (הבחירה שלה, 2026-11-25:
+    // "5 לאנדרואיד ולאייפון 1"). באייפון אין תמונות בהתראה, ושם נשאר הנקי (1)
+    if (payload.data && payload.data.sourceType) options.image = 'reminder-banner.jpg?v=1';
     // תזכורת חזקה יותר (לפי בקשה מפורשת): רטט בטלפונים שתומכים, ותזכורת למשימה נשארת על המסך
     // עד שמגיבים (בוצע / עוד לא / החלקה) במקום להיעלם לבד. הצליל עצמו הוא צליל ההתראות של הטלפון
     options.vibrate = [400, 150, 400, 150, 700];
