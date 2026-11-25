@@ -137,7 +137,7 @@
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img, .boot-book b { animation: none; } .boot-book b { opacity: .85; } .boot-sparkle i { top: var(--y); } }
     </style>
     <link rel="preload" as="image" href="splash-book.webp?v=3" type="image/webp">
-    <link rel="stylesheet" href="theme.css?v=658">
+    <link rel="stylesheet" href="theme.css?v=659">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -4205,8 +4205,16 @@
                 <h3 id="reminder-popup-title"></h3>
                 <p id="reminder-popup-text" class="modal-subtitle"></p>
                 <button id="reminder-popup-done-btn" class="btn-primary btn-premium-cta hidden" style="width:100%; margin-bottom: 8px;" onclick="markReminderPopupDone()" data-i18n="reminder_popup_done_btn">✅ Done, thanks!</button>
-                <!-- נודניק: עוד תזכורת בעוד 5 דקות, וחוזרת עד "בוצע" / "הבנתי" (ר' snoozeReminderPopup) -->
-                <button id="reminder-popup-snooze-btn" class="btn-secondary hidden" style="padding: 12px; width:100%; margin-bottom: 8px;" onclick="snoozeReminderPopup()" data-i18n="reminder_popup_not_done_btn">Not yet - remind me in 5 minutes</button>
+                <!-- נודניק: להזכיר שוב בעוד 10 דקות / 30 דקות / שעה (לפי בקשה מפורשת, 2026-11-25: "להזכיר עוד עשר דק וכאלה"),
+                     וחוזרת עד "בוצע" / "הבנתי" (ר' snoozeReminderPopup) -->
+                <div id="reminder-popup-snooze-btn" class="reminder-snooze-row hidden">
+                    <span class="reminder-snooze-label" data-i18n="reminder_snooze_label">Remind me again in</span>
+                    <div class="reminder-snooze-chips">
+                        <button type="button" class="reminder-snooze-chip" data-snooze-min="10" onclick="snoozeReminderPopup(10)"></button>
+                        <button type="button" class="reminder-snooze-chip" data-snooze-min="30" onclick="snoozeReminderPopup(30)"></button>
+                        <button type="button" class="reminder-snooze-chip" data-snooze-min="60" onclick="snoozeReminderPopup(60)"></button>
+                    </div>
+                </div>
                 <button type="button" class="btn-link-subtle" style="padding: 10px; font-size: .9rem;" onclick="dismissReminderPopup()" data-i18n="reminder_popup_close_btn">Got it!</button>
             </div>
         </div>
@@ -4664,10 +4672,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=581"></script>
+    <script src="i18n/core.js?v=582"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=11"></script>
-    <script src="app.js?v=686"></script>
+    <script src="app.js?v=687"></script>
     <script src="calendar-views.js?v=2"></script>
     <script src="ai-chat.js?v=10"></script>
     <script src="goals-library.js?v=6"></script>

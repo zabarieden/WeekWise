@@ -77,9 +77,22 @@ self.addEventListener('notificationclick', (event) => {
         return;
     }
 
-    // לחיצה על גוף ההתראה עצמו (לא על כפתור) - ראו את התזכורת, אז מפסיקים נודניק, ופותחים/
-    // ממקדים את האפליקציה ישר בהצצה להיום (לפי בקשה מפורשת).
-    // תזכורת ארוחה של New Me (data.open = 'newme') פותחת ישר את התפריט של היום
+    // לחיצה על גוף ההתראה של תזכורת (לפי בקשה מפורשת, 2026-11-25: "לחצתי... וזה רק הביא אותי לשגרה... שיפתח גם מין
+    // פתק כזה ששואל האם בוצע? או להזכיר עוד עשר דק"): האפליקציה נפתחת על הפתק של התזכורת - בוצע / להזכיר שוב בעוד
+    // 10 / 30 / 60 / הבנתי. לא מסמנים כאן "הבנתי" - התשובה בפתק. אפליקציה שכבר פתוחה ברקע מקבלת הודעה (בלי טעינה מחדש)
+    if (data && data.sourceType && data.sourceId) {
+        const rem = { sourceType: data.sourceType, sourceId: data.sourceId, sourceDate: data.sourceDate, taskTitle: data.taskTitle || '', text: data.text || '' };
+        event.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+            const existing = list.find((c) => 'focus' in c);
+            if (existing) {
+                existing.postMessage({ type: 'weekwise-reminder-open', data: rem });
+                return existing.focus();
+            }
+            return self.clients.openWindow(`./index.html?open=peek&rem=${encodeURIComponent(JSON.stringify(rem))}`);
+        }));
+        return;
+    }
+    // תזכורת ארוחה של New Me (data.open = 'newme') פותחת ישר את התפריט של היום; אחרת - הצצה להיום
     const target = data && data.open === 'newme' ? 'newme' : 'peek';
     event.waitUntil(Promise.all([reminderAction(data, 'dismiss'), focusOrOpenApp(`./index.html?open=${target}`)]));
 });

@@ -2,7 +2,7 @@
 //
 // Called from sw.js when the user acts on a push/system notification:
 //   action "done" (✅ button)  - marks the task done and stops any snooze;
-//   action "snooze" (⏰ button) - another notification in 5 minutes (reminder_snoozes,
+//   action "snooze" ("10 more min" button) - another notification in 10 minutes (reminder_snoozes,
 //                                 sent by send-due-reminders, repeats up to 6 times);
 //   action "dismiss"           - notification tapped or swiped away: stop snoozing.
 // Every answer is also written to reminder_deliveries, so the reminder closes on every
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
             }, { onConflict: "user_id,source_type,source_id,source_date" });
         };
 
-        // נודניק: "⏰ עוד לא" על ההתראה = עוד התראה בעוד 5 דקות (send-due-reminders שולח, וחוזר
+        // נודניק: "עוד 10 דק׳" על ההתראה = עוד התראה בעוד 10 דקות (מאז 2026-11-25, היה 5) (send-due-reminders שולח, וחוזר
         // עד 6 פעמים או עד "בוצע" / "הבנתי"). הטקסט נלקח מהשורה עצמה, לא מהבקשה, ובודקים
         // שהשורה באמת שייכת ל-userId
         if (action === "snooze") {
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
             const { error } = await supabase.from("reminder_snoozes").upsert({
                 user_id: userId, source_type: sourceType, source_id: sourceId, source_date: date,
                 title: src.title.slice(0, 200), body: src.body.slice(0, 500),
-                next_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(), remaining: 6,
+                next_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), remaining: 6,
             }, { onConflict: "user_id,source_type,source_id,source_date" });
             if (error) return jsonResponse({ error: error.message }, 500);
             await recordAnswer("snooze");

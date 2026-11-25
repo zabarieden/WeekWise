@@ -48,7 +48,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 const LATE_LIMIT_MINUTES = 60;
 // אפליקציה פתוחה מול העיניים מציגה את התזכורת בעצמה - מחכים לה עד 2 דקות, ואז שולחים בכל זאת
 const PRESENCE_WAIT_MINUTES = 2;
-const SNOOZE_MINUTES = 5;
+const SNOOZE_MINUTES = 10;
+// כפתורי ההתראה במילים ("✓ בוצע" / "עוד 10 דק׳") בכל 33 השפות - לפי user_premium.language
+const ACTION_WORDS: Record<string, [string, string]> = {
+    he: ["✓ בוצע", "עוד 10 דק׳"], en: ["✓ Done", "10 more min"], es: ["✓ Hecho", "10 min más"], fr: ["✓ Fait", "Encore 10 min"],
+    ar: ["✓ تم", "بعد 10 دقائق"], ru: ["✓ Сделано", "Через 10 мин"], de: ["✓ Erledigt", "In 10 Min."], pt: ["✓ Feito", "Mais 10 min"],
+    ja: ["✓ 完了", "10分後"], zh: ["✓ 完成", "10分钟后"], hi: ["✓ हो गया", "10 मिनट बाद"], ko: ["✓ 완료", "10분 뒤"],
+    tr: ["✓ Yapıldı", "10 dk sonra"], id: ["✓ Selesai", "10 menit lagi"], it: ["✓ Fatto", "Tra 10 min"], vi: ["✓ Xong", "10 phút nữa"],
+    pl: ["✓ Zrobione", "Za 10 min"], th: ["✓ เสร็จแล้ว", "อีก 10 นาที"], ur: ["✓ ہو گیا", "10 منٹ بعد"], bn: ["✓ হয়ে গেছে", "১০ মিনিট পরে"],
+    sw: ["✓ Imefanyika", "Dakika 10 zaidi"], uk: ["✓ Зроблено", "За 10 хв"], el: ["✓ Έγινε", "Σε 10 λεπτά"], nl: ["✓ Klaar", "Over 10 min"],
+    ca: ["✓ Fet", "D'aquí a 10 min"], ro: ["✓ Gata", "Peste 10 min"], yo: ["✓ Ó ti parí", "Ìṣẹ́jú 10 sí i"], sv: ["✓ Klart", "Om 10 min"],
+    nb: ["✓ Ferdig", "Om 10 min"], da: ["✓ Færdig", "Om 10 min"], cs: ["✓ Hotovo", "Za 10 min"], hu: ["✓ Kész", "10 perc múlva"],
+    fi: ["✓ Tehty", "10 min päästä"],
+};
 const DELIVERY_KEY = "user_id,source_type,source_id,source_date";
 
 // מחזיר את התאריך/שעה המקומיים של המשתמש (לפי אזור הזמן השמור), בלי לבנות Date חדש -
@@ -148,10 +160,11 @@ async function handleRequest(): Promise<Response> {
     ]);
 
     const [{ data: prefs }, { data: presence }] = await Promise.all([
-        supabase.from("user_premium").select("user_id, reminder_all_devices").in("user_id", userIds),
+        supabase.from("user_premium").select("user_id, reminder_all_devices, language").in("user_id", userIds),
         supabase.from("reminder_presence").select("user_id").in("user_id", userIds).gt("visible_until", now.toISOString()),
     ]);
     const allDevicesUsers = new Set((prefs ?? []).filter((p) => p.reminder_all_devices).map((p) => p.user_id));
+    const userLang = new Map((prefs ?? []).map((p) => [p.user_id, String(p.language || "he")]));
     const appOpenUsers = new Set((presence ?? []).map((p) => p.user_id));
 
     // "תופסים" את התזכורת: רק מי שמכניס ראשון את השורה מוסר אותה (האפליקציה עושה בדיוק אותו דבר).
@@ -173,9 +186,11 @@ async function handleRequest(): Promise<Response> {
         const targets = reminderTargets(userSubs, allDevices);
         const targetKind = allDevices ? "all" : (targets.primary.some((s) => s.device_kind === "mobile") ? "mobile" : "all");
         const appOpen = appOpenUsers.has(userId);
+        // הכפתורים במילים, בשפה של המשתמש/ת (לפי בקשה מפורשת, 2026-11-25: בלי ⏰ ובלי אימוג׳י בהתראה)
+        const words = ACTION_WORDS[userLang.get(userId) || "he"] || ACTION_WORDS.en;
         const actions = [
-            { action: "done", title: "✅" },
-            { action: "not_done", title: "⏰" },
+            { action: "done", title: words[0] },
+            { action: "not_done", title: words[1] },
         ];
 
         const { data: dueRows } = await supabase
@@ -237,10 +252,12 @@ async function handleRequest(): Promise<Response> {
             // תוכל לסגור את ההתראה כשעונים במקום אחר); actions = "בוצע" / "עוד לא" על ההתראה עצמה,
             // ו-userId בתוך data כי אין session בתוך ה-Service Worker (ר' mark-reminder-done)
             const tag = `weekwise-reminder-${row.type}-${row.id}-${wallClock.dateStr}`;
-            const data = { sourceType: row.type, sourceId: row.id, sourceDate: wallClock.dateStr, userId };
-            const title = `⏰ ${row.title || "NOT10.ai"}`;
+            const data = { sourceType: row.type, sourceId: row.id, sourceDate: wallClock.dateStr, userId, taskTitle: row.title || "", text: row.body || "" };
+            const title = row.title || "NOT10.ai";
             // TTL קצר יחסית (10 דק') - תזכורת שלא הגיעה תוך זמן סביר כבר לא רלוונטית
-            const delivered = await pushToUser(targets, { title, body: row.body || "", tag, actions, data }, { urgency: "high", TTL: 600 });
+            // בגוף: הטקסט של התזכורת, ואם אין - השעה של המשימה (בלי מילים, אז בלי תרגום)
+            const body = row.body || String(row.time || "").slice(0, 5);
+            const delivered = await pushToUser(targets, { title, body, tag, actions, data }, { urgency: "high", TTL: 600 });
             if (delivered) {
                 await supabase.from(row.table).update({ last_notified_date: wallClock.dateStr }).eq("id", row.id);
             }
@@ -290,7 +307,7 @@ async function handleRequest(): Promise<Response> {
             if (!won || !won.length) continue;
             if (remaining <= 0) await removeSnooze();
 
-            const title = `⏰ ${sn.title || "NOT10.ai"}`;
+            const title = sn.title || "NOT10.ai";
             // אותו tag כמו ההתראה המקורית - מחליף אותה במקום להצטבר, ו-renotify כדי שתצלצל שוב
             const tag = `weekwise-reminder-${sn.source_type}-${sn.source_id}-${sn.source_date}`;
             const data = { sourceType: sn.source_type, sourceId: sn.source_id, sourceDate: sn.source_date, userId, snooze: true, taskTitle: sn.title || "", text: sn.body || "" };

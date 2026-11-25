@@ -9791,9 +9791,14 @@ function handleNotificationDeepLink() {
     const params = new URLSearchParams(window.location.search);
     const open = params.get('open');
     if (!open) return;
+    // 📲 rem = התזכורת שנגעו בה (sw.js) - נפתח עליה הפתק "בוצע? / להזכיר שוב" (openReminderFromNotification)
+    let rem = null;
+    try { rem = params.get('rem') ? JSON.parse(params.get('rem')) : null; } catch { rem = null; }
     params.delete('open');
+    params.delete('rem');
     const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
     window.history.replaceState({}, '', newUrl);
+    if (rem && rem.sourceType) { openTodayPeekPanel(); setTimeout(() => openReminderFromNotification(rem), 600); return; }
     if (open === 'peek') openTodayPeekPanel();
     // תזכורת ארוחה של New Me - נפתח ברגע שמצב הרכישה נטען (ר' updateNewMeShortcut)
     else if (open === 'newme') { if (typeof nmPendingDeepLink !== 'undefined') nmPendingDeepLink = true; else window.__nmDeepLink = true; }
@@ -17836,6 +17841,8 @@ function showReminderPopup(taskTitle, text, source) {
     if (doneBtn) doneBtn.classList.toggle('hidden', !currentReminderPopupSource);
     const snoozeBtn = document.getElementById('reminder-popup-snooze-btn');
     if (snoozeBtn) snoozeBtn.classList.toggle('hidden', !currentReminderPopupSource);
+    // 10 דק׳ / 30 דק׳ / שעה - בשפת הממשק (Intl), בלי טקסט לתרגום
+    document.querySelectorAll('#reminder-popup-snooze-btn [data-snooze-min]').forEach(b => { b.textContent = reminderSnoozeLabel(Number(b.dataset.snoozeMin)); });
     openModal('modal-reminder-popup');
     const confettiEl = document.getElementById('reminder-popup-confetti');
     if (confettiEl) {
@@ -17855,8 +17862,13 @@ function reminderThemeConfettiColors() {
 // נודניק (לפי בקשה מפורשת): "עוד לא" = עוד תזכורת בעוד 5 דקות, וחוזרת כל 5 דקות (עד 6 פעמים
 // אם לא מגיבים) עד "בוצע, תודה" או "הבנתי". השורה נשמרת ב-reminder_snoozes, וכל סבב מגיע
 // למקום אחד: למכשיר שפתוח מול העיניים (checkReminders לוקח אותו), אחרת השרת שולח לטלפון
-const REMINDER_SNOOZE_MINUTES = 5;
+// מאז 2026-11-25: ברירת המחדל 10 דקות, ובפופאפ בוחרים 10 / 30 / 60 ("להזכיר עוד עשר דק וכאלה")
+const REMINDER_SNOOZE_MINUTES = 10;
 const REMINDER_SNOOZE_REPEATS = 6;
+function reminderSnoozeLabel(min) {
+    const unit = min >= 60 && min % 60 === 0 ? ['hour', min / 60] : ['minute', min];
+    try { return new Intl.NumberFormat(currentLang, { style: 'unit', unit: unit[0], unitDisplay: unit[0] === 'hour' ? 'long' : 'short' }).format(unit[1]); } catch { return `${min}′`; }
+}
 
 // "בוצע" / "הבנתי" / "עוד לא" נרשמים בשורת המסירה - כל מכשיר אחר סוגר את התזכורת לפי זה
 async function recordReminderAnswer(source, kind) {
@@ -17882,18 +17894,19 @@ function closeReminderPopupForAnswer() {
     return source;
 }
 
-async function snoozeReminderPopup() {
+async function snoozeReminderPopup(minutes) {
+    const mins = [10, 30, 60].includes(Number(minutes)) ? Number(minutes) : REMINDER_SNOOZE_MINUTES;
     const source = closeReminderPopupForAnswer();
     if (source && supabaseClient && currentUserId) {
         const row = {
             user_id: currentUserId, source_type: source.sourceType, source_id: source.sourceId,
             source_date: source.sourceDate || getLocalDateString(),
             title: String(source.taskTitle || '').slice(0, 200), body: String(source.text || '').slice(0, 500),
-            next_at: new Date(Date.now() + REMINDER_SNOOZE_MINUTES * 60000).toISOString(), remaining: REMINDER_SNOOZE_REPEATS,
+            next_at: new Date(Date.now() + mins * 60000).toISOString(), remaining: REMINDER_SNOOZE_REPEATS,
         };
         const { error } = await supabaseClient.from('reminder_snoozes').upsert(row, { onConflict: 'user_id,source_type,source_id,source_date' });
         recordReminderAnswer(source, 'snooze');
-        showAppToast(t(error ? 'nm_save_error' : 'reminder_snoozed_toast'), error ? 'error' : undefined);
+        showAppToast(error ? t('nm_save_error') : t('reminder_snoozed_in').replace('{t}', reminderSnoozeLabel(mins)), error ? 'error' : undefined);
     }
     showNextQueuedReminder();
 }
@@ -17909,11 +17922,26 @@ async function dismissReminderPopup() {
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
         const msg = event.data;
-        if (!msg || msg.type !== 'weekwise-reminder-snooze' || !msg.data) return;
+        if (!msg || !msg.data) return;
+        // 📲 נגיעה בהתראה כשהאפליקציה כבר פתוחה ברקע (sw.js): פותחים את "בוצע?" של התזכורת הזו
+        if (msg.type === 'weekwise-reminder-open') { openReminderFromNotification(msg.data); return; }
+        if (msg.type !== 'weekwise-reminder-snooze') return;
         if (document.visibilityState !== 'visible') return;
         const d = msg.data;
         queueReminder({ taskTitle: d.taskTitle, text: d.text, sourceType: d.sourceType, sourceId: d.sourceId, sourceDate: d.sourceDate });
     });
+}
+
+// 📲 נגיעה בהתראה בטלפון (לפי בקשה מפורשת, 2026-11-25: "לחצתי... וזה רק הביא אותי לשגרה... שיפתח גם מין פתק כזה ששואל
+// האם בוצע? או להזכיר עוד עשר דק"): האפליקציה נפתחת ישר על הפתק של התזכורת - בוצע / להזכיר שוב / הבנתי
+function openReminderFromNotification(d) {
+    if (!d || !d.sourceType || !d.sourceId) return;
+    const rem = { taskTitle: d.taskTitle || '', text: d.text || '', sourceType: d.sourceType, sourceId: d.sourceId, sourceDate: d.sourceDate || getLocalDateString() };
+    if (isReminderPopupOpen() && currentReminderPopupSource && currentReminderPopupSource.sourceType === rem.sourceType && currentReminderPopupSource.sourceId === rem.sourceId) return;
+    markReminderSeenHere(rem);
+    // ההתראה כבר צלצלה בטלפון - כאן רק הפתק, בלי צלצול נוסף
+    if (isReminderPopupOpen() && currentReminderPopupSource) { queueReminder(rem); return; }
+    showReminderPopup(rem.taskTitle, rem.text, rem);
 }
 
 // "בוצע, תודה" - מסמנת השלמה על השורה האמיתית (אותו מנגנון בדיוק כמו הצ'קבוקס

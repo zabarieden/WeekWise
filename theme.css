@@ -12781,3 +12781,11 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .vision-milestone-edit { flex: none; opacity: 0.75; }
 .vision-milestone-edit svg { width: 15px; height: 15px; }
 .vision-milestone-input { flex: 1 1 auto; min-width: 0; min-height: 36px; padding: 6px 12px; border-radius: 12px; border: 1.5px solid var(--accent-purple); background: color-mix(in srgb, var(--accent-purple) 8%, var(--bg-row)); color: var(--text-primary); font: inherit; font-size: 0.9rem; outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-purple) 16%, transparent); }
+
+/* ⏰ להזכיר שוב בעוד 10 / 30 / 60 בפתק התזכורת (לפי בקשה מפורשת, 2026-11-25) */
+.reminder-snooze-row { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; margin: 2px 0 10px; }
+.reminder-snooze-row.hidden { display: none; }
+.reminder-snooze-label { font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); text-align: center; }
+.reminder-snooze-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.reminder-snooze-chip { min-height: 44px; padding: 8px 6px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--accent-purple) 40%, var(--border-color)); background: color-mix(in srgb, var(--accent-purple) 10%, var(--bg-row)); color: var(--text-primary); font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; }
+.reminder-snooze-chip:active { transform: scale(0.96); }
