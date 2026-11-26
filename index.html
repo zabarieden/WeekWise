@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=669" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=671" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -1645,7 +1645,7 @@
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_sport">Sport</div>
                     <button type="button" data-tour="m-sport" class="hamburger-drawer-item" onclick="navigateFromMenu('sport-section')">
-                        <span class="hamburger-drawer-item-icon">🏃</span>
+                        <span class="hamburger-drawer-item-icon"><svg class="ic-dumbbell" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7.4" y="10.6" width="9.2" height="2.8" rx="1.4" fill="#c4b5fd"/><rect x="4.3" y="5.8" width="3.8" height="12.4" rx="1.7" fill="#8b5cf6"/><rect x="15.9" y="5.8" width="3.8" height="12.4" rx="1.7" fill="#8b5cf6"/><rect x="1.5" y="8.5" width="3.3" height="7" rx="1.4" fill="#a78bfa"/><rect x="19.2" y="8.5" width="3.3" height="7" rx="1.4" fill="#a78bfa"/><path d="M5.6 7.6v3M17.2 7.6v3" stroke="#fff" stroke-opacity=".6" stroke-width="1.1" stroke-linecap="round"/></svg></span>
                         <span class="hamburger-drawer-item-title" data-i18n="hamburger_sport_tracking_label">Workout Tracking</span>
                     </button>
                     <!-- מד הצעדים היומי עבר לתוך "מעקב אימונים" (פס קטן למעלה) - לפי בקשה מפורשת -->
@@ -4850,10 +4850,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=591"></script>
+    <script src="i18n/core.js?v=592"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=15"></script>
-    <script src="app.js?v=694"></script>
+    <script src="app.js?v=696"></script>
     <script src="calendar-views.js?v=4"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>

@@ -13005,6 +13005,47 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .srp-wt-label text { paint-order: stroke; stroke: rgba(20, 12, 44, .6); stroke-width: 3px; }
 @media (prefers-reduced-motion: reduce) { .srp-wt-stream path, .srp-wt-rise circle { animation: none; } .srp-wt-pool { animation: none; } }
 
+/* ☰ התפריט בקטגוריות שנפתחות (2026-11-26, menuApplyFold ב-app.js): כותרת קבוצה = שורה עם אייקון וחץ, אחת פתוחה בכל פעם.
+   קבוצה עם פריט אחד - בלי כותרת, הפריט בשורה הראשית */
+.hamburger-drawer-section-title.menu-fold-head {
+    display: flex; align-items: center; gap: 12px; margin: 8px 0 6px; padding: 12px; border-radius: 14px; cursor: pointer;
+    font-size: .92rem; font-weight: 700; color: var(--text-primary); text-transform: none; letter-spacing: 0; line-height: 1.3;
+    background: color-mix(in srgb, var(--accent-purple, #a78bfa) 9%, rgba(255, 255, 255, .03));
+    border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 22%, transparent);
+    transition: background .2s ease, border-color .2s ease; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.menu-fold-head::before { content: '•'; flex-shrink: 0; width: 1.25rem; text-align: center; font-size: 1.1rem; }
+.menu-fold-head[data-i18n="hamburger_group_goals"]::before { content: '🎯'; }
+.menu-fold-head[data-i18n="hamburger_group_planning"]::before { content: '🗓️'; }
+.menu-fold-head[data-i18n="hamburger_group_notes"]::before { content: '📝'; }
+.menu-fold-head[data-i18n="hamburger_group_nutrition"]::before { content: '🍽️'; }
+.menu-fold-head[data-i18n="hamburger_group_finance"]::before { content: '📊'; }
+.menu-fold-head[data-i18n="hamburger_group_other"]::before { content: '⚙️'; }
+.menu-fold-head::after {
+    content: ''; flex-shrink: 0; margin-inline-start: auto; width: 7px; height: 7px;
+    border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; opacity: .55;
+    transform: translateY(-2px) rotate(45deg); transition: transform .25s ease;
+}
+.menu-fold-head.is-open { background: color-mix(in srgb, var(--accent-purple, #a78bfa) 18%, rgba(255, 255, 255, .04)); border-color: color-mix(in srgb, var(--accent-purple, #a78bfa) 40%, transparent); }
+.menu-fold-head.is-open::after { transform: translateY(2px) rotate(-135deg); }
+.menu-fold-head:focus-visible { outline: 2px solid var(--accent-purple, #a78bfa); outline-offset: 2px; }
+.menu-fold-head.is-single { display: none; }
+/* פריט שעומד לבד בשורה הראשית (שגרת אימונים, הגדרות) - נראה כמו שורת קטגוריה */
+#hamburger-drawer-overlay .hamburger-drawer-item:not(.in-fold) {
+    margin: 8px 0 6px; padding: 12px; border-radius: 14px; font-size: .92rem; font-weight: 700;
+    background: color-mix(in srgb, var(--accent-purple, #a78bfa) 9%, rgba(255, 255, 255, .03));
+    border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 22%, transparent);
+}
+.hamburger-drawer-item.is-folded { display: none; }
+.hamburger-drawer-item.in-fold { margin-inline-start: 14px; width: calc(100% - 14px); }
+.hamburger-drawer-item.menu-pop { animation: menuPop .26s ease both; animation-delay: calc(var(--n, 0) * 30ms); }
+@keyframes menuPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .hamburger-drawer-item.menu-pop { animation: none; } .menu-fold-head::after { transition: none; } }
+/* 🟣 המשקולת הסגולה של "שגרת אימונים" (במקום האיש הרץ) */
+.ic-dumbbell { display: block; width: 1.2em; height: 1.2em; }
+.hamburger-drawer-item-icon .ic-dumbbell { width: 1.3rem; height: 1.3rem; }
+.categories-tile-icon .ic-dumbbell { width: 1.3em; height: 1.3em; margin-inline: auto; }
+
 /* 🎨 הסימן שקובץ העיצוב נטען עד הסוף (ר' __cssGuard ב-index.html): מחזיר את המסך ומסתיר את מסך ה-↻.
    להשאיר בסוף הקובץ - כללים חדשים להוסיף מעליו */
 html body { visibility: visible; }

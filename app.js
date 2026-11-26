@@ -2283,6 +2283,9 @@ const NM_ICON_SVG = '<svg class="nm-icon" viewBox="0 0 24 24" fill="none" stroke
 function appTourIconHtml(icon) {
     return String(icon).startsWith('<svg') ? `<span class="app-tour-svg-icon">${icon}</span>` : appTourEsc(icon);
 }
+// 🟣 "שגרת אימונים": משקולת סגולה מצוירת במקום האיש הרץ (לפי בקשה מפורשת, 2026-11-26: "משהו סגול כמו בכל האפליקציה").
+// צבעים מלאים ולא gradient עם id - עותק של ה-SVG בתוך קבוצה סגורה (display:none) היה מעלים את ה-gradient לכל השאר
+const SPORT_ICON_SVG = '<svg class="ic-dumbbell" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="7.4" y="10.6" width="9.2" height="2.8" rx="1.4" fill="#c4b5fd"/><rect x="4.3" y="5.8" width="3.8" height="12.4" rx="1.7" fill="#8b5cf6"/><rect x="15.9" y="5.8" width="3.8" height="12.4" rx="1.7" fill="#8b5cf6"/><rect x="1.5" y="8.5" width="3.3" height="7" rx="1.4" fill="#a78bfa"/><rect x="19.2" y="8.5" width="3.3" height="7" rx="1.4" fill="#a78bfa"/><path d="M5.6 7.6v3M17.2 7.6v3" stroke="#fff" stroke-opacity=".6" stroke-width="1.1" stroke-linecap="round"/></svg>';
 // "הכול מחובר" - כל שורה: [אייקון, מפתח תרגום (או כמה מפתחות - מוצגים עם ›), טקסט קבוע] או חץ
 // ('>' כיוון אחד, '<>' הדדי). פריסה חכמה מוצגת עם המקום שלה - בתוך המחברות שלי
 const APP_TOUR_FLOWS = [
@@ -2291,7 +2294,7 @@ const APP_TOUR_FLOWS = [
     [['📅', 'apptour_flow_calendar'], '<>', ['🗓️', null, 'Google Calendar']],
     [[NM_ICON_SVG, null, NM_NAME], ['📝', 'notes_ai_title'], ['🍽️', 'nutrition_daily_tracker_title'], '>', ['🔥', 'apptour_flow_calories']],
     [['⚖️', 'apptour_flow_weight'], '<>', [NM_ICON_SVG, null, NM_NAME], '<>', ['📈', 'calorie_metrics_title'], '<>', ['🎯', 'vision_board_title']],
-    [['✅', 'daily_board_title'], '>', ['🏃', 'hamburger_sport_tracking_label']],
+    [['✅', 'daily_board_title'], '>', [SPORT_ICON_SVG, 'hamburger_sport_tracking_label']],
     [['🔁', 'apptour_flow_recurring'], '>', ['📊', 'bottom_tab_finance']],
 ];
 
@@ -2524,6 +2527,7 @@ async function appTourEnsureContext(step) {
         else switchAiBrainTab(step.tab || 'food');
     } else if (ctx === 'menu') {
         if (!menuOverlay.classList.contains('open')) { openHamburgerMenu(); changed = true; }
+        if (menuUnfoldFor(step.target)) changed = true;
     } else if (inSettings) {
         if (!settingsModal.classList.contains('open')) { openSettingsDrawer(); changed = true; }
         if (ctx === 'settings_sub') {
@@ -4228,6 +4232,69 @@ function openHamburgerMenu() {
     // בלבד לא מספיקה כדי שהמגירה לא תיחסם על ידם במובייל
     const wrapper = document.querySelector('.phone-wrapper');
     if (wrapper) wrapper.classList.add('menu-open');
+    menuApplyFold();
+}
+
+// ☰ התפריט בקטגוריות שנפתחות (לפי בקשה מפורשת, 2026-11-26: "לצמצם לתפריטים נפתחים שיהיה פחות עמוס, חשוב חשוב"):
+// כותרת של קבוצה = שורה שנפתחת ונסגרת - אחת פתוחה בכל פעם, והמכשיר זוכר איזו. קבוצה עם פריט אחד בלבד (ספורט, עוד/הגדרות) -
+// בלי כותרת, הפריט עצמו בשורה הראשית. ה-HTML לא משתנה (מסך הקטגוריות בונה ממנו את הקוביות) - רק מחלקות
+const MENU_OPEN_GROUP_KEY = 'weekwise_menu_open_group';
+function menuFoldGroups() {
+    const scroll = document.querySelector('#hamburger-drawer-overlay .hamburger-drawer-scroll');
+    const groups = [];
+    let cur = null;
+    if (!scroll) return groups;
+    Array.from(scroll.children).forEach(el => {
+        if (el.classList.contains('hamburger-drawer-section-title')) { cur = { head: el, key: el.getAttribute('data-i18n'), items: [] }; groups.push(cur); }
+        else if (cur && el.classList.contains('hamburger-drawer-item')) cur.items.push(el);
+    });
+    return groups;
+}
+function menuOpenGroup() { try { return localStorage.getItem(MENU_OPEN_GROUP_KEY) || ''; } catch { return ''; } }
+function menuApplyFold(animateKey) {
+    const open = menuOpenGroup();
+    menuFoldGroups().forEach(g => {
+        const single = g.items.filter(i => !i.classList.contains('hidden')).length <= 1;
+        const isOpen = !single && g.key === open;
+        g.head.classList.add('menu-fold-head');
+        g.head.classList.toggle('is-single', single);
+        g.head.classList.toggle('is-open', isOpen);
+        g.head.setAttribute('role', 'button');
+        g.head.setAttribute('tabindex', single ? '-1' : '0');
+        g.head.setAttribute('aria-expanded', String(isOpen));
+        g.items.forEach((item, n) => {
+            item.classList.toggle('is-folded', !single && !isOpen);
+            item.classList.toggle('in-fold', !single);
+            if (isOpen && g.key === animateKey) { item.style.setProperty('--n', n); item.classList.remove('menu-pop'); void item.offsetWidth; item.classList.add('menu-pop'); }
+        });
+    });
+    if (!menuApplyFold.bound) {
+        menuApplyFold.bound = true;
+        const scroll = document.querySelector('#hamburger-drawer-overlay .hamburger-drawer-scroll');
+        const toggle = head => {
+            if (!head || head.classList.contains('is-single')) return;
+            const key = head.getAttribute('data-i18n');
+            const next = menuOpenGroup() === key ? '' : key;
+            try { localStorage.setItem(MENU_OPEN_GROUP_KEY, next); } catch {}
+            menuApplyFold(next);
+            if (next) setTimeout(() => head.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 60);
+        };
+        scroll?.addEventListener('click', e => toggle(e.target.closest('.menu-fold-head')));
+        scroll?.addEventListener('keydown', e => {
+            const head = e.target.closest('.menu-fold-head');
+            if (head && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(head); }
+        });
+    }
+}
+// הסיור באפליקציה: פריט שמסתתר בקבוצה סגורה - פותחים את הקבוצה שלו לפני שמדגישים אותו
+function menuUnfoldFor(selector) {
+    const el = selector && document.querySelector(selector);
+    if (!el || !el.classList.contains('is-folded')) return false;
+    const g = menuFoldGroups().find(x => x.items.includes(el));
+    if (!g) return false;
+    try { localStorage.setItem(MENU_OPEN_GROUP_KEY, g.key); } catch {}
+    menuApplyFold();
+    return true;
 }
 
 // --- "כל הקטגוריות": מסך קוביות גדולות לכל קבוצה בתפריט (בלי "עוד"/הגדרות),
@@ -4236,7 +4303,7 @@ function openHamburgerMenu() {
 // כפולה לתחזק ושני הניווטים תמיד מסונכרנים
 const CATEGORY_GROUP_ICONS = {
     hamburger_group_planning: '🗓️', hamburger_group_notes: '📝', hamburger_group_goals: '🎯',
-    hamburger_group_nutrition: '🍽️', hamburger_group_sport: '🏃', hamburger_group_finance: '📊',
+    hamburger_group_nutrition: '🍽️', hamburger_group_sport: SPORT_ICON_SVG, hamburger_group_finance: '📊',
 };
 let categoriesOpenGroupKey = null;
 
@@ -4261,7 +4328,8 @@ function getMenuCategoryGroups() {
 function splitMenuItemLabel(item) {
     const iconEl = item.querySelector('.hamburger-drawer-item-icon');
     const titleEl = item.querySelector('.hamburger-drawer-item-title');
-    let icon = iconEl ? iconEl.textContent.trim() : '';
+    // אייקון מצויר (למשל המשקולת הסגולה) עובר כמו שהוא
+    let icon = iconEl ? (iconEl.querySelector('svg') ? iconEl.innerHTML.trim() : iconEl.textContent.trim()) : '';
     let label = titleEl ? titleEl.textContent.trim() : '';
     if (!icon) {
         const m = label.match(/^(\p{Extended_Pictographic}️?)\s*/u);
@@ -4287,7 +4355,7 @@ function makeCategoryTile(className, icon, label, onClick) {
     tile.className = className;
     const iconSpan = document.createElement('span');
     iconSpan.className = 'categories-tile-icon';
-    if (icon === NM_ICON_SVG) iconSpan.innerHTML = icon; else iconSpan.textContent = icon;
+    if (icon === NM_ICON_SVG || String(icon).startsWith('<svg')) iconSpan.innerHTML = icon; else iconSpan.textContent = icon;
     const labelSpan = document.createElement('span');
     labelSpan.className = 'categories-tile-label';
     labelSpan.textContent = label;
@@ -10700,7 +10768,7 @@ document.addEventListener('pointerdown', e => {
     setTimeout(() => host.classList.remove('bin-open'), 650);
 }, { passive: true });
 const HELP_FAQ_GROUPS = [
-    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'share_images', 'app_icon'] },
+    { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'menu_groups', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'share_images', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
     { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_recipes_shortcut', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
     { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'routine_blocks', 'routine_day_note', 'habits_streaks', 'routine_nudge'] },
