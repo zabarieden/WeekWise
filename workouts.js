@@ -944,6 +944,8 @@ async function toggleWorkoutDone(planId, dateStr, opts = {}) {
         workoutWeekDone.set(key, data);
         workoutWeekSessions.push(data);
         showAppToast(t('workout_logged_toast'));
+        // 💧 13: כוס מים אחרי האימון (water.js)
+        if (typeof waterOfferAfterWorkout === 'function') setTimeout(waterOfferAfterWorkout, 1200);
     }
     renderWorkoutPlan();
     renderMyDayWorkoutChip();

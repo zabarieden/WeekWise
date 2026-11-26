@@ -9892,6 +9892,11 @@ function handleNotificationDeepLink() {
     // תזכורת ארוחה של New Me - נפתח ברגע שמצב הרכישה נטען (ר' updateNewMeShortcut)
     else if (open === 'newme') { if (typeof nmPendingDeepLink !== 'undefined') nmPendingDeepLink = true; else window.__nmDeepLink = true; }
     else if (open === 'calendar') openCalendarOnDate(calDateParam || getLocalDateString());
+    // 💧 תזכורת שתייה לפי הקצב - נפתח מעקב המים
+    else if (open === 'water') {
+        if (typeof switchToTab === 'function') switchToTab('nutrition-section');
+        setTimeout(() => { if (typeof openSubTile === 'function') openSubTile('nutrition-section', 'water'); if (typeof loadWaterData === 'function' && currentUserId) loadWaterData(); }, 300);
+    }
 }
 // פותח את מסך היומן על תאריך מסוים (בתצוגה שנבחרה); הכרטיס של לוח החודש נפתח אם היה סגור
 function openCalendarOnDate(dateStr) {
@@ -10706,7 +10711,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_details', 'cal_calendars', 'cal_repeat_more', 'cal_reminders', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
-    { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
+    { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note', 'water_more'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
     { tab: 'general', head: 'faq_cat_goals', ids: ['goal_edit', 'change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
     { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week', 'achievements'] },
@@ -13637,6 +13642,7 @@ async function submitSportSession() {
     photoUrlInput.value = '';
     setSportPhotoPreview(null);
     showAppToast(t('sport_add_success'));
+    if (typeof waterOfferAfterWorkout === 'function') setTimeout(waterOfferAfterWorkout, 1200);
     await Promise.all([renderSportSummary(), renderSportHistory()]);
 }
 
@@ -13696,6 +13702,7 @@ async function submitSportQuickAdd() {
     afterSportChanged();
     closeModal('modal-sport-quick-add');
     showAppToast(t('sport_add_success'));
+    if (typeof waterOfferAfterWorkout === 'function') setTimeout(waterOfferAfterWorkout, 1200);
     if (document.getElementById('sport-summary-next-btn')) await Promise.all([renderSportSummary(), renderSportHistory()]);
 }
 

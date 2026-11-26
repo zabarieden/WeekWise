@@ -125,6 +125,11 @@ self.addEventListener('notificationclick', (event) => {
         event.waitUntil(focusOrOpenApp(`./index.html?open=calendar${date ? `&date=${date}` : ''}`));
         return;
     }
+    // 💧 תזכורת שתייה לפי הקצב (send-due-reminders): נפתח ישר מעקב המים
+    if (data && data.open === 'water') {
+        event.waitUntil(focusOrOpenApp('./index.html?open=water'));
+        return;
+    }
     // תזכורת ארוחה של New Me (data.open = 'newme') פותחת ישר את התפריט של היום; אחרת - הצצה להיום
     const target = data && data.open === 'newme' ? 'newme' : 'peek';
     event.waitUntil(Promise.all([reminderAction(data, 'dismiss'), focusOrOpenApp(`./index.html?open=${target}`)]));

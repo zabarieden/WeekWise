@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=667" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=669" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -811,10 +811,11 @@
                             <span class="card-toggle-icon">▼</span>
                         </div>
                         <div class="card-body">
-                            <div class="ai-brain-tabs">
-                                <button type="button" class="ai-brain-tab" onclick="addWaterLog(200)" data-i18n="water_add_cup_btn">💧 +200ml (cup)</button>
-                                <button type="button" class="ai-brain-tab" onclick="addWaterLog(500)" data-i18n="water_add_bottle_btn">🍶 +500ml (bottle)</button>
-                            </div>
+                            <!-- 💧 סבב 2026-11-26 (water.js): האגם שמתמלא, "המים של החודש", הכוסות שלי וסוגי המשקאות -->
+                            <div class="water-lake" id="water-lake"></div>
+                            <div class="water-talk hidden" id="water-talk" role="status"></div>
+                            <div class="ai-brain-tabs water-cups" id="water-cups"></div>
+                            <div class="water-drinks" id="water-drinks"></div>
                             <div class="preset-manager-grid" style="margin-top: 10px;">
                                 <input type="number" id="water-custom-amount-input" data-i18n-placeholder="water_custom_amount_placeholder" placeholder="Custom amount (ml)">
                                 <button type="button" class="btn-secondary" onclick="addCustomWaterLog()" data-i18n="water_add_custom_btn">Add</button>
@@ -824,10 +825,12 @@
                                 <div class="stat-box weekly"><h3 data-i18n="stat_weekly">Weekly</h3><div class="stat-number" id="water-weekly-total">0</div></div>
                             </div>
                             <div style="margin-top: 12px;">
-                                <label class="settings-label" data-i18n="water_daily_goal_label">Daily goal (ml)</label>
-                                <input type="number" id="water-daily-goal-input" onchange="saveWaterDailyGoal()">
-                                <div class="progress-bar-bg" style="margin-top: 8px;"><div class="progress-bar-fill" id="water-goal-progress-fill" style="width:0%;"></div></div>
+                                <label class="settings-label" id="water-goal-label" for="water-daily-goal-input" data-i18n="water_daily_goal_label">Daily goal (ml)</label>
+                                <input type="number" id="water-daily-goal-input" inputmode="decimal" onchange="saveWaterDailyGoal()">
+                                <div class="water-suggest" id="water-suggest"></div>
+                                <div class="water-settings" id="water-settings"></div>
                             </div>
+                            <div class="water-week" id="water-week"></div>
                             <div class="preset-category-header" onclick="toggleWaterHistory()">
                                 <span class="preset-category-label" data-i18n="water_history_title">Today's Log</span>
                                 <span class="preset-category-chevron" id="water-history-chevron">▼</span>
@@ -838,6 +841,12 @@
                                 <span class="preset-category-label" data-i18n="water_month_title">Monthly table</span>
                                 <span class="preset-category-chevron" id="water-month-chevron">▶</span>
                             </div>
+                            <!-- 💧 לפי חודשים: כמה שתית בכל חודש, ממוצע ליום ואחוז הימים ביעד -->
+                            <div class="preset-category-header" onclick="toggleWaterMonths()">
+                                <span class="preset-category-label" data-i18n="water_months_title">By month</span>
+                                <span class="preset-category-chevron" id="water-months-chevron">▶</span>
+                            </div>
+                            <div class="water-months hidden" id="water-months"></div>
                             <div id="water-month-body" class="water-month hidden">
                                 <div class="water-month-nav">
                                     <button type="button" class="water-month-arrow" onclick="navigateWaterMonth(-1)" data-i18n-aria-label="monthly_goal_prev_month" aria-label="Previous month">‹</button>
@@ -2618,10 +2627,8 @@
             <div class="modal-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
                 <h3 data-i18n="water_quick_add_title">Add water</h3>
-                <div class="ai-brain-tabs">
-                    <button type="button" class="ai-brain-tab" onclick="addWaterLog(200); closeModal('modal-water-quick-add');" data-i18n="water_add_cup_btn">💧 +200ml (cup)</button>
-                    <button type="button" class="ai-brain-tab" onclick="addWaterLog(500); closeModal('modal-water-quick-add');" data-i18n="water_add_bottle_btn">🍶 +500ml (bottle)</button>
-                </div>
+                <div class="ai-brain-tabs water-cups" id="water-fab-cups"></div>
+                <div class="water-drinks" id="water-fab-drinks"></div>
                 <div class="preset-manager-grid" style="margin-top: 10px;">
                     <input type="number" id="water-quick-add-custom-input" data-i18n-placeholder="water_custom_amount_placeholder" placeholder="Custom amount (ml)">
                     <div class="action-buttons-wrap">
@@ -4843,10 +4850,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=590"></script>
+    <script src="i18n/core.js?v=591"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
-    <script src="nourish-loader.js?v=14"></script>
-    <script src="app.js?v=693"></script>
+    <script src="nourish-loader.js?v=15"></script>
+    <script src="app.js?v=694"></script>
     <script src="calendar-views.js?v=4"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>
@@ -4855,12 +4862,13 @@
     <script src="change.js?v=2"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=5"></script>
-    <script src="workouts.js?v=14"></script>
+    <script src="workouts.js?v=15"></script>
     <!-- 🖼️ כרטיסי שיתוף כתמונה ודפי PDF (10 המקומות, 2026-11-25) - אחרי workouts.js כי משתמש ברקע שלו -->
     <script src="share-cards.js?v=1"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=11"></script>
     <script src="home.js?v=45"></script>
+    <script src="water.js?v=2"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=10"></script>

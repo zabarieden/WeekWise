@@ -1317,6 +1317,15 @@ function srpWaterfallScene() {
                 ${srpArt('waterfall.jpg')}
                 <g class="srp-mist" fill="#ffffff" filter="url(#wfMistBlur)"><ellipse cx="160" cy="452" rx="70" ry="16" opacity="0.32"/><ellipse cx="236" cy="448" rx="74" ry="15" opacity="0.28"/><ellipse cx="198" cy="438" rx="52" ry="12" opacity="0.26"/></g>
             </g>
+            <!-- 💧 המים של היום (בחירתה 2026-11-26, רעיון 12): המפל זורם במים קסומים, הבריכה מתמלאת לפי כמה ששתית היום
+                 ונראה שהיא גם מתרוקנת - ניצוצות עולים ממנה (המים הטובים ששתית) - ומתמלאת שוב באותו רגע. ר' srpWaterToday -->
+            <g class="srp-water-today is-empty" aria-hidden="true">
+                <defs><radialGradient id="wtPool"><stop offset="0" stop-color="#fff7cf" stop-opacity=".9"/><stop offset=".45" stop-color="#7ef9ff" stop-opacity=".7"/><stop offset="1" stop-color="#2dd4bf" stop-opacity="0"/></radialGradient></defs>
+                <g class="srp-wt-stream"><path d="M184 140 V440"/><path d="M198 136 V444" style="animation-delay:-.4s"/><path d="M212 140 V440" style="animation-delay:-.8s"/></g>
+                <ellipse class="srp-wt-pool" cx="195" cy="600" rx="175" ry="58" fill="url(#wtPool)"/>
+                <g class="srp-wt-rise" fill="#fff7cf">${[[150, 0], [178, .7], [205, 1.4], [232, 2.1], [262, 2.8]].map(([x, d]) => `<circle cx="${x}" cy="600" r="3" style="animation-delay:${d}s"/>`).join('')}</g>
+                <g class="srp-wt-label"><rect x="85" y="500" width="220" height="34" rx="17" fill="rgba(20,12,44,.55)"/><text x="195" y="523" text-anchor="middle" font-size="15" font-weight="800" fill="#f2fdff" data-fit="200"></text></g>
+            </g>
             <g class="srp-hot srp-pool" data-place-hot="pool" role="button" tabindex="0" aria-label="${srEsc(t('room_waterfall_pool_aria'))}">
                 <ellipse class="srp-hit" cx="195" cy="612" rx="236" ry="150" fill="transparent"/>
                 <g class="srp-ripples-wf" fill="none" stroke="#ffffff" stroke-width="2"><ellipse cx="195" cy="586" rx="70" ry="16"/><ellipse cx="195" cy="592" rx="94" ry="21" style="animation-delay:1.2s"/><ellipse cx="195" cy="598" rx="118" ry="26" style="animation-delay:2.4s"/></g>
@@ -1378,8 +1387,24 @@ function srpOpenMirror(box) {
         showAppToast(t('room_pool_added'));
     });
 }
+// 💧 המים של היום על המפל (water.js): כמה ששתית היום מול היעד - הבריכה גדלה עד היעד, והתווית אומרת כמה
+async function srpWaterToday(box) {
+    const g = box.querySelector('.srp-water-today');
+    if (!g || typeof waterTodayTotal !== 'function') return;
+    const total = await waterTodayTotal();
+    const goal = typeof getWaterDailyGoal === 'function' ? getWaterDailyGoal() : 2000;
+    if (!g.isConnected) return;
+    const p = goal > 0 ? Math.min(1, total / goal) : 0;
+    g.style.setProperty('--p', Math.max(0.12, p).toFixed(2));
+    g.classList.toggle('is-empty', !total);
+    g.classList.toggle('is-full', p >= 1);
+    const text = g.querySelector('.srp-wt-label text');
+    if (text) text.textContent = total ? t('water_fall_today').replace('{amount}', typeof waterBig === 'function' ? waterBig(total) : `${total}`) : t('water_fall_empty');
+    if (typeof srFitTexts === 'function') srFitTexts(g);
+}
 function srpInitWaterfall(box) {
     srpCleanups.push(srpWaterStop);
+    srpWaterToday(box);
     box.querySelector('.srp-rest-exit').addEventListener('click', srpWaterStop);
     return {
         rock: () => { srpRest(box); srpWaterStart(); },

@@ -98,6 +98,54 @@ const CAL_WORDS: Record<string, { leave: string; today: string; tomorrow: string
     hu: { leave: "Ideje indulni", today: "Ma a naptárban", tomorrow: "Holnap a naptárban" },
     fi: { leave: "Aika lähteä", today: "Tänään kalenterissa", tomorrow: "Huomenna kalenterissa" },
 };
+// 💧 מים (לפי בחירה מפורשת, 2026-11-26): כותרת תזכורת השתייה לפי הקצב, ושורת המים בסיכום הבוקר ("אתמול") ובסיכום הערב ("היום").
+// בלי אימוג׳י בהתראה. הכמויות עצמן - Intl (ליטר / מ״ל / fl oz) לפי user_premium.water_prefs.unit
+const WATER_WORDS: Record<string, { t: string; y: string; d: string }> = {
+    he: { t: "הגיע הזמן לכוס מים", y: "מים אתמול", d: "מים היום" },
+    en: { t: "Time for a glass of water", y: "Water yesterday", d: "Water today" },
+    es: { t: "Hora de un vaso de agua", y: "Agua ayer", d: "Agua hoy" },
+    fr: { t: "C'est l'heure d'un verre d'eau", y: "Eau hier", d: "Eau aujourd'hui" },
+    ar: { t: "حان وقت كوب ماء", y: "الماء أمس", d: "الماء اليوم" },
+    ru: { t: "Время для стакана воды", y: "Вода вчера", d: "Вода сегодня" },
+    de: { t: "Zeit für ein Glas Wasser", y: "Wasser gestern", d: "Wasser heute" },
+    pt: { t: "Hora de um copo de água", y: "Água ontem", d: "Água hoje" },
+    ja: { t: "お水を1杯どうぞ", y: "昨日の水", d: "今日の水" },
+    zh: { t: "该喝杯水了", y: "昨天喝水", d: "今天喝水" },
+    hi: { t: "एक गिलास पानी का समय", y: "कल पानी", d: "आज पानी" },
+    ko: { t: "물 한 잔 마실 시간이에요", y: "어제 마신 물", d: "오늘 마신 물" },
+    tr: { t: "Bir bardak su zamanı", y: "Dün su", d: "Bugün su" },
+    id: { t: "Waktunya segelas air", y: "Air kemarin", d: "Air hari ini" },
+    it: { t: "È ora di un bicchiere d'acqua", y: "Acqua ieri", d: "Acqua oggi" },
+    vi: { t: "Đến lúc uống một cốc nước", y: "Nước hôm qua", d: "Nước hôm nay" },
+    pl: { t: "Czas na szklankę wody", y: "Woda wczoraj", d: "Woda dziś" },
+    th: { t: "ได้เวลาดื่มน้ำสักแก้ว", y: "น้ำเมื่อวาน", d: "น้ำวันนี้" },
+    ur: { t: "ایک گلاس پانی کا وقت", y: "کل کا پانی", d: "آج کا پانی" },
+    bn: { t: "এক গ্লাস পানির সময়", y: "গতকালের পানি", d: "আজকের পানি" },
+    sw: { t: "Ni wakati wa glasi ya maji", y: "Maji jana", d: "Maji leo" },
+    uk: { t: "Час для склянки води", y: "Вода вчора", d: "Вода сьогодні" },
+    el: { t: "Ώρα για ένα ποτήρι νερό", y: "Νερό χθες", d: "Νερό σήμερα" },
+    nl: { t: "Tijd voor een glas water", y: "Water gisteren", d: "Water vandaag" },
+    ca: { t: "Hora d'un got d'aigua", y: "Aigua ahir", d: "Aigua avui" },
+    ro: { t: "E timpul pentru un pahar cu apă", y: "Apă ieri", d: "Apă azi" },
+    yo: { t: "Àkókò fún ife omi kan", y: "Omi àná", d: "Omi òní" },
+    sv: { t: "Dags för ett glas vatten", y: "Vatten i går", d: "Vatten i dag" },
+    nb: { t: "Tid for et glass vann", y: "Vann i går", d: "Vann i dag" },
+    da: { t: "Tid til et glas vand", y: "Vand i går", d: "Vand i dag" },
+    cs: { t: "Čas na sklenici vody", y: "Voda včera", d: "Voda dnes" },
+    hu: { t: "Ideje egy pohár víznek", y: "Víz tegnap", d: "Víz ma" },
+    fi: { t: "Aika lasilliselle vettä", y: "Vesi eilen", d: "Vesi tänään" },
+};
+const ML_PER_FL_OZ = 29.5735;
+// 1,800 מ״ל → "1.8 ל׳", 600 → "600 מ״ל"; באונקיות → "60.9 fl oz"
+function waterAmount(ml: number, unit: string, lang: string) {
+    const f = (v: number, u: string, digits: number) => {
+        try { return new Intl.NumberFormat(lang, { style: "unit", unit: u, unitDisplay: "short", maximumFractionDigits: digits }).format(v); } catch { return `${v} ${u}`; }
+    };
+    if (unit === "oz") return f(Math.round(ml / ML_PER_FL_OZ * 10) / 10, "fluid-ounce", 1);
+    return ml >= 1000 ? f(Math.round(ml / 100) / 10, "liter", 1) : f(Math.round(ml), "milliliter", 0);
+}
+// לא מזכירים אם שתו ב-45 הדקות האחרונות
+const WATER_QUIET_AFTER_LOG_MS = 45 * 60 * 1000;
 // תזכורת נוספת / זמן לצאת שהתפספסו נשלחות עד חצי שעה באיחור, לא יותר
 const EXTRA_LATE_MINUTES = 30;
 // אירוע בלי שעה (כל היום): התזכורות הנוספות נספרות מ-09:00 של היום שלו
@@ -210,12 +258,20 @@ async function handleRequest(): Promise<Response> {
     ]);
 
     const [{ data: prefs }, { data: presence }] = await Promise.all([
-        supabase.from("user_premium").select("user_id, reminder_all_devices, language, calendar_prefs").in("user_id", userIds),
+        supabase.from("user_premium").select("user_id, reminder_all_devices, language, calendar_prefs, water_prefs").in("user_id", userIds),
         supabase.from("reminder_presence").select("user_id").in("user_id", userIds).gt("visible_until", now.toISOString()),
     ]);
     const allDevicesUsers = new Set((prefs ?? []).filter((p) => p.reminder_all_devices).map((p) => p.user_id));
     const userLang = new Map((prefs ?? []).map((p) => [p.user_id, String(p.language || "he")]));
     const userCalPrefs = new Map((prefs ?? []).map((p) => [p.user_id, (p.calendar_prefs && typeof p.calendar_prefs === "object" ? p.calendar_prefs : {}) as Record<string, unknown>]));
+    const userWaterPrefs = new Map((prefs ?? []).map((p) => [p.user_id, (p.water_prefs && typeof p.water_prefs === "object" ? p.water_prefs : {}) as Record<string, any>]));
+    // סך המים של יום (log_date נשמר באפליקציה לפי התאריך המקומי) - לשורת המים ולתזכורת לפי הקצב
+    const waterDay = async (userId: string, date: string) => {
+        const { data, error } = await supabase.from("water_logs").select("amount_ml, created_at").eq("user_id", userId).eq("log_date", date);
+        if (error) return null;
+        const rows = data ?? [];
+        return { total: rows.reduce((s, r) => s + (Number(r.amount_ml) || 0), 0), lastAt: rows.reduce((m, r) => Math.max(m, new Date(r.created_at).getTime() || 0), 0) };
+    };
     // תזכורות היומן החדשות (שלב 3) נתפסות כמו כל תזכורת - אבל שגיאה כאן = לא שולחים (לא מסתכנים בהתראה כל דקה)
     const claimCalDelivery = async (userId: string, sourceType: string, sourceId: string, sourceDate: string, deviceKind: string) => {
         const { data, error } = await supabase.from("reminder_deliveries").upsert(
@@ -383,8 +439,46 @@ async function handleRequest(): Promise<Response> {
             if (!items.length) continue;
             const lines = items.slice(0, SUMMARY_MAX_LINES).map((i) => `${i.time || "•"} ${i.title}`);
             if (items.length > SUMMARY_MAX_LINES) lines.push(`+${items.length - SUMMARY_MAX_LINES}`);
+            // 💧 שורת מים: בבוקר - כמה שתו אתמול; בערב - כמה היום מתוך היעד. רק כשיש מה לספר (לא "0")
+            const wp = userWaterPrefs.get(userId) || {};
+            const wUnit = wp.unit === "oz" ? "oz" : "ml";
+            const ww = WATER_WORDS[lang] || WATER_WORDS.en;
+            const wDay = await waterDay(userId, offset ? wallClock.dateStr : dateOfNum(todayNum - 1));
+            if (wDay && wDay.total > 0) {
+                const goal = Number(wp.goal) > 0 ? Number(wp.goal) : 0;
+                lines.push(offset
+                    ? `${ww.d}: ${waterAmount(wDay.total, wUnit, lang)}${goal ? ` / ${waterAmount(goal, wUnit, lang)}` : ""}`
+                    : `${ww.y}: ${waterAmount(wDay.total, wUnit, lang)}`);
+            }
             const title = offset ? calWords.tomorrow : calWords.today;
             await pushToUser(targets, { title, body: lines.join("\n"), tag: `weekwise-${kind}-${date}`, data: { open: "calendar", date } }, { urgency: "normal", TTL: 3600 });
+        }
+
+        // 💧 תזכורת שתייה לפי הקצב (water_prefs.remind = { on, from, to }): רק כשמפגרים אחרי הקצב של היום בכוס בערך,
+        // בין השעות שנבחרו, לכל היותר פעם בחלון של שעתיים (reminder_deliveries: water_s<חלון>), לא אחרי שתייה
+        // ב-45 הדקות האחרונות, ושקט לגמרי כשהיעד הושג. לחיצה פותחת את מעקב המים
+        const wPrefs = userWaterPrefs.get(userId) || {};
+        const wRemind = wPrefs.remind && typeof wPrefs.remind === "object" ? wPrefs.remind : null;
+        if (wRemind && wRemind.on === true && !appOpen) {
+            const from = toMin(typeof wRemind.from === "string" ? wRemind.from : "08:00");
+            const to = toMin(typeof wRemind.to === "string" ? wRemind.to : "22:00");
+            const goal = Number(wPrefs.goal) > 0 ? Number(wPrefs.goal) : 2000;
+            if (from !== null && to !== null && to > from && nowMinutes >= from + 60 && nowMinutes < to) {
+                checked++;
+                const wDay = await waterDay(userId, wallClock.dateStr);
+                const cupSizes = (Array.isArray(wPrefs.cups) ? wPrefs.cups : []).map((c: any) => Number(c?.ml) || 0).filter((x: number) => x > 0);
+                const cup = Math.max(150, Math.min(250, ...cupSizes));
+                const expected = goal * (nowMinutes - from) / (to - from);
+                if (wDay && wDay.total < goal && expected - wDay.total >= cup && now.getTime() - wDay.lastAt > WATER_QUIET_AFTER_LOG_MS) {
+                    const slot = Math.floor((nowMinutes - from) / 120);
+                    if (await claimCalDelivery(userId, `water_s${slot}`, userId, wallClock.dateStr, targetKind)) {
+                        const wUnit = wPrefs.unit === "oz" ? "oz" : "ml";
+                        const ww = WATER_WORDS[lang] || WATER_WORDS.en;
+                        const body = `${waterAmount(wDay.total, wUnit, lang)} / ${waterAmount(goal, wUnit, lang)}`;
+                        await pushToUser(targets, { title: ww.t, body, tag: `weekwise-water-${wallClock.dateStr}`, data: { open: "water" } }, { urgency: "normal", TTL: 1800 });
+                    }
+                }
+            }
         }
 
         // נודניק: "עוד לא" (בהתראה או בפופאפ) נכנס ל-reminder_snoozes - התראה חוזרת כל 5 דקות עד

@@ -12921,6 +12921,90 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .nm-names-stepper .nm-count-pick:disabled { opacity: .35; cursor: default; }
 .nm-names-num { min-width: 26px; text-align: center; font-size: 1.35rem; }
 
+/* 💧 מעקב מים - סבב 2026-11-26 (water.js) */
+.water-lake { position: relative; display: grid; place-items: center; margin: 4px auto 10px; width: min(220px, 70%); aspect-ratio: 1; color: var(--text-secondary); }
+.water-lake-svg { width: 100%; height: 100%; }
+.water-lake-fill { transition: r 1s cubic-bezier(.2, .8, .2, 1); }
+.water-ripple { transform-box: fill-box; transform-origin: center; animation: waterRipple 3s ease-out infinite; }
+@keyframes waterRipple { from { transform: scale(.4); opacity: .9; } to { transform: scale(2.4); opacity: 0; } }
+.water-lake-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; pointer-events: none; text-shadow: 0 1px 6px rgba(0, 40, 60, .55); color: #fff; }
+.water-lake-text b { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+.water-lake-text span { font-size: .78rem; font-weight: 700; opacity: .95; }
+.water-talk { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; padding: 10px 12px; border-radius: 16px; background: color-mix(in srgb, #38bdf8 14%, var(--bg-row)); border: 1px solid color-mix(in srgb, #38bdf8 35%, transparent); }
+.water-talk.hidden { display: none; }
+.water-talk p { margin: 0; flex: 1; min-width: 0; font-size: .88rem; line-height: 1.5; }
+.water-talk-ic { font-size: 1.4rem; }
+.water-talk-x { border: none; background: none; color: var(--text-secondary); cursor: pointer; font-size: .9rem; padding: 4px 6px; }
+.water-cups { flex-wrap: wrap; }
+.water-cup-btn { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; line-height: 1.15; }
+.water-cup-btn small { font-size: .68rem; font-weight: 600; opacity: .75; max-width: 120px; overflow-wrap: anywhere; }
+.water-drinks { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.water-drink { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .76rem; font-weight: 700; cursor: pointer; }
+.water-drink.on { border-color: transparent; background: linear-gradient(120deg, #38bdf8, #2dd4bf); color: #04212b; }
+.water-drink:focus-visible, .water-cup-edit:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.water-other { display: flex; gap: 6px; width: 100%; }
+.water-other.hidden { display: none; }
+.water-other input { flex: 1 1 0; min-width: 0; box-sizing: border-box; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--accent-purple); background: rgba(20, 10, 30, .45); color: var(--text-primary); font: inherit; font-size: .85rem; }
+.water-suggest:empty { display: none; }
+.water-suggest { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 8px; padding: 9px 12px; border-radius: 14px; background: var(--bg-row); border: 1px dashed color-mix(in srgb, #38bdf8 55%, transparent); font-size: .85rem; }
+.water-suggest small { color: var(--text-secondary); font-size: .74rem; flex-basis: 100%; }
+.water-suggest-use { margin-inline-start: auto; border: none; border-radius: 999px; padding: 5px 12px; background: linear-gradient(120deg, #38bdf8, #2dd4bf); color: #04212b; font: inherit; font-weight: 800; font-size: .78rem; cursor: pointer; }
+.water-settings { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.water-set-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: .86rem; cursor: pointer; }
+.water-seg { display: inline-flex; border: 1px solid var(--border-color); border-radius: 999px; overflow: hidden; }
+.water-seg button { border: none; background: none; color: var(--text-primary); font: inherit; font-size: .78rem; font-weight: 700; padding: 5px 11px; cursor: pointer; }
+.water-seg button.on { background: linear-gradient(120deg, #38bdf8, #2dd4bf); color: #04212b; }
+.water-set-times { display: flex; flex-wrap: wrap; gap: 10px; font-size: .82rem; color: var(--text-secondary); }
+.water-set-times.hidden { display: none; }
+.water-set-times input { margin-inline-start: 4px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--accent-purple); background: rgba(20, 10, 30, .45); color: var(--text-primary); font: inherit; color-scheme: dark; }
+.water-week:empty { display: none; }
+.water-week { margin: 14px 0 6px; padding: 12px; border-radius: 16px; background: var(--bg-row); border: 1px solid var(--border-color); }
+.water-week-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 10px; font-size: .82rem; margin-bottom: 8px; }
+.water-week-head span { color: var(--text-secondary); }
+.water-week-bars { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; height: 110px; padding-bottom: 18px; }
+.water-week-bars::before { content: ""; position: absolute; inset-inline: 0; bottom: calc(18px + (100% - 18px) * var(--goal) / 100); border-top: 1.5px dashed color-mix(in srgb, #38bdf8 70%, transparent); }
+.water-week-col { position: relative; display: flex; align-items: flex-end; justify-content: center; min-width: 0; }
+.water-week-bar { display: block; width: 70%; min-height: 3px; border-radius: 8px 8px 3px 3px; background: color-mix(in srgb, #38bdf8 45%, transparent); }
+.water-week-col.is-goal .water-week-bar { background: linear-gradient(180deg, #38bdf8, #2dd4bf); }
+.water-week-col.is-today .water-week-bar { box-shadow: 0 0 0 2px color-mix(in srgb, #38bdf8 60%, transparent); }
+.water-week-col small { position: absolute; bottom: -18px; font-size: .66rem; color: var(--text-secondary); }
+.water-months.hidden { display: none; }
+.water-months { overflow-x: auto; margin-bottom: 8px; }
+.water-months-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+.water-months-table th, .water-months-table td { padding: 7px 6px; text-align: start; border-bottom: 1px solid var(--border-color); }
+.water-months-table th { color: var(--text-secondary); font-weight: 700; font-size: .74rem; }
+.water-months-table td:not(:first-child) { font-variant-numeric: tabular-nums; }
+.water-cups-ov { position: absolute; inset: 0; z-index: 4300; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .5); }
+.water-cups-sheet { width: 100%; max-width: 520px; max-height: 85%; overflow-y: auto; box-sizing: border-box; padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px)); border-radius: 24px 24px 0 0; background: var(--bg-sheet); color: var(--text-primary); display: flex; flex-direction: column; gap: 12px; }
+.water-cups-sheet h3 { margin: 0; text-align: center; }
+.water-cups-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--bg-row); }
+.water-cups-row span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.water-cups-add { display: flex; flex-direction: column; gap: 8px; }
+.water-cups-add input { box-sizing: border-box; padding: 11px; border-radius: 10px; border: 1px solid var(--accent-purple); background: rgba(20, 10, 30, .45); color: var(--text-primary); font: inherit; }
+.water-offer { position: absolute; z-index: 4400; inset-inline: 14px; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 16px; background: var(--bg-sheet); color: var(--text-primary); border: 1px solid color-mix(in srgb, #38bdf8 45%, transparent); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); font-size: .86rem; }
+.water-offer span { flex: 1; min-width: 0; }
+.water-offer button { border: none; border-radius: 999px; padding: 6px 12px; background: linear-gradient(120deg, #38bdf8, #2dd4bf); color: #04212b; font: inherit; font-weight: 800; cursor: pointer; white-space: nowrap; }
+.water-offer .water-offer-x { background: none; color: var(--text-secondary); padding: 4px 6px; }
+:is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) :is(.water-other input, .water-set-times input, .water-cups-add input) { background: rgba(0, 0, 0, .05); color: var(--accent-purple-text); color-scheme: light; }
+@media (prefers-reduced-motion: reduce) { .water-ripple { animation: none; opacity: .3; } .water-lake-fill { transition: none; } }
+
+
+/* 💧 המים של היום על המפל (srpWaterToday): זרם קסום, הבריכה מתמלאת עד --p ו"נושמת", ניצוצות עולים ממנה */
+.srp-water-today { --p: .12; pointer-events: none; }
+/* טיפות אור עגולות שנופלות במפל (לא קווים מקווקווים) */
+.srp-wt-stream path { fill: none; stroke: #e6fdff; stroke-width: 4; stroke-linecap: round; stroke-dasharray: .1 22; opacity: .75; filter: drop-shadow(0 0 5px rgba(126, 249, 255, .95)); animation: srpWtFlow 1.3s linear infinite; }
+.srp-wt-stream path:nth-child(2) { stroke: #fff6d0; stroke-width: 3.2; filter: drop-shadow(0 0 5px rgba(255, 226, 140, .95)); }
+@keyframes srpWtFlow { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -22.1; } }
+.srp-wt-pool { transform-box: fill-box; transform-origin: center; mix-blend-mode: screen; transform: scale(var(--p)); animation: srpWtFill 2.2s cubic-bezier(.2, .8, .2, 1) both, srpWtBreath 4.5s ease-in-out 2.2s infinite; }
+@keyframes srpWtFill { from { transform: scale(0); } to { transform: scale(var(--p)); } }
+@keyframes srpWtBreath { 0%, 100% { transform: scale(var(--p)); } 50% { transform: scale(calc(var(--p) * .84)); } }
+.srp-wt-rise circle { opacity: 0; transform-box: fill-box; filter: drop-shadow(0 0 4px rgba(255, 238, 170, 1)); animation: srpWtRise 3.5s ease-in infinite; }
+@keyframes srpWtRise { 0% { opacity: 0; transform: translateY(0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translateY(-170px); } }
+.srp-water-today.is-empty .srp-wt-stream, .srp-water-today.is-empty .srp-wt-rise { display: none; }
+.srp-water-today.is-full .srp-wt-label rect { fill: rgba(45, 212, 191, .45); }
+.srp-wt-label text { paint-order: stroke; stroke: rgba(20, 12, 44, .6); stroke-width: 3px; }
+@media (prefers-reduced-motion: reduce) { .srp-wt-stream path, .srp-wt-rise circle { animation: none; } .srp-wt-pool { animation: none; } }
+
 /* 🎨 הסימן שקובץ העיצוב נטען עד הסוף (ר' __cssGuard ב-index.html): מחזיר את המסך ומסתיר את מסך ה-↻.
    להשאיר בסוף הקובץ - כללים חדשים להוסיף מעליו */
 html body { visibility: visible; }
