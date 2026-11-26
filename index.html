@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=678" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=679" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -2883,6 +2883,10 @@
                     </div>
 
                     <label class="settings-label" data-i18n="settings_theme_label">App Theme (Premium)</label>
+                    <!-- 🎨 הערכות בקבוצות סגורות שנפתחות עם חץ (לפי בקשה מפורשת, 2026-11-26: "שיהיה גם בתפריטים סגורים ויהיה אפשר
+                         לפתוח... ושיהיה עם חץ שיהיה ברור"). הקבוצה של הערכה הנוכחית מסומנת ב-✓ (settingsSyncFolds ב-app.js) -->
+                    <details class="settings-fold theme-fold" data-theme-fold="basic">
+                    <summary class="settings-fold-head"><span class="settings-fold-dots" aria-hidden="true"><i style="background:#2dd4bf"></i><i style="background:#38bdf8"></i><i style="background:#f472b6"></i></span><span class="settings-fold-title" data-i18n="theme_fold_basic">Colors</span><span class="settings-fold-mark" aria-hidden="true">✓</span><span class="settings-fold-chev" aria-hidden="true"></span></summary>
                     <div class="theme-picker-grid">
                         <!-- מנטה - ראשונה וחינמית (ברירת המחדל לחשבון חדש היא "ברירת מחדל" מאז 2026-11-07). אחריה "כחול וטורקיז" (התכלת) ו"פריחת הדובדבן" (הוורוד), ואז כל השאר בסדר הקודם
                              (לפי בקשה מפורשת, 2026-11-07: "התכלת שיש עכשיו יהיה שני - ולאחריו ורוד ואז כל הסדר שיש"). מי חינמית ומי פרימיום - FREE_COLOR_THEMES ב-app.js -->
@@ -2906,6 +2910,7 @@
                         <button type="button" class="theme-swatch theme-swatch-indigo" data-theme="midnight_indigo" onclick="selectColorTheme('midnight_indigo')" data-i18n-title="theme_name_midnight_indigo" data-i18n-aria-label="theme_name_midnight_indigo" title="Midnight Indigo" aria-label="Midnight Indigo"><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-swatch-deepspace" data-theme="deep_space" onclick="selectColorTheme('deep_space')" data-i18n-title="theme_name_deep_space" data-i18n-aria-label="theme_name_deep_space" title="Deep Space" aria-label="Deep Space"><span class="theme-swatch-lock">🔒</span></button>
                     </div>
+                    </details>
 
                     <!-- ערכות נושא מיוחדות - קונספטואליות (לא רק שם-צבע, ר' .home-theme-pattern
                          ב-theme.css לדוגמת-הרקע הייחודית של כל אחת). היה מקובץ ל-10 קטגוריות עם
@@ -2917,7 +2922,8 @@
                          "שהנצנצים האלה יהיו הראשונים שמשלמים על הפרימיום ואחריהם עוד 2 צבעים כאלה") - זהובים, ורודים, סגולים
                          וטורקיז. אחריהן החללית, צבעי המים והזוהר הצפוני (הסדר הקודם: "תעשה שזה יהיה הראשון במיוחדים הוא כלכך יפה";
                          "לזה תוסיף נצנצים מבצבצים ושזה יהיה השני"; "ושתהיה השלישית בתור") -->
-                    <div class="theme-special-divider"><span class="theme-special-sparkle"><i class="ic-spark" aria-hidden="true"></i></span><span data-i18n="theme_special_section_label">Special Themes</span><span class="theme-special-sparkle"><i class="ic-spark" aria-hidden="true"></i></span></div>
+                    <details class="settings-fold theme-fold" data-theme-fold="special">
+                    <summary class="settings-fold-head"><span class="settings-fold-dots" aria-hidden="true"><i class="ic-spark"></i></span><span class="settings-fold-title" data-i18n="theme_special_section_label">Special Themes</span><span class="settings-fold-mark" aria-hidden="true">✓</span><span class="settings-fold-chev" aria-hidden="true"></span></summary>
                     <div class="theme-picker-grid">
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="gold_sparkle" data-color-theme="gold_sparkle" onclick="selectColorTheme('gold_sparkle')" data-i18n-title="theme_name_gold_sparkle" data-i18n-aria-label="theme_name_gold_sparkle" title="Gold Sparkle" aria-label="Gold Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="pink_sparkle" data-color-theme="pink_sparkle" onclick="selectColorTheme('pink_sparkle')" data-i18n-title="theme_name_pink_sparkle" data-i18n-aria-label="theme_name_pink_sparkle" title="Pink Sparkle" aria-label="Pink Sparkle"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
@@ -2931,10 +2937,12 @@
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="botanical_greenhouse" data-color-theme="botanical_greenhouse" onclick="selectColorTheme('botanical_greenhouse')" data-i18n-title="theme_name_botanical_greenhouse" data-i18n-aria-label="theme_name_botanical_greenhouse" title="Botanical Greenhouse" aria-label="Botanical Greenhouse"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile" data-theme="bull_run" data-color-theme="bull_run" onclick="selectColorTheme('bull_run')" data-i18n-title="theme_name_bull_run" data-i18n-aria-label="theme_name_bull_run" title="Bull Run" aria-label="Bull Run"><span class="home-theme-pattern"></span><span class="theme-swatch-lock">🔒</span></button>
                     </div>
+                    </details>
 
                     <!-- 💎 הערכות הקסומות של New Me (לפי בקשה מפורשת, 2026-10-13) - רק למי שקנה New Me; בלי New Me יש 💎 ונגיעה
                          פותחת את New Me. בחירה נצבעת על המסך במברשת של נצנצים (magicPaintTheme). אותה בחירה גם בתוך New Me -->
-                    <div class="theme-special-divider theme-magic-divider"><span class="theme-special-sparkle">💎</span><span data-i18n="theme_magic_section_label">NOT10 Nourish+ magical themes</span><span class="theme-special-sparkle">💎</span></div>
+                    <details class="settings-fold theme-fold" data-theme-fold="magic">
+                    <summary class="settings-fold-head"><span class="settings-fold-dots" aria-hidden="true">💎</span><span class="settings-fold-title" data-i18n="theme_magic_section_label">NOT10 Nourish+ magical themes</span><span class="settings-fold-mark" aria-hidden="true">✓</span><span class="settings-fold-chev" aria-hidden="true"></span></summary>
                     <div class="theme-picker-grid theme-magic-grid">
                         <button type="button" class="theme-swatch theme-preview-tile theme-magic-tile" data-theme="magic_forest" data-color-theme="magic_forest" onclick="selectColorTheme('magic_forest')" data-i18n-title="magic_forest_name" data-i18n-aria-label="magic_forest_name" title="Enchanted Forest" aria-label="Enchanted Forest"><span class="home-theme-pattern"></span><span class="theme-magic-lock" aria-hidden="true">💎</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile theme-magic-tile" data-theme="magic_stardust" data-color-theme="magic_stardust" onclick="selectColorTheme('magic_stardust')" data-i18n-title="magic_stardust_name" data-i18n-aria-label="magic_stardust_name" title="Stardust" aria-label="Stardust"><span class="home-theme-pattern"></span><span class="theme-magic-lock" aria-hidden="true">💎</span></button>
@@ -2942,6 +2950,7 @@
                         <button type="button" class="theme-swatch theme-preview-tile theme-magic-tile" data-theme="magic_aurora" data-color-theme="magic_aurora" onclick="selectColorTheme('magic_aurora')" data-i18n-title="magic_aurora_name" data-i18n-aria-label="magic_aurora_name" title="Magic Aurora" aria-label="Magic Aurora"><span class="home-theme-pattern"></span><span class="theme-magic-lock" aria-hidden="true">💎</span></button>
                         <button type="button" class="theme-swatch theme-preview-tile theme-magic-tile" data-theme="magic_dusk" data-color-theme="magic_dusk" onclick="selectColorTheme('magic_dusk')" data-i18n-title="magic_dusk_name" data-i18n-aria-label="magic_dusk_name" title="Golden Dusk" aria-label="Golden Dusk"><span class="home-theme-pattern"></span><span class="theme-magic-lock" aria-hidden="true">💎</span></button>
                     </div>
+                    </details>
 
                     <!-- בורר אייקון עוזר ה-AI - רק שתי אפשרויות, לפי בקשה מפורשת ("תמחק את כל
                          האפשרויות, רק מה שיש לי עכשיו כראשון ואת הרובוט כשני אחרי שמשלמים"):
@@ -3033,6 +3042,10 @@
                     <!-- כמה משבצות ארוחה/נשנוש להציג במסך התזונה היומי - עד 5 מכל סוג
                          (ר' applyMealRowCounts/MEAL_SLOT_KEYS/SNACK_SLOT_KEYS ב-app.js),
                          לפי בקשה מפורשת -->
+                    <!-- 🍽️ ארוחות ונשנושים - תפריט סגור אחד שנפתח (לפי בקשה מפורשת, 2026-11-26: "תפריט סגור ביחד ושזה יפתח שיבחרו
+                         שלא יתבלבלו, גם שזה רק הפרימיום"): בכותרת - כמה נבחר עכשיו ותווית פרימיום. בלי פרימיום נגיעה פותחת את חלון הפרימיום -->
+                    <details class="settings-fold meal-counts-fold" id="meal-counts-fold">
+                    <summary class="settings-fold-head"><span class="settings-fold-dots" aria-hidden="true">🍽️</span><span class="settings-fold-title"><span data-i18n="settings_meals_fold_label">Meals &amp; snacks</span><small id="meal-counts-fold-value"></small></span><span class="settings-fold-premium" data-i18n="routine_premium_badge">Premium</span><span class="settings-fold-chev" aria-hidden="true"></span></summary>
                     <div class="settings-toggle-row">
                         <label class="settings-label" data-i18n="settings_meal_count_label" for="meal-count-select">How many meals?</label>
                         <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('meal-count-select')"><span id="meal-count-select-display"></span></button>
@@ -3055,6 +3068,7 @@
                             <option value="5">5</option>
                         </select>
                     </div>
+                    </details>
                     <!-- "חודש" פיננסי מותאם אישית (למשל לפי יום המשכורת, לא חודש קלנדרי) -
                          1 = ברירת מחדל, זהה לחלוטין לחודש קלנדרי הרגיל - ר'
                          getFinanceCycleStartDay/getFinancePeriodRange ב-app.js -->
@@ -4858,10 +4872,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=596"></script>
+    <script src="i18n/core.js?v=598"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=15"></script>
-    <script src="app.js?v=699"></script>
+    <script src="app.js?v=700"></script>
     <script src="calendar-views.js?v=5"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>

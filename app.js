@@ -1366,14 +1366,40 @@ function applyMealRowCounts() {
     if (mealSelect) mealSelect.value = String(mealCount);
     const snackSelect = document.getElementById('snack-count-select');
     if (snackSelect) snackSelect.value = String(snackCount);
+    if (typeof settingsSyncFolds === 'function') settingsSyncFolds();
 }
+// 🍽️ כמה ארוחות / נשנושים - פרימיום בלבד (לפי בקשה מפורשת, 2026-11-26), בתפריט סגור אחד בהגדרות
 function setMealCount(count) {
+    if (!isPremiumUser) { applyMealRowCounts(); openPremiumUpgradeModal(); return; }
     localStorage.setItem('weekwise_meal_count', String(count));
     applyMealRowCounts();
 }
 function setSnackCount(count) {
+    if (!isPremiumUser) { applyMealRowCounts(); openPremiumUpgradeModal(); return; }
     localStorage.setItem('weekwise_snack_count', String(count));
     applyMealRowCounts();
+}
+// 🎨 / 🍽️ הקבוצות הסגורות בהגדרות: ✓ על הקבוצה של הערכה הנוכחית, וכמה ארוחות ונשנושים בכותרת. בלי פרימיום - נגיעה בכותרת
+// של הארוחות פותחת את חלון הפרימיום במקום לפתוח את התפריט
+function settingsSyncFolds() {
+    const current = document.documentElement.getAttribute('data-color-theme') || 'default';
+    document.querySelectorAll('details.theme-fold').forEach(fold => {
+        fold.classList.toggle('has-current', !!fold.querySelector(`.theme-swatch[data-theme="${current}"]`));
+    });
+    const val = document.getElementById('meal-counts-fold-value');
+    if (val) val.textContent = t('settings_meals_fold_value').replace('{m}', getMealCount()).replace('{s}', getSnackCount());
+    const fold = document.getElementById('meal-counts-fold');
+    if (fold) {
+        fold.classList.toggle('is-locked', !isPremiumUser);
+        if (!fold.dataset.bound) {
+            fold.dataset.bound = '1';
+            fold.querySelector('summary').addEventListener('click', e => {
+                if (isPremiumUser) return;
+                e.preventDefault();
+                openPremiumUpgradeModal();
+            });
+        }
+    }
 }
 
 // preferredSlotKeys (MEAL_SLOT_KEYS/SNACK_SLOT_KEYS, אופציונלי) - כשידוע
@@ -3600,6 +3626,7 @@ function openSettingsDrawer() {
     document.getElementById('settings-main-menu').classList.remove('hidden');
     document.querySelectorAll('.settings-subscreen').forEach(el => el.classList.add('hidden'));
     openModal('modal-settings-drawer');
+    settingsSyncFolds();
     devRenderSettingsPanel();
     renderNotificationSettingsStatus();
     renderReminderChimePicker();
@@ -10816,7 +10843,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'new_me', head: 'faq_cat_nm_plan', ids: ['new_me_what', 'new_me_preview', 'new_me_plans', 'new_me_tour', 'nm_me1_guide', 'new_me_home_btn', 'new_me_no_ai', 'new_me_weight_optional', 'new_me_magic_themes'] },
     { tab: 'new_me', head: 'faq_cat_nm_menu', ids: ['new_me_times', 'new_me_names', 'new_me_menu_build', 'new_me_tracking', 'new_me_swap', 'new_me_flexible_menu', 'new_me_meal_review', 'new_me_favorites', 'new_me_small_breakfast', 'new_me_coffee', 'new_me_day_total', 'new_me_free_meal', 'new_me_month', 'new_me_journey', 'new_me_checkin', 'new_me_body', 'new_me_shopping', 'new_me_reminders', 'new_me_routine_meals', 'routine_newme_sync'] },
     { tab: 'new_me', head: 'faq_cat_nm_world', ids: ['new_me_hall', 'new_me_game', 'wm_map', 'nm_me_card', 'new_me_week_challenge', 'new_me_challenges', 'new_me_challenge_journal', 'new_me_letter_gift', 'new_me_advanced', 'secret_room', 'secret_room_places', 'room_genie', 'secret_room_yoga', 'secret_room_diary', 'room_computer', 'room_records', 'room_roof_gifts', 'room_wish_jar'] },
-    { tab: 'settings', head: 'settings_cat_appearance', ids: ['change_language', 'night_mode', 'theme_mode', 'ai_icon'] },
+    { tab: 'settings', head: 'settings_cat_appearance', ids: ['change_language', 'night_mode', 'theme_mode', 'settings_folds', 'ai_icon'] },
     { tab: 'settings', head: 'settings_cat_personalization', ids: ['myday_water_toggle'] },
     { tab: 'settings', head: 'settings_cat_notifications', ids: ['notifications_not_arriving', 'reminder_chime', 'notification_action_buttons', 'reminders_one_place'] },
     { tab: 'settings', head: 'settings_cat_account', ids: ['multi_device_login', 'forgot_password', 'google_calendar_sync', 'google_calendar_reconnect', 'data_export_report', 'delete_account'] },
@@ -11053,6 +11080,7 @@ function selectCountryFromPicker(code) {
 function applyColorTheme(themeName) {
     if (!themeName || themeName === 'default') document.documentElement.removeAttribute('data-color-theme');
     else document.documentElement.setAttribute('data-color-theme', themeName);
+    if (typeof settingsSyncFolds === 'function') setTimeout(settingsSyncFolds, 0);
     document.querySelectorAll('.theme-swatch').forEach(el => {
         el.classList.toggle('selected', el.getAttribute('data-theme') === (themeName || 'default'));
     });

@@ -13114,6 +13114,28 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .pg-tile.is-goal { padding-top: 12px; }
 html.light-mode .pg-times { color: #8a5a00; }
 @media (prefers-reduced-motion: reduce) { .pg-tile.is-got::after, .pg-loading { animation: none; } }
+/* 🎨 / 🍽️ קבוצות סגורות בהגדרות (2026-11-26): כותרת עם חץ שמסתובב, ✓ על הקבוצה של הערכה הנוכחית, תווית פרימיום */
+.settings-fold { margin: 6px 0 8px; border-radius: 16px; background: color-mix(in srgb, var(--text-primary) 4%, transparent); border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 22%, transparent); }
+.settings-fold[open] { border-color: color-mix(in srgb, var(--accent-purple, #a78bfa) 42%, transparent); }
+.settings-fold-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; list-style: none; font-weight: 700; font-size: .92rem; color: var(--text-primary); -webkit-tap-highlight-color: transparent; user-select: none; }
+.settings-fold-head::-webkit-details-marker { display: none; }
+.settings-fold-head::marker { content: ''; }
+.settings-fold-head:focus-visible { outline: 2px solid var(--accent-purple, #a78bfa); outline-offset: 2px; border-radius: 14px; }
+.settings-fold-dots { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; font-size: 1rem; }
+.settings-fold-dots i { display: block; width: 10px; height: 10px; border-radius: 50%; }
+.settings-fold-dots .ic-spark { width: 16px; height: 16px; }
+.settings-fold-title { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
+.settings-fold-title small { font-size: .76rem; font-weight: 500; color: var(--text-secondary); }
+.settings-fold-mark { display: none; flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; place-items: center; font-size: .72rem; font-weight: 900; color: #fff; background: var(--accent-purple, #a78bfa); }
+.settings-fold.has-current .settings-fold-mark { display: grid; }
+.settings-fold-premium { flex-shrink: 0; padding: 2px 8px; border-radius: 999px; font-size: .68rem; font-weight: 800; color: #3b2a00; background: linear-gradient(135deg, #fde68a, #f5b93a); }
+.settings-fold-chev { flex-shrink: 0; width: 8px; height: 8px; margin-inline: 2px 4px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; opacity: .65; transform: translateY(-2px) rotate(45deg); transition: transform .25s ease; }
+.settings-fold[open] > .settings-fold-head .settings-fold-chev { transform: translateY(2px) rotate(-135deg); }
+.settings-fold > :not(summary) { margin-inline: 10px; }
+.settings-fold > .theme-picker-grid { padding-bottom: 12px; }
+.settings-fold > .settings-toggle-row:last-child { margin-bottom: 10px; }
+.settings-fold.is-locked .settings-fold-chev { opacity: .3; }
+@media (prefers-reduced-motion: reduce) { .settings-fold-chev { transition: none; } }
 /* 🏋️ "כדאי להתייעץ עם מאמן כושר מוסמך" ליד תרגילים ותוכניות (WK_PRO_NOTE ב-workouts.js) */
 .wk-pro-note { margin: 8px 0 4px; font-size: .76rem; line-height: 1.5; color: var(--text-secondary); text-align: start; }
 .wk-pro-note span { color: var(--accent-purple, #a78bfa); font-weight: 800; }
