@@ -383,6 +383,95 @@ function aiChatUnhookToasts() {
     aiChatToastOrig = null;
 }
 
+// ---------- 🧭 לאן להוסיף? (לפי בקשה מפורשת, 2026-11-26: "האם להוסיף את זה לאימונים שלך / או למשהו אחר שאפשר להוסיף
+// באפליקציה - תפתח את כל הקטגוריות והמשתמש יבחר") ----------
+// משהו שלא ברור לאן הוא שייך (בלי כלי שנבחר), או שנראה כמו אימון ("אימון ב-7 בבוקר") - שואלים לפני שמוסיפים, עם כל
+// המקומות: אימונים, יומן, השגרה שלי, יעד חדש, פתקים ורשימת הקניות. אימון - ראשון ומודגש
+const AI_DEST_ICONS = {
+    workout: '<svg class="ai-chat-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="7.4" y="10.6" width="9.2" height="2.8" rx="1.4" fill="#c4b5fd"/><rect x="4.3" y="5.8" width="3.8" height="12.4" rx="1.7" fill="#8b5cf6"/><rect x="15.9" y="5.8" width="3.8" height="12.4" rx="1.7" fill="#8b5cf6"/><rect x="1.5" y="8.5" width="3.3" height="7" rx="1.4" fill="#a78bfa"/><rect x="19.2" y="8.5" width="3.3" height="7" rx="1.4" fill="#a78bfa"/></svg>',
+    schedule: AI_CHAT_SVG.schedule,
+    routine: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M5 3.5 2.5 6M19 3.5 21.5 6"/></svg>',
+    goal: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+    note: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M14 3v5h5M8.5 12h7M8.5 16h5"/></svg>',
+    shopping: '<svg class="ai-chat-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.2 11h10.6L20 7H6.2"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17" cy="19.5" r="1.4"/></svg>',
+};
+// "ב-7 בבוקר" / "at 7pm" / "13:30" / "ב-8 בערב" → "07:00" / "19:00" / "13:30" / "20:00"; בלי שעה → null
+function aiChatGuessTime(text) {
+    const s = String(text || '');
+    // רק שעה של ממש: "13:30" או מספר אחרי "ב" / "at" (לא "5 ק״מ" או "30 דקות")
+    const m = s.match(/(\d{1,2})[:.](\d{2})\s*(am|pm|a\.m\.|p\.m\.)?/i) || s.match(/(?:^|[\s(])(?:ב-?|at\s+|@\s*)(\d{1,2})()\s*(am|pm|a\.m\.|p\.m\.)?(?!\d)/i);
+    if (!m) return null;
+    let h = Number(m[1]);
+    const min = Number(m[2] || 0);
+    if (h > 23 || min > 59) return null;
+    const pmWord = /pm|p\.m\./i.test(m[3] || '') || /בערב|בלילה|אחה"צ|אחה״צ|אחר הצהריים|evening|tonight|afternoon/i.test(s);
+    const noon = /בצהריים|\bnoon\b/i.test(s);
+    if ((pmWord || (noon && h <= 4)) && h < 12) h += 12;
+    if (/am|a\.m\./i.test(m[3] || '') && h === 12) h = 0;
+    return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+// "אימון" / "workout" / "להתאמן" בלי סוג מסוים - גם נראה כמו אימון
+const AI_WORKOUT_WORDS = /אימון|אימונים|להתאמן|התעמלות|ספורט|workout|exercis|\btrain(ing)?\b|\bsport|entrena|ejercicio|entraîn|trainier|тренир|تمرين|رياضة|allenam|treino|exercício|antrenman|egzersiz|latihan|olahraga|tập luyện|trening|ćwicz|cvič|edzés|harjoit|treen|άσκηση|προπόνη|exercici|antrenament|mazoezi|eré-ìmárale|ออกกำลัง|トレーニング|运动|锻炼|训练|운동|व्यायाम|वर्कआउट|ورزش|ব্যায়াম|ওয়ার্কআউট/i;
+function aiChatWorkoutLike(text) { return !!((typeof wkGuessKind === 'function' && wkGuessKind(text)) || AI_WORKOUT_WORDS.test(String(text || ''))); }
+function aiChatAskDest(text) {
+    const kind = aiChatWorkoutLike(text);
+    const order = kind ? ['workout', 'schedule', 'routine', 'goal', 'note', 'shopping'] : ['schedule', 'routine', 'workout', 'goal', 'note', 'shopping'];
+    const row = [];
+    const chips = order.map((k, i) => ({
+        label: t('ai_dest_' + k), icon: AI_DEST_ICONS[k], cls: 'ai-chat-dest', on: i === 0 && !!kind,
+        onClick: () => { row.forEach(el => el && el.remove()); aiChatBubble(t('ai_dest_' + k), 'me'); aiChatAddTo(k, text); },
+    }));
+    row.push(aiChatBubble(t(kind ? 'ai_dest_q_workout' : 'ai_dest_q'), 'bot'));
+    row.push(aiChatChips(chips));
+}
+async function aiChatAddTo(dest, text) {
+    // ליומן: כמו תמיד. אחר כך ההודעה הבאה שוב נשאלת (לא "נתקעים" על היומן)
+    if (dest === 'schedule') { await aiChatRun('schedule', text); aiChatTool = null; aiChatSyncNote(); return; }
+    if (dest === 'note' || dest === 'shopping') {
+        const ok = typeof insertCenterItemDirect === 'function' && await insertCenterItemDirect(dest === 'note' ? 'weekly' : 'general', text, null, null, null, true);
+        if (!aiChatIsOpen()) return;
+        aiChatSay(ok ? t(dest === 'note' ? 'notes_ai_added' : 'notes_ai_added_shopping') : t('nm_save_error'), ok ? [
+            { label: t('ai_chat_more'), onClick: () => { aiChatTool = null; aiChatSyncNote(); aiChatSay(t('ai_chat_hi_again'), aiChatToolChips()); } },
+            { label: t(dest === 'note' ? 'ai_dest_open_notes' : 'ai_dest_open_shopping'), onClick: () => { closeAiChat(); navigateFromMenu('my-center-section', dest === 'note' ? 'notes' : 'shopping'); } },
+        ] : null, ok ? 'is-ok' : 'is-error');
+        return;
+    }
+    closeAiChat();
+    if (dest === 'workout') {
+        // נפתח "אימון חדש" עם הסוג, השם והשעה שזוהו - בוחרים ימים ושומרים
+        navigateFromMenu('sport-section');
+        setTimeout(() => {
+            if (typeof openWorkoutEditor !== 'function') return;
+            openWorkoutEditor(null);
+            const kind = typeof wkGuessKind === 'function' ? wkGuessKind(text) : null;
+            if (typeof workoutDraft !== 'undefined' && workoutDraft) {
+                // סוג שזוהה ("ריצה", "יוגה") נבחר; "אימון" כללי - בוחרים סוג בעצמכם; משהו אחר לגמרי - "אחר" עם השם
+                if (kind) workoutDraft.kind = kind;
+                else if (!AI_WORKOUT_WORDS.test(text)) { workoutDraft.kind = 'custom'; workoutDraft.custom_name = text.slice(0, 40); }
+                workoutDraft.time = aiChatGuessTime(text);
+                if (typeof renderWorkoutEditor === 'function') renderWorkoutEditor();
+            }
+        }, 350);
+    } else if (dest === 'routine') {
+        // עוזר השגרה מקבל את הטקסט ומוסיף לטאב הפתוח (גם בלי שעה - ב"בלי שעה")
+        await openDailyBoardModal();
+        const name = (typeof routineActiveTabName === 'function' && routineActiveTabName()) || (dailyBoardTabs[0] && dailyBoardTabs[0].name) || '';
+        openRoutineAiModal(name);
+        if (name) {
+            routineAiNext();
+            const ta = document.getElementById('routine-ai-text');
+            if (ta) { ta.value = text; if (typeof createRoutineWithAI === 'function') createRoutineWithAI(); }
+        }
+    } else if (dest === 'goal') {
+        openGoalsVisionDrawer();
+        setTimeout(() => {
+            openVisionGoalModal();
+            const inp = document.getElementById('vision-goal-title-input');
+            if (inp) { inp.value = text.slice(0, 120); inp.focus(); }
+        }, 300);
+    }
+}
+
 // ---------- שליחה ----------
 // בלי כלי שנבחר: אוכל ("אכלתי", "ארוחה"...) / טבלה / ואחרת - היומן
 function aiChatDetect(text) {
@@ -417,6 +506,11 @@ async function aiChatSend() {
         aiChatSyncNote();
         return;
     }
+    // 🧭 לאן להוסיף? - כשלא נבחר כלי (הזיהוי נפל על היומן), או כשזה נראה כמו אימון גם בכלי היומן
+    if (tool === 'schedule' && (!aiChatTool || aiChatWorkoutLike(text))) { aiChatAskDest(text); return; }
+    await aiChatRun(tool, text);
+}
+async function aiChatRun(tool, text) {
     aiChatTool = tool;
     aiChatSyncNote();
     const typing = aiChatBubble(t('ai_chat_working_' + tool), 'bot', 'is-typing');

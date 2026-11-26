@@ -13136,6 +13136,9 @@ html.light-mode .pg-times { color: #8a5a00; }
 .settings-fold > .settings-toggle-row:last-child { margin-bottom: 10px; }
 .settings-fold.is-locked .settings-fold-chev { opacity: .3; }
 @media (prefers-reduced-motion: reduce) { .settings-fold-chev { transition: none; } }
+/* 🧭 "לאן להוסיף?" בעוזר (aiChatAskDest ב-ai-chat.js): אייקון ומילה עם רווח */
+.ai-chat-chip.ai-chat-dest { display: inline-flex; align-items: center; gap: 7px; }
+.ai-chat-chip.ai-chat-dest .ai-chat-ic { width: 18px; height: 18px; flex-shrink: 0; }
 /* 🏋️ "כדאי להתייעץ עם מאמן כושר מוסמך" ליד תרגילים ותוכניות (WK_PRO_NOTE ב-workouts.js) */
 .wk-pro-note { margin: 8px 0 4px; font-size: .76rem; line-height: 1.5; color: var(--text-secondary); text-align: start; }
 .wk-pro-note span { color: var(--accent-purple, #a78bfa); font-weight: 800; }
