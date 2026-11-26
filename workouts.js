@@ -123,7 +123,8 @@ function wkDarker(hex, amount = 0.27) {
         h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
         h /= 6;
     }
-    l = Math.max(0.16, l - amount);
+    // amount שלילי = בהיר יותר (בשביל אותו סוג פעם שלישית באותו יום)
+    l = Math.min(0.9, Math.max(0.16, l - amount));
     const q = l < 0.5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
     const f = tt => { tt = (tt + 1) % 1; return tt < 1 / 6 ? p + (q - p) * 6 * tt : tt < 0.5 ? q : tt < 2 / 3 ? p + (q - p) * (2 / 3 - tt) * 6 : p; };
     return '#' + [f(h + 1 / 3), f(h), f(h - 1 / 3)].map(v => Math.round(v * 255).toString(16).padStart(2, '0')).join('');
@@ -158,8 +159,18 @@ function wkDayStar(w, date, dayItems, cls) {
     if (!c) return '';
     const n = wkSameKindCount(date, c);
     const first = (dayItems || []).find(x => wkColor(x) === c);
-    return n >= 2 && (!first || first === w) ? wkMultiStarSvg(c, n, cls) : wkStarSvg(c, cls);
+    return n >= 2 && (!first || first === w) ? wkMultiStarSvg(c, n, cls) : wkStarSvg(wkDayColor(w, dayItems), cls);
 }
+// 🎨 אותו סוג אימון כמה פעמים באותו יום (לפי בקשה מפורשת, 2026-11-26: "צריך צבעים שונים אם יש הליכה פעמיים ביום... וגם
+// הרקע בטבלת שבוע... כל צבע בצבע שלו רק יותר כהה או בהיר"): הראשון בצבע הרגיל, השני כהה יותר, השלישי בהיר יותר -
+// הכוכב והרקע של השורה (--wk-c) בציר של השבוע ובלוח
+function wkDayColor(w, dayItems) {
+    const c = wkColor(w);
+    if (!c || !dayItems) return c;
+    const k = dayItems.filter(x => wkColor(x) === c).indexOf(w);
+    return k <= 0 ? c : k === 1 ? wkDarker(c, 0.25) : wkDarker(c, -0.16);
+}
+function wkCVarDay(w, dayItems) { const c = wkDayColor(w, dayItems); return c ? ` style="--wk-c:${c}"` : ''; }
 // אייקונים קטנים (SVG, בצבע הטקסט) במקום תווים - כך הם תמיד במרכז הכפתור ונראים אותו דבר בכל טלפון
 const WK_ICONS = {
     play: '<svg class="wk-ico" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7.6 5.6v12.8a1 1 0 0 0 1.52.85l10.2-6.4a1 1 0 0 0 0-1.7L9.12 4.75A1 1 0 0 0 7.6 5.6z"/></svg>',
@@ -540,7 +551,7 @@ function wkTimelineHtml() {
                 : '<span></span>';
             // על הקו: כוכב בצבע של האימון (יום מנוחה - רק נקודה ריקה)
             return `
-                <li class="wk-row${isToday ? ' is-today' : ''}${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}${isPast ? ' is-past' : ''}" data-day="${dayIdx}"${wkCVar(w)}>
+                <li class="wk-row${isToday ? ' is-today' : ''}${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}${isPast ? ' is-past' : ''}" data-day="${dayIdx}"${wkCVarDay(w, items)}>
                     <b class="wk-day">${i === 0 ? dayLabel : ''}</b>
                     ${rest ? '<span class="wk-dot" aria-hidden="true"></span>' : `<span class="wk-node" aria-hidden="true">${wkDayStar(w, date, items)}</span>`}
                     ${rest ? '<span class="wk-time"></span>' : `<button type="button" class="wk-time wk-time-btn${w.time ? '' : ' is-empty'}" data-wk-edit-time="${w.id}" aria-label="${wkEsc(t('workout_time_label'))} – ${wkEsc(wkName(w))}${w.time ? ': ' + wkEsc(w.time) : ''}">${w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : WK_ICONS.clock}</button>`}
@@ -612,7 +623,7 @@ function wkBoardHtml() {
             const done = !rest && wkIsDone(w.id, date);
             const canCheck = !rest && date <= today;
             return `
-                <div class="wk-card${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}"${wkCVar(w)} role="button" tabindex="0" data-wk-card="${w.id}" data-day="${dayIdx}" aria-label="${wkEsc(wkName(w))}${w.time && !rest ? ' ' + wkEsc(w.time) : ''}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
+                <div class="wk-card${done ? ' is-done' : ''}${rest ? ' is-rest' : ''}"${wkCVarDay(w, dayItems)} role="button" tabindex="0" data-wk-card="${w.id}" data-day="${dayIdx}" aria-label="${wkEsc(wkName(w))}${w.time && !rest ? ' ' + wkEsc(w.time) : ''}, ${wkEsc(t(dayNameKeys[dayIdx]))}">
                     <span class="wk-card-name">${wkDayStar(w, date, dayItems, 'wk-star-inline')}${wkEsc(wkName(w))}</span>
                     <span class="wk-card-meta">${rest ? '' : [w.time ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : '', w.duration_minutes ? `<bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''].filter(Boolean).join(' · ')}<span class="wk-card-pen" aria-hidden="true">${WK_ICONS.pen}</span></span>
                     ${canCheck ? `<button type="button" class="wk-card-check" data-wk-check="${w.id}" data-wk-date="${date}" aria-pressed="${done}" aria-label="${wkEsc(t('workout_check_aria'))} – ${wkEsc(wkName(w))}, ${wkEsc(t(dayNameKeys[dayIdx]))}">${done ? WK_ICONS.check : ''}</button>` : ''}

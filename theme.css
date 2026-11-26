@@ -10686,6 +10686,11 @@ html[data-quote-look="wall"] .sr-quote figcaption { color: rgba(27, 16, 48, 0.65
 .wk-node { position: relative; z-index: 1; justify-self: center; display: grid; place-items: center; width: 22px; height: 22px; }
 .wk-node .wk-star { width: 19px; height: 19px; }
 .wk-row.is-done .wk-node .wk-star { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--wk-c) 70%, transparent)); }
+/* 🎨 רקע בצבע של האימון בכל שורה (לפי בקשה מפורשת, 2026-11-26) - אותו סוג פעמיים ביום: השני כהה יותר, השלישי בהיר יותר
+   (--wk-c מ-wkCVarDay). היום עצמו נשאר מסומן בקו זהוב דק */
+.wk-row[style*="--wk-c"]:not(.is-rest):not(.is-empty) { background: color-mix(in srgb, var(--wk-c) 13%, transparent); }
+.wk-row.is-done[style*="--wk-c"]:not(.is-rest) { background: color-mix(in srgb, var(--wk-c) 26%, transparent); }
+.wk-row.is-today[style*="--wk-c"]:not(.is-rest) { box-shadow: inset 0 0 0 1px color-mix(in srgb, #fbbf24 38%, transparent); }
 .wk-time { color: var(--text-secondary); font-size: 0.82rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: center; }
 .wk-row-main { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 40px; padding: 0 8px; border: none; border-radius: 12px; background: transparent; color: var(--text-primary); font: inherit; font-size: 0.92rem; font-weight: 600; text-align: start; cursor: pointer; }
 .wk-row-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
