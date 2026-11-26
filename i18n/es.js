@@ -4279,3 +4279,4 @@ translations.es = {
     faq_q_contact_support: "¿Cómo contacto al soporte, y cuánto tardaré en recibir respuesta?", faq_a_contact_support: "El mismo botón 📬 Contáctanos en Ajustes es también la forma de contactar al soporte - esta app es creada y mantenida por una sola desarrolladora, no un equipo de soporte, así que cada mensaje se lee personalmente. No hay un tiempo de respuesta garantizado fijo, pero los problemas reales se toman en serio y se revisan lo antes posible.",
     faq_q_delete_account: "¿Cómo elimino mi cuenta de forma permanente?", faq_a_delete_account: "Al final de Ajustes > Cuenta y seguridad está la opción Eliminar Cuenta. Es definitiva e irreversible, así que tienes que escribir 'ELIMINAR' para confirmarla. Se elimina todo, incluidas las fotos que subiste. Si Google Calendar está conectado, la App lo desconecta primero: no se elimina nada de tu propio Google Calendar.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.es = '590';

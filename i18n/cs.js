@@ -4285,3 +4285,4 @@ translations.cs = {
     faq_q_contact_support: "Jak kontaktuji podporu a jak dlouho bude trvat, než dostanu odpověď?", faq_a_contact_support: "Stejné tlačítko 📬 Kontaktujte nás v Nastavení je také způsob, jak kontaktovat podporu - tuto aplikaci vytváří a udržuje jediná vývojářka, ne tým podpory, takže každá zpráva se čte osobně. Neexistuje pevná zaručená doba odpovědi, ale skutečné problémy se berou vážně a kontrolují se co nejdříve.",
     faq_q_delete_account: "Jak trvale smažu svůj účet?", faq_a_delete_account: "Dole v Nastavení > Účet a zabezpečení je volba Smazat Účet - je to konečné a nevratné, takže pro potvrzení musíte napsat 'DELETE'. Smaže se vše, včetně nahraných fotek. Pokud je připojen Google Calendar, aplikace ho nejprve odpojí – ze samotného Google Calendar se nic nesmaže.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.cs = '590';

@@ -27,14 +27,33 @@ function isRTL(lang) { return RTL_LANGUAGES.includes(lang); }
 // כל שפה בקובץ משלה (2026-10-21, "שיעבוד חלק גם בחיבור איטי"): הקובץ הזה הוא המקור, וממנו נבנים i18n/core.js
 // (המנוע) ו-i18n/<lang>.js (שפה אחת). האפליקציה טוענת רק את השפה שבשימוש; שפה אחרת נטענת כשעוברים אליה
 const i18nFiles = {};
+// 🔄 קובץ שפה ישן (בקשתה 2026-11-26 - בחלון של נוריש הופיעו "nm_flow_q" במקום מילים): כשטוענים בדיוק בזמן עדכון, השרת יכול
+// להחזיר את הקובץ הקודם תחת השם החדש. לכל קובץ שפה יש סימן גרסה (I18N_FILE_V, נכתב ב-build-i18n.pl); אם הוא לא תואם
+// ל-I18N_V - מורידים את הקובץ שוב, עוקפים את המטמון, ורק אז מציגים את המילים
+var I18N_FILE_V = typeof I18N_FILE_V !== 'undefined' ? I18N_FILE_V : {};
+const i18nRefetches = {};
+function i18nIsFresh(lang) { return typeof I18N_V === 'undefined' || I18N_FILE_V[lang] === I18N_V; }
+function i18nRefetch(lang) {
+    if (typeof document === 'undefined') return Promise.resolve(false);
+    if (!i18nRefetches[lang]) {
+        i18nRefetches[lang] = new Promise(resolve => {
+            const s = document.createElement('script');
+            s.src = `i18n/${lang}.js?v=${I18N_V}&r=${Date.now()}`;
+            s.onload = () => resolve(i18nIsFresh(lang));
+            s.onerror = () => resolve(false);
+            document.head.appendChild(s);
+        });
+    }
+    return i18nRefetches[lang];
+}
 function i18nLoad(lang) {
-    if (translations[lang]) return Promise.resolve(true);
+    if (translations[lang]) return i18nIsFresh(lang) ? Promise.resolve(true) : i18nRefetch(lang).then(() => true);
     if (!SUPPORTED_LANGUAGES.includes(lang) || typeof document === 'undefined') return Promise.resolve(false);
     if (!i18nFiles[lang]) {
         i18nFiles[lang] = new Promise(resolve => {
             const s = document.createElement('script');
             s.src = `i18n/${lang}.js?v=${typeof I18N_V !== 'undefined' ? I18N_V : '0'}`;
-            s.onload = () => resolve(!!translations[lang]);
+            s.onload = () => { if (!translations[lang]) { resolve(false); return; } if (i18nIsFresh(lang)) resolve(true); else i18nRefetch(lang).then(() => resolve(true)); };
             s.onerror = () => { delete i18nFiles[lang]; resolve(false); };
             document.head.appendChild(s);
         });
@@ -91,6 +110,8 @@ function setLanguage(lang, opts) {
             if (lang !== 'en' && !i18nApplied) return setLanguage('en', { keepSaved: true });
         });
     }
+    // 🔄 קובץ שפה ישן מהמטמון: מציגים בינתיים את מה שיש, מורידים את החדש ומחילים שוב (פעם אחת - i18nRefetches)
+    if (!i18nIsFresh(lang) && !i18nRefetches[lang]) i18nRefetch(lang).then(() => { if (i18nWanted === lang) setLanguage(lang, opts); });
     currentLang = lang;
     i18nApplied = true;
     if (!(opts && opts.keepSaved)) {

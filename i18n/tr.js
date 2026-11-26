@@ -4279,3 +4279,4 @@ translations.tr = {
     faq_q_contact_support: "Destekle nasıl iletişime geçerim ve yanıt almak ne kadar sürer?", faq_a_contact_support: "Ayarlar'daki aynı 📬 Bize Ulaşın butonu, desteğe ulaşmanın da yoludur - bu uygulama bir destek ekibi tarafından değil, tek bir geliştirici tarafından oluşturulur ve bakımı yapılır, bu yüzden her mesaj kişisel olarak okunur. Sabit garantili bir yanıt süresi yoktur, ama gerçek sorunlar ciddiye alınır ve mümkün olan en kısa sürede incelenir.",
     faq_q_delete_account: "Hesabımı kalıcı olarak nasıl silerim?", faq_a_delete_account: "Ayarlar > Hesap ve Güvenlik bölümünün en altında bir Hesabı Sil seçeneği var - bu kesin ve geri alınamaz, bu yüzden onaylamak için 'SİL' yazman gerekir. Yüklediğin fotoğraflar dahil her şey silinir. Google Calendar bağlıysa uygulama önce bağlantıyı keser – Google Calendar'ın kendisinden hiçbir şey silinmez.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.tr = '590';

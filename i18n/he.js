@@ -4271,3 +4271,4 @@ translations.he = {
     quick_note_dest_notes: "📝 פתקים", quick_note_dest_shopping: "🛒 רשימת קניות",
     preset_select_placeholder: "📋 ארוחה קבועה...",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.he = '590';

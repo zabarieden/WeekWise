@@ -4271,3 +4271,4 @@ translations.en = {
     quick_note_dest_notes: "📝 Notes", quick_note_dest_shopping: "🛒 Shopping List",
     preset_select_placeholder: "📋 Saved meal...",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.en = '590';

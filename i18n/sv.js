@@ -4281,3 +4281,4 @@ translations.sv = {
     faq_q_contact_support: "Hur kontaktar jag supporten, och hur lång tid tar det att få ett svar?", faq_a_contact_support: "Samma 📬 Kontakta oss-knapp i Inställningar är också sättet att nå supporten - den här appen byggs och underhålls av en enda utvecklare, inte ett supportteam, så varje meddelande läses personligen. Det finns ingen fast garanterad svarstid, men verkliga problem tas på allvar och granskas så snart som möjligt.",
     faq_q_delete_account: "Hur tar jag bort mitt konto permanent?", faq_a_delete_account: "Längst ner under Inställningar > Konto och säkerhet finns alternativet Ta bort Konto - det är slutgiltigt och kan inte ångras, så du måste skriva 'DELETE' för att bekräfta. Allt raderas, även foton du har laddat upp. Om Google Calendar är anslutet kopplar appen först bort det – inget raderas från själva Google Calendar.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.sv = '590';

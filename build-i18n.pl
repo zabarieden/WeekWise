@@ -79,7 +79,8 @@ $crossJs .= "};\n";
 $out{'core.js'} = "// נבנה אוטומטית מ-i18n.js (build-i18n.pl) - לא לערוך כאן\n" . $engine . "const I18N_V = '$ver';\n" . $crossJs . "const translations = {};\n";
 
 for my $l (@langs) {
-    $out{"$l.js"} = "// נבנה אוטומטית מ-i18n.js (build-i18n.pl) - לא לערוך כאן\ntranslations.$l = {\n" . $block{$l} . "};\n";
+    # סימן הגרסה של הקובץ - i18nIsFresh ב-core.js משווה אותו ל-I18N_V ומוריד שוב קובץ ישן מהמטמון
+    $out{"$l.js"} = "// נבנה אוטומטית מ-i18n.js (build-i18n.pl) - לא לערוך כאן\ntranslations.$l = {\n" . $block{$l} . "};\nif (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.$l = '$ver';\n";
 }
 
 my (%seen, @focus);

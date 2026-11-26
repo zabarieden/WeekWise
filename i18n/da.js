@@ -4281,3 +4281,4 @@ translations.da = {
     faq_q_contact_support: "Hvordan kontakter jeg support, og hvor lang tid tager det at få et svar?", faq_a_contact_support: "Den samme 📬 Kontakt os-knap i Indstillinger er også måden at nå support på – denne app er bygget og vedligeholdt af en enkelt udvikler, ikke et supportteam, så hver besked læses personligt. Der er ingen fast garanteret svartid, men rigtige problemer tages alvorligt og gennemgås så hurtigt som muligt.",
     faq_q_delete_account: "Hvordan sletter jeg min konto permanent?", faq_a_delete_account: "Nederst under Indstillinger > Konto og sikkerhed er der valgmuligheden Slet Konto – det er endeligt og kan ikke fortrydes, så du skal skrive 'DELETE' for at bekræfte. Alt slettes, også billeder, du har uploadet. Hvis Google Calendar er forbundet, afbryder appen forbindelsen først – intet slettes fra selve Google Calendar.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.da = '590';

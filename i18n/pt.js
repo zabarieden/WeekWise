@@ -4279,3 +4279,4 @@ translations.pt = {
     faq_q_contact_support: "Como entro em contato com o suporte, e quanto tempo até receber uma resposta?", faq_a_contact_support: "O mesmo botão 📬 Fale conosco em Configurações também é a forma de contatar o suporte - este app é criado e mantido por uma única desenvolvedora, não uma equipe de suporte, então cada mensagem é lida pessoalmente. Não há um tempo de resposta garantido fixo, mas problemas reais são levados a sério e analisados o quanto antes.",
     faq_q_delete_account: "Como excluo minha conta permanentemente?", faq_a_delete_account: "No fim de Configurações > Conta e segurança há a opção Excluir Conta - isso é definitivo e irreversível, então é preciso digitar 'EXCLUIR' para confirmar. Tudo é excluído, inclusive as fotos que você enviou. Se o Google Calendar estiver conectado, o app o desconecta primeiro – nada é excluído do seu próprio Google Calendar.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.pt = '590';

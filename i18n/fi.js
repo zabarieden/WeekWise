@@ -4281,3 +4281,4 @@ translations.fi = {
     faq_q_contact_support: "Miten otan yhteyttä tukeen, ja kuinka kauan kestää saada vastaus?", faq_a_contact_support: "Sama 📬 Ota yhteyttä -painike Asetuksissa on myös tapa tavoittaa tuki – tämän sovelluksen rakentaa ja ylläpitää yksi ainoa kehittäjä, ei tukitiimi, joten jokainen viesti luetaan henkilökohtaisesti. Ei ole kiinteää taattua vastausaikaa, mutta todelliset ongelmat otetaan vakavasti ja tarkistetaan mahdollisimman pian.",
     faq_q_delete_account: "Miten poistan tilini pysyvästi?", faq_a_delete_account: "Kohdan Asetukset > Tili ja tietoturva alareunassa on Poista Tili -valinta – se on lopullinen eikä sitä voi perua, joten sinun täytyy kirjoittaa 'DELETE' vahvistaaksesi sen. Kaikki poistetaan, myös lataamasi kuvat. Jos Google Calendar on yhdistetty, sovellus katkaisee yhteyden ensin – itse Google Calendarista ei poisteta mitään.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.fi = '590';

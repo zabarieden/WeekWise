@@ -4279,3 +4279,4 @@ translations.zh = {
     faq_q_contact_support: "如何联系支持团队，需要多久才能收到回复？", faq_a_contact_support: "设置中同一个📬联系我们按钮也是联系支持的方式 - 这个应用是由一位独立开发者构建和维护的，而不是一个支持团队，所以每条消息都会被亲自阅读。没有固定的保证回复时间，但真正的问题会被认真对待并尽快查看。",
     faq_q_delete_account: "如何永久删除我的账户？", faq_a_delete_account: "在设置 > 账户与安全的底部有「删除账户」选项 - 此操作是最终的且不可撤销，因此需要输入「删除」进行确认。所有内容都会被删除，包括上传的照片。如果已连接 Google Calendar，应用会先断开连接 – Google Calendar 本身中的内容不会被删除。",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.zh = '590';

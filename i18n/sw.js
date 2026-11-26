@@ -4281,3 +4281,4 @@ translations.sw = {
     faq_q_contact_support: "Ninawasilianaje na usaidizi, na itachukua muda gani kupata jibu?", faq_a_contact_support: "Kitufe kile kile cha 📬 Wasiliana Nasi katika Mipangilio pia ndiyo njia ya kufikia usaidizi - programu hii inajengwa na kudumishwa na msanidi mmoja, si timu ya usaidizi, hivyo kila ujumbe husomwa binafsi. Hakuna muda wa majibu wa uhakika uliowekwa, lakini masuala halisi huchukuliwa kwa uzito na kukaguliwa haraka iwezekanavyo.",
     faq_q_delete_account: "Ninafutaje akaunti yangu kabisa?", faq_a_delete_account: "Chini kabisa ya Mipangilio > Akaunti na Usalama kuna chaguo la Futa Akaunti - hili ni la mwisho na haliwezi kutenduliwa, kwa hivyo unahitaji kuandika 'FUTA' kulithibitisha. Kila kitu hufutwa, ikiwa ni pamoja na picha ulizopakia. Ikiwa Google Calendar imeunganishwa, programu huitenganisha kwanza – hakuna kinachofutwa kwenye Google Calendar yenyewe.",
 };
+if (typeof I18N_FILE_V !== 'undefined') I18N_FILE_V.sw = '590';
