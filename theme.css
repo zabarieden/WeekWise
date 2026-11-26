@@ -12920,3 +12920,9 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .nm-names-stepper .nm-count-pick { width: 52px; min-height: 46px; }
 .nm-names-stepper .nm-count-pick:disabled { opacity: .35; cursor: default; }
 .nm-names-num { min-width: 26px; text-align: center; font-size: 1.35rem; }
+
+/* 🎨 הסימן שקובץ העיצוב נטען עד הסוף (ר' __cssGuard ב-index.html): מחזיר את המסך ומסתיר את מסך ה-↻.
+   להשאיר בסוף הקובץ - כללים חדשים להוסיף מעליו */
+html body { visibility: visible; }
+html #css-rescue { display: none; }
+:root { --theme-css-ok: 1; }
