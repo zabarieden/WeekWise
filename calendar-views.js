@@ -139,22 +139,30 @@ function calFmtMinutes(min) {
 // ---------- נתונים ----------
 async function calFetchRange(start, end) {
     if (!supabaseClient || !currentUserId) return { events: [], fixed: [] };
+    // 📅 יומן שלב 2 (calendar-details.js): גם אירוע של כמה ימים שנכנס לטווח, ובלי יומנים שהוסתרו
+    const hasCalx = typeof calxRange === 'function';
+    let q = supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId);
+    q = hasCalx ? calxRange(q, start, end) : q.gte('event_date', start).lte('event_date', end);
     const [{ data: events }, { data: fixed }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', start).lte('event_date', end).not('source', 'in', CAL_INTERNAL_SOURCES),
+        q.not('source', 'in', CAL_INTERNAL_SOURCES),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId),
+        hasCalx ? calxLoadCalendars() : null,
     ]);
-    return { events: events || [], fixed: (fixed || []).filter(r => String(r.task_title || '').trim()) };
+    return { events: (events || []).filter(e => !hasCalx || calxVisible(e)), fixed: (fixed || []).filter(r => String(r.task_title || '').trim()) };
 }
 // כל מה שיש בתאריך: אירועים ומשימות מהיומן + המשימות הקבועות של אותו יום בשבוע
 function calItemsForDate(dateStr, data, withFixed = true) {
     const wd = calWeekday(dateStr);
     const out = [];
-    data.events.filter(e => e.event_date === dateStr).forEach(e => {
-        const timeRaw = e.event_time || (String(e.event_title || '').match(/^(\d{1,2}:\d{2})\s/) || [])[1] || '';
+    const hasCalx = typeof calxCovers === 'function';
+    data.events.filter(e => (hasCalx ? calxCovers(e, dateStr) : e.event_date === dateStr)).forEach(e => {
+        // כל היום / כמה ימים - בפס של "כל היום" למעלה, בלי שעה
+        const allDay = hasCalx && (e.all_day || calxIsMulti(e));
+        const timeRaw = allDay ? '' : (e.event_time || (String(e.event_title || '').match(/^(\d{1,2}:\d{2})\s/) || [])[1] || '');
         const start = calToMin(timeRaw);
         let end = calToMin(e.end_time);
         if (start === null || end === null || end <= start) end = null;
-        out.push({ type: 'event', id: e.id, date: dateStr, start, end, title: stripLeadingTimeFromTitle(e.event_title), icon: calendarKindIcon(e), kind: calendarKindOf(e), done: !!e.is_completed, row: e });
+        out.push({ type: 'event', id: e.id, date: dateStr, start, end, title: stripLeadingTimeFromTitle(e.event_title), icon: calendarKindIcon(e), kind: calendarKindOf(e), done: !!e.is_completed, row: e, color: hasCalx ? calxColorOf(e) : null, free: !!e.is_free, multi: hasCalx ? calxDayLabel(e, dateStr) : '' });
     });
     if (withFixed) {
         data.fixed.filter(r => r.day_of_week === dbDaysMap[wd]).forEach(r => {
@@ -338,7 +346,7 @@ async function calRenderTimeGrid(view) {
         const timed = calLayoutLanes(items.filter(it => it.start !== null));
         allday += `<div class="cal-tg-allday-col" data-date="${dateStr}">${untimed.map(it => {
             const key = `${it.type}:${it.id}:${dateStr}`; calTgItems[key] = it;
-            return `<button type="button" class="cal-tg-chip kind-${it.kind}${it.done ? ' is-done' : ''}" data-cal-item="${key}">${it.icon ? `<span aria-hidden="true">${it.icon}</span> ` : ''}${calEsc(it.title)}</button>`;
+            return `<button type="button" class="cal-tg-chip kind-${it.kind}${it.done ? ' is-done' : ''}${it.color ? ' calx-colored' : ''}${it.free ? ' is-free' : ''}" data-cal-item="${key}"${it.color ? ` style="--calx-c:${it.color}"` : ''}>${it.icon ? `<span aria-hidden="true">${it.icon}</span> ` : ''}${calEsc(it.title)}</button>`;
         }).join('')}</div>`;
         let col = '';
         timed.forEach(it => {
@@ -352,7 +360,7 @@ async function calRenderTimeGrid(view) {
                 ? `inset-inline-start:calc(${it._lane * 16}% + 1px);width:calc(${100 - it._lane * 16}% - 2px);z-index:${1 + it._lane}`
                 : `inset-inline-start:calc(${it._lane * w}% + 1px);width:calc(${w}% - 2px)`;
             const timeTxt = calRange(calFromMin(it.start), it.end !== null ? calFromMin(it.end) : '');
-            col += `<button type="button" class="cal-ev kind-${it.kind}${it.done ? ' is-done' : ''}${height < 34 ? ' is-short' : ''}${cascade && it._lane ? ' is-stacked' : ''}" data-cal-item="${key}" style="top:${top}px;height:${height}px;${pos}">
+            col += `<button type="button" class="cal-ev kind-${it.kind}${it.done ? ' is-done' : ''}${height < 34 ? ' is-short' : ''}${cascade && it._lane ? ' is-stacked' : ''}${it.color ? ' calx-colored' : ''}${it.free ? ' is-free' : ''}" data-cal-item="${key}" style="top:${top}px;height:${height}px;${pos}${it.color ? `;--calx-c:${it.color}` : ''}">
                 <small class="cal-ev-time">${calEsc(timeTxt)}</small><span class="cal-ev-title">${it.icon && it.kind !== 'task' ? `<span aria-hidden="true">${it.icon}</span> ` : ''}${calEsc(it.title)}</span></button>`;
         });
         if (isToday) col += `<span class="cal-tg-now" style="top:${nowMin / 60 * CAL_HOUR_PX}px" aria-hidden="true"></span>`;
@@ -488,8 +496,12 @@ async function calRenderYear() {
     const y = Number((calAnchor || getLocalDateString()).slice(0, 4));
     let marked = new Set();
     if (supabaseClient && currentUserId) {
-        const { data } = await supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', `${y}-01-01`).lte('event_date', `${y}-12-31`).not('source', 'in', CAL_INTERNAL_SOURCES);
-        marked = new Set((data || []).map(r => r.event_date));
+        const data = await calFetchRange(`${y}-01-01`, `${y}-12-31`);
+        // אירוע של כמה ימים - כל הימים שלו מסומנים
+        data.events.forEach(r => {
+            const end = typeof calxEnd === 'function' ? calxEnd(r) : r.event_date;
+            for (let ds = r.event_date, g = 0; ds <= end && g < 400; ds = addDaysToDateStr(ds, 1), g++) marked.add(ds);
+        });
     }
     const today = getLocalDateString();
     const shown = calShownWeekdays();
@@ -522,7 +534,11 @@ async function calRenderList(extend) {
     if (extend === 'earlier') calListFrom = addDaysToDateStr(calListFrom, -30);
     const data = await calFetchRange(calListFrom, calListTo);
     const byDate = new Map();
-    data.events.forEach(e => { if (!byDate.has(e.event_date)) byDate.set(e.event_date, true); });
+    data.events.forEach(e => {
+        // אירוע של כמה ימים - בכל יום שלו בטווח
+        const end = typeof calxEnd === 'function' ? calxEnd(e) : e.event_date;
+        for (let ds = e.event_date < calListFrom ? calListFrom : e.event_date, g = 0; ds <= end && ds <= calListTo && g < 400; ds = addDaysToDateStr(ds, 1), g++) byDate.set(ds, true);
+    });
     const dates = [...byDate.keys()].sort();
     calTgItems = {};
     const tomorrow = addDaysToDateStr(today, 1);
@@ -535,8 +551,8 @@ async function calRenderList(extend) {
             <button type="button" class="cal-list-date" data-cal-day="${dateStr}"><b>${calEsc(calFmtDate(dateStr, { weekday: 'long', day: 'numeric', month: 'long' }))}</b>${rel ? `<small>${calEsc(rel)}</small>` : ''}</button>
             ${items.map(it => {
                 const key = `${it.type}:${it.id}:${dateStr}`; calTgItems[key] = it;
-                const sub = [it.row && it.row.meeting_with, it.row && it.row.location].filter(Boolean).join(' · ');
-                return `<button type="button" class="cal-list-item kind-${it.kind}${it.done ? ' is-done' : ''}" data-cal-item="${key}">
+                const sub = [it.multi, it.row && it.row.meeting_with, it.row && it.row.location].filter(Boolean).join(' · ');
+                return `<button type="button" class="cal-list-item kind-${it.kind}${it.done ? ' is-done' : ''}${it.color ? ' calx-colored' : ''}" data-cal-item="${key}"${it.color ? ` style="--calx-c:${it.color}"` : ''}>
                     <span class="cal-list-time">${it.start !== null ? calEsc(calRange(calFromMin(it.start), it.end !== null ? calFromMin(it.end) : '')) : calEsc(t('calv_allday'))}</span>
                     <span class="cal-list-text"><span>${it.icon ? `<span aria-hidden="true">${it.icon}</span> ` : ''}${calEsc(it.title)}</span>${sub ? `<small>${calEsc(sub)}</small>` : ''}</span>
                 </button>`;
@@ -613,7 +629,8 @@ async function calFindOverlaps(dateStr, startHHMM, endHHMM, excludeId) {
     if (start === null || !supabaseClient || !currentUserId) return [];
     const end = calToMin(endHHMM) !== null && calToMin(endHHMM) > start ? calToMin(endHHMM) : Math.min(1440, start + calPrefs.dur);
     const data = await calFetchRange(dateStr, dateStr);
-    return calItemsForDate(dateStr, data).filter(it => it.start !== null && !(it.type === 'event' && it.id === excludeId) && it.start < end && calItemEnd(it) > start);
+    // "פנוי" (יומן שלב 2) לא מתנגש בכלום
+    return calItemsForDate(dateStr, data).filter(it => it.start !== null && !it.free && !(it.type === 'event' && it.id === excludeId) && it.start < end && calItemEnd(it) > start);
 }
 let calOverlapResolve = null;
 function calConfirmOverlap(items) {
@@ -679,7 +696,7 @@ async function calRenderFreeTime() {
     for (let i = 0; i < 7; i++) {
         const dateStr = addDaysToDateStr(today, i);
         if (!calIsShown(dateStr)) continue;
-        const busy = calItemsForDate(dateStr, data).filter(it => it.start !== null).map(it => [it.start, calItemEnd(it)]).sort((a, b) => a[0] - b[0]);
+        const busy = calItemsForDate(dateStr, data).filter(it => it.start !== null && !it.free).map(it => [it.start, calItemEnd(it)]).sort((a, b) => a[0] - b[0]);
         let cursor = i === 0 ? Math.max(from, nowMin) : from;
         const windows = [];
         busy.forEach(([s, e]) => {
@@ -751,6 +768,7 @@ function calRenderSettings() {
     const chip = (attr, val, on, label) => `<button type="button" class="cal-chip${on ? ' on' : ''}" ${attr}="${val}" aria-pressed="${on ? 'true' : 'false'}">${label}</button>`;
     const deviceTz = calDeviceTz();
     box.innerHTML = `
+        ${typeof calxOpenCalendars === 'function' ? `<button type="button" class="calx-cals-open" id="calx-cals-open-btn"><span class="calx-dots" aria-hidden="true">${['#a78bfa', '#f472b6', '#60a5fa'].map(c => `<span class="monthly-calendar-dot" style="background:${c}"></span>`).join('')}</span><span>${calEsc(t('calx_cals_title'))}</span><span aria-hidden="true">›</span></button>` : ''}
         <div class="cal-set-label">${calEsc(t('calv_set_first'))}</div>
         <div class="cal-chip-row">${[0, 1, 6].map(d => chip('data-first', d, p.firstDay === d, calEsc(t(dayNameKeys[d])))).join('')}</div>
         <div class="cal-set-label">${calEsc(t('calv_set_days'))}</div>
@@ -773,6 +791,7 @@ function calRenderSettings() {
         <div class="cal-chip-row">${chip('data-tz2', '', !p.tz2, calEsc(t('calv_tz2_none')))}${p.tz2 ? chip('data-tz2', p.tz2, true, `<bdi>${calEsc(calTzLabel(p.tz2))}</bdi>`) : ''}</div>
         <label class="cal-search-field">${CAL_SEARCH_ICON}<input type="search" id="cal-tz2-search" placeholder="${calEsc(t('calv_tz2_search'))}" aria-label="${calEsc(t('calv_tz2_search'))}" autocomplete="off" enterkeyhint="search"></label>
         <div id="cal-tz2-results" class="cal-tz-results"></div>`;
+    box.querySelector('#calx-cals-open-btn')?.addEventListener('click', () => calxOpenCalendars(false));
     box.querySelectorAll('[data-first]').forEach(b => b.addEventListener('click', () => { calSavePrefs({ firstDay: Number(b.dataset.first) }); calRenderSettings(); }));
     box.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => {
         const d = Number(b.dataset.day);

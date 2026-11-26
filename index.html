@@ -137,7 +137,7 @@
         @media (prefers-reduced-motion: reduce) { .boot-sparkle i, .boot-sparkle i::before, .boot-book::before, .boot-book img, .boot-book b { animation: none; } .boot-book b { opacity: .85; } .boot-sparkle i { top: var(--y); } }
     </style>
     <link rel="preload" as="image" href="splash-book.webp?v=3" type="image/webp">
-    <link rel="stylesheet" href="theme.css?v=663">
+    <link rel="stylesheet" href="theme.css?v=664">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Tesseract.js (OCR מקומי) ו-SheetJS (ייבוא Excel/CSV) נטענים רק כשצריך אותם - loadLazyScript ב-app.js (2026-11-17:
@@ -354,6 +354,8 @@
                                 <button type="button" class="cal-view-chip" data-view="year" role="radio" aria-checked="false" data-i18n="calv_view_year">Year</button>
                                 <button type="button" class="cal-view-chip" data-view="list" role="radio" aria-checked="false" data-i18n="calv_view_list">List</button>
                             </div>
+                            <!-- 🎨 היומנים שלי - נגיעה מסתירה / מציגה יומן (calendar-details.js, רק כשיש יומנים) -->
+                            <div class="calx-row calx-filter hidden" id="calx-filter" data-i18n-aria-label="calx_cals_title" aria-label="My calendars"></div>
                             <div class="cal-tools">
                                 <button type="button" class="cal-tool" onclick="calGoToday()" data-i18n="calv_today">Today</button>
                                 <button type="button" class="cal-tool" onclick="calOpenFreeTime()" data-i18n="calv_free">Free time</button>
@@ -4303,12 +4305,23 @@
                         <button type="button" class="calendar-kind-chip" data-kind="event" role="radio" aria-checked="false" onclick="setCalendarEventKind('event')" data-i18n="calendar_kind_event">📅 Event</button>
                         <button type="button" class="calendar-kind-chip" data-kind="meeting" role="radio" aria-checked="false" onclick="setCalendarEventKind('meeting')" data-i18n="calendar_kind_meeting">🤝 Meeting</button>
                     </div>
-                    <input type="text" id="calendar-event-title-input" data-i18n-placeholder="calendar_event_title_placeholder" placeholder="Event title...">
+                    <!-- 🦷 סמל לאירוע - לבד לפי המילים, או ידנית (calendar-details.js) -->
+                    <div class="calx-title-row">
+                        <button type="button" id="calx-icon-btn" class="calx-icon-btn" onclick="calxOpenIconPicker()" data-i18n-aria-label="calx_icon_title" data-i18n-title="calx_icon_title" aria-label="Icon" title="Icon"></button>
+                        <input type="text" id="calendar-event-title-input" data-i18n-placeholder="calendar_event_title_placeholder" placeholder="Event title..." oninput="if (typeof calxOnTitleInput === 'function') calxOnTitleInput()">
+                    </div>
                     <button type="button" id="calendar-event-date-trigger" class="date-picker-field-trigger" onclick="openDateFieldPicker('calendar-event-date-input')">
                         <svg class="date-picker-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"></rect><line x1="3" y1="10" x2="21" y2="10"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="16" y1="2" x2="16" y2="6"></line></svg>
                         <span id="calendar-event-date-input-display" data-placeholder=""></span>
                     </button>
                     <input type="date" id="calendar-event-date-input" class="date-picker-hidden-input">
+                    <!-- 📅 יומן שלב 2: כל היום, ועד תאריך (אירוע של כמה ימים) -->
+                    <div class="calx-row" id="calx-when-row">
+                        <button type="button" class="calx-chip" id="calx-allday" aria-pressed="false" onclick="calxToggleAllDay()"><span data-i18n="calx_allday">All day</span></button>
+                        <button type="button" class="calx-chip" id="calx-enddate-btn" onclick="calxOpenEndDate()"><span data-i18n="calx_until_btn">Until…</span></button>
+                        <button type="button" class="calx-chip calx-x hidden" id="calx-enddate-clear" onclick="calxClearEndDate()" aria-label="✕">✕</button>
+                    </div>
+                    <input type="date" id="calendar-event-end-date-input" class="date-picker-hidden-input">
                     <label class="calendar-event-recurring-toggle">
                         <input type="checkbox" id="calendar-event-recurring-checkbox" onchange="toggleRecurringOptionsVisibility()">
                         <span data-i18n="calendar_event_recurring_label">Repeat</span>
@@ -4318,13 +4331,20 @@
                             <span class="calendar-event-repeat-every-label" data-i18n="calendar_event_repeat_every_label">Every</span>
                             <input type="number" id="calendar-event-recur-interval" min="1" value="1" class="calendar-event-recur-interval-input">
                             <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-recur-unit')"><span id="calendar-event-recur-unit-display"></span></button>
-                            <select id="calendar-event-recur-unit" class="hidden">
+                            <select id="calendar-event-recur-unit" class="hidden" onchange="if (typeof calxRecUnitChanged === 'function') calxRecUnitChanged()">
                                 <option value="days" data-i18n="calendar_event_unit_days">Days</option>
                                 <option value="weeks" selected data-i18n="calendar_event_unit_weeks">Weeks</option>
                                 <option value="months" data-i18n="calendar_event_unit_months">Months</option>
+                                <option value="years" data-i18n="calx_rec_years">Years</option>
                             </select>
                         </div>
-                        <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-duration-input')"><span id="calendar-event-duration-input-display"></span></button>
+                        <!-- 🔁 יומן שלב 2: באילו ימים בשבוע, "יום ג׳ השני בחודש", ומתי הסדרה נגמרת -->
+                        <div id="calx-weekdays" class="calx-row calx-weekdays hidden" role="group" data-i18n-aria-label="calx_rec_weekdays" aria-label="Days"></div>
+                        <div id="calx-monthmode" class="calx-row hidden" role="radiogroup"></div>
+                        <div id="calx-end-row" class="calx-row" role="radiogroup"></div>
+                        <button type="button" class="language-select custom-select-trigger" id="calendar-event-duration-trigger" onclick="openCustomSelectPicker('calendar-event-duration-input')"><span id="calendar-event-duration-input-display"></span></button>
+                        <button type="button" class="calx-chip calx-until-btn hidden" id="calx-end-until" onclick="calxPickUntil()"><span></span></button>
+                        <div id="calx-end-count-wrap" class="calx-count hidden"><input type="number" id="calx-end-count" min="1" max="500" value="10" inputmode="numeric" oninput="calxCountChanged(this.value)" data-i18n-aria-label="calx_end_count" aria-label="Times"><span data-i18n="calx_end_count_label">times</span></div>
                         <!-- "למשך חודש" - לפי בקשה מפורשת ("בחזרה - חודש גם שיהיה"); ברירת המחדל נשארת 3 חודשים -->
                         <select id="calendar-event-duration-input" class="hidden">
                             <option value="1" data-i18n="calendar_event_duration_1m">For 1 month</option>
@@ -4341,7 +4361,7 @@
                         <!-- 🌍 השעה באזור הזמן הנוסף (הגדרות יומן) - "= 10:00 ב-New York" -->
                         <div id="calendar-event-tz2" class="calendar-event-tz2 hidden"></div>
                         <input type="text" id="calendar-event-with-input" class="calendar-meeting-only hidden" maxlength="120" data-i18n-placeholder="calendar_meeting_with_placeholder" placeholder="With whom? (optional)">
-                        <input type="text" id="calendar-event-location-input" class="calendar-meeting-only hidden" maxlength="300" data-i18n-placeholder="calendar_meeting_location_placeholder" placeholder="Place or link – address, Zoom, Meet… (optional)">
+                        <input type="text" id="calendar-event-location-input" class="calendar-place-only hidden" maxlength="300" data-i18n-placeholder="calendar_meeting_location_placeholder" placeholder="Place or link – address, Zoom, Meet… (optional)">
                         <textarea id="calendar-event-notes-input" class="calendar-meeting-only hidden" rows="2" maxlength="1000" data-i18n-placeholder="calendar_meeting_notes_placeholder" placeholder="Notes (optional)"></textarea>
                         <button type="button" class="language-select custom-select-trigger" onclick="openCustomSelectPicker('calendar-event-reminder')"><span id="calendar-event-reminder-display"></span></button>
                         <select id="calendar-event-reminder" class="hidden">
@@ -4357,8 +4377,18 @@
                     <!-- שכפול - יוצר אירוע חדש בתאריך שרשום בשדה כרגע, בלי לגעת במקורי -
                          מוצג רק במצב עריכה (כמו כפתור המחיקה), לפי בקשה מפורשת
                          ("שכפול ליום אחר") -->
+                    <!-- 📅 יומן שלב 2: יומן (צבע), פנוי / עסוק, קבצים ותמונות (calendar-details.js) -->
+                    <div class="calx-more">
+                        <div class="calx-row calx-cals" id="calx-cals"></div>
+                        <div class="calx-row calendar-place-only hidden" id="calx-busy-row" role="radiogroup">
+                            <button type="button" class="calx-chip" data-calx-busy="busy" role="radio" aria-checked="true" onclick="calxSetBusy(false)"><span data-i18n="calx_busy">Busy</span></button>
+                            <button type="button" class="calx-chip" data-calx-busy="free" role="radio" aria-checked="false" onclick="calxSetBusy(true)"><span data-i18n="calx_free">Free</span></button>
+                        </div>
+                        <div class="calx-files" id="calx-files"></div>
+                        <label class="calx-attach-btn"><input type="file" accept="image/*,application/pdf" multiple class="hidden" onchange="calxPickFiles(this)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 11.5l-8.2 8.2a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg><span data-i18n="calx_attach_btn">Attach a file</span></label>
+                    </div>
                     <button type="button" id="btn-duplicate-calendar-event" class="btn-secondary hidden" style="margin-bottom: 8px;" onclick="duplicateCalendarEvent()" data-i18n="glance_edit_task_duplicate_btn">Duplicate</button>
-                    <button type="button" id="btn-delete-calendar-event" class="btn-clear-week hidden" style="margin-bottom: 8px;" onclick="deleteCalendarEvent(editingCalendarEventId); closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="glance_edit_task_delete_btn">Delete task</button>
+                    <button type="button" id="btn-delete-calendar-event" class="btn-clear-week hidden" style="margin-bottom: 8px;" onclick="if (typeof calxDeleteFromModal === 'function') calxDeleteFromModal(); else { deleteCalendarEvent(editingCalendarEventId); closeModal('modal-add-calendar-event'); resetCalendarEventModal(); }" data-i18n="glance_edit_task_delete_btn">Delete task</button>
                     <div class="action-buttons-wrap">
                         <button id="btn-add-calendar-event" onclick="addCalendarEvent()" class="btn-primary" data-i18n="calendar_event_add_btn">Add event</button>
                         <button class="btn-clear-specific" onclick="closeModal('modal-add-calendar-event'); resetCalendarEventModal();" data-i18n="cancel_btn">Cancel</button>
@@ -4377,6 +4407,35 @@
                     <button type="button" class="btn-primary" onclick="calOverlapAnswer(true)" data-i18n="calv_overlap_add">Add anyway</button>
                     <button type="button" class="btn-clear-specific" onclick="calOverlapAnswer(false)" data-i18n="calv_overlap_change">Change the time</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- 📅 יומן שלב 2 (calendar-details.js): בחירת סמל, "רק את זה / את זה ואת הבאים", היומנים שלי -->
+        <div id="modal-calx-icons" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calx_icon_title">Icon</h3>
+                <div id="calx-icon-grid" class="calx-icon-grid"></div>
+                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 10px;" onclick="document.getElementById('modal-calx-icons').classList.remove('open')" data-i18n="close_btn">Close</button>
+            </div>
+        </div>
+        <div id="modal-calx-scope" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calx_scope_title">This is part of a repeating series</h3>
+                <div class="calx-scope-btns">
+                    <button type="button" class="btn-primary" onclick="calxScopeAnswer('this')" data-i18n="calx_scope_this">Only this one</button>
+                    <button type="button" class="btn-secondary" onclick="calxScopeAnswer('following')" data-i18n="calx_scope_following">This and the following ones</button>
+                    <button type="button" class="btn-clear-specific" onclick="calxScopeAnswer(null)" data-i18n="cancel_btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div id="modal-calx-cals" class="apple-modal">
+            <div class="modal-sheet">
+                <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
+                <h3 data-i18n="calx_cals_title">My calendars</h3>
+                <div id="calx-cals-body" class="preset-manager-grid calx-cals-grid"></div>
+                <button type="button" class="btn-clear-specific" style="width: 100%; margin-top: 12px;" onclick="calxCloseCalendars()" data-i18n="close_btn">Close</button>
             </div>
         </div>
 
@@ -4702,11 +4761,13 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=585"></script>
+    <script src="i18n/core.js?v=586"></script>
     <script>(function () { var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=12"></script>
-    <script src="app.js?v=690"></script>
-    <script src="calendar-views.js?v=2"></script>
+    <script src="app.js?v=691"></script>
+    <script src="calendar-views.js?v=3"></script>
+    <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
+    <script src="calendar-details.js?v=1"></script>
     <script src="ai-chat.js?v=10"></script>
     <script src="goals-library.js?v=6"></script>
     <script src="change.js?v=2"></script>

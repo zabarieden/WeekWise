@@ -6723,7 +6723,8 @@ async function loadTodayTasks() {
     // + השגרה של היום ("היום שלי" – הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
     const [{ data, error }, { data: eventRows }, completedScheduleIds, { data: celebratedRows }, routine] = await Promise.all([
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', todayDbDay),
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr).not('source', 'in', '(today_celebrated,daily_focus_dismissed)'),
+        // 📅 יומן שלב 2: גם אירוע של כמה ימים שנמשך היום (חופשה, כנס)
+        (typeof calxRange === 'function' ? calxRange(supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId), todayStr, todayStr) : supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', todayStr)).not('source', 'in', '(today_celebrated,daily_focus_dismissed)'),
         getScheduleCompletionsForDate(todayStr),
         supabaseClient.from('calendar_events').select('id').eq('user_id', currentUserId).eq('event_date', todayStr).eq('source', 'today_celebrated').limit(1),
         typeof loadMyDayRoutine === 'function' ? loadMyDayRoutine(todayStr) : Promise.resolve({ items: [], doneIds: new Set(), checksOn: false }),
@@ -7195,11 +7196,28 @@ async function loadMonthlyCalendarGrid() {
     // לא כוללים source פנימי (daily_focus/today_celebrated/daily_focus_dismissed)
     // בחישוב הנקודה - אלה לא אירועים/משימות אמיתיים, ונוצרים כמעט כל יום, מה
     // שגרם לנקודה להופיע כמעט על כל יום בחודש בלי קשר אם יש בו משהו אמיתי
+    // 📅 יומן שלב 2: אירוע של כמה ימים מסומן בכל הימים שלו, כל נקודה בצבע של היומן שלה, ויומן מוסתר לא מסומן
+    const hasCalx = typeof calxRange === 'function';
+    let monthQuery = supabaseClient.from('calendar_events').select(hasCalx ? 'event_date, end_date, calendar_id' : 'event_date').eq('user_id', currentUserId);
+    monthQuery = hasCalx ? calxRange(monthQuery, firstStr, lastStr) : monthQuery.gte('event_date', firstStr).lte('event_date', lastStr);
     const [{ data }, { data: recurringData }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('event_date').eq('user_id', currentUserId).gte('event_date', firstStr).lte('event_date', lastStr).not('source', 'in', '(today_celebrated,daily_focus_dismissed,daily_focus)'),
+        monthQuery.not('source', 'in', '(today_celebrated,daily_focus_dismissed,daily_focus)'),
         supabaseClient.from('weekly_schedule').select('day_of_week, task_title').eq('user_id', currentUserId),
+        hasCalx ? calxLoadCalendars() : null,
     ]);
-    const markedDates = new Set((data || []).map(r => r.event_date));
+    if (hasCalx) calxRenderFilter();
+    const markedDates = new Set();
+    const dateColors = new Map();
+    (data || []).forEach(r => {
+        if (hasCalx && !calxVisible(r)) return;
+        const end = hasCalx ? calxEnd(r) : r.event_date;
+        const color = hasCalx ? calxColorOf(r) : null;
+        for (let ds = r.event_date < firstStr ? firstStr : r.event_date, guard = 0; ds <= end && ds <= lastStr && guard < 62; ds = addDaysToDateStr(ds, 1), guard++) {
+            markedDates.add(ds);
+            if (!dateColors.has(ds)) dateColors.set(ds, new Set());
+            dateColors.get(ds).add(color || '');
+        }
+    });
     // כל יום מקבל מראש כמה "משבצות בסיס" ריקות (task_title:"") כדי שהרשת
     // הבסיסית בלו"ז השבועי תמיד תוצג - בלי הסינון הזה, הנקודה במבט החודשי
     // הייתה מופיעה על כל יום שכבר "בוקר" ב-MyWeek (יש לו משבצות ריקות
@@ -7214,9 +7232,12 @@ async function loadMonthlyCalendarGrid() {
         const isToday = dateStr === todayStr;
         const isSelected = dateStr === selectedCalendarDay;
         const hasEvents = markedDates.has(dateStr) || recurringDays.has(dbDaysMap[new Date(y, m - 1, day).getDay()]);
+        // עד 3 נקודות בצבעי היומנים של היום (בלי יומנים - הנקודה הרגילה)
+        const colors = dateColors.has(dateStr) ? [...dateColors.get(dateStr)].slice(0, 3) : [];
+        const dots = colors.some(Boolean) ? `<span class="calx-dots">${colors.map(c => `<span class="monthly-calendar-dot"${c ? ` style="background:${c}"` : ''}></span>`).join('')}</span>` : (hasEvents ? '<span class="monthly-calendar-dot"></span>' : '');
         return `<button type="button" class="monthly-calendar-cell${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}" data-date="${dateStr}" onclick="selectCalendarDay('${dateStr}')">
             <span class="monthly-calendar-day-num">${day}</span>
-            ${hasEvents ? '<span class="monthly-calendar-dot"></span>' : ''}
+            ${dots}
         </button>`;
     };
     let html = '';
@@ -7270,10 +7291,16 @@ async function renderWeeklyTable() {
     const start = viewedWeeklyTableStart, end = addDaysToDateStr(start, 6);
     const fmt = (s, opts) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(currentLang, opts); };
     label.textContent = `${fmt(start, { day: 'numeric', month: 'short' })} – ${fmt(end, { day: 'numeric', month: 'short' })}`;
-    const [{ data: events }, { data: fixed }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).gte('event_date', start).lte('event_date', end).not('source', 'in', '(today_celebrated,daily_focus,daily_focus_dismissed)'),
+    const hasCalx = typeof calxRange === 'function';
+    let wtQuery = supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId);
+    wtQuery = hasCalx ? calxRange(wtQuery, start, end) : wtQuery.gte('event_date', start).lte('event_date', end);
+    const [{ data: eventsAll }, { data: fixed }] = await Promise.all([
+        wtQuery.not('source', 'in', '(today_celebrated,daily_focus,daily_focus_dismissed)'),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId),
+        hasCalx ? calxLoadCalendars() : null,
     ]);
+    const events = (eventsAll || []).filter(e => !hasCalx || calxVisible(e));
+    const coversDay = (e, ds) => (hasCalx ? calxCovers(e, ds) : e.event_date === ds);
     const today = getLocalDateString();
     weeklyTableItems = {};
     let html = '';
@@ -7283,13 +7310,13 @@ async function renderWeeklyTable() {
         const [y, m, d] = dateStr.split('-').map(Number);
         const wd = new Date(y, m - 1, d).getDay();
         const items = [
-            ...(events || []).filter(e => e.event_date === dateStr).map(e => ({ kind: 'event', id: e.id, time: e.event_time || (String(e.event_title || '').match(/^(\d{1,2}:\d{2})\s/) || [])[1] || '', title: `${calendarKindIcon(e) ? calendarKindIcon(e) + ' ' : ''}${stripLeadingTimeFromTitle(e.event_title)}`, done: !!e.is_completed, row: e })),
+            ...(events || []).filter(e => coversDay(e, dateStr)).map(e => ({ kind: 'event', id: e.id, time: (hasCalx && (e.all_day || calxIsMulti(e))) ? '' : (e.event_time || (String(e.event_title || '').match(/^(\d{1,2}:\d{2})\s/) || [])[1] || ''), title: `${calendarKindIcon(e) ? calendarKindIcon(e) + ' ' : ''}${stripLeadingTimeFromTitle(e.event_title)}`, done: !!e.is_completed, row: e, color: hasCalx ? calxColorOf(e) : null })),
             ...(fixed || []).filter(r => r.day_of_week === dbDaysMap[wd] && String(r.task_title || '').trim()).map(r => ({ kind: 'fixed', id: r.id, time: r.time_of_day || '', title: r.task_title, done: false, row: r })),
         ].sort((a, b) => (a.time || '99').localeCompare(b.time || '99'));
         items.forEach(it => { weeklyTableItems[`${it.kind}:${it.id}:${dateStr}`] = it; });
         html += `<div class="weekly-table-day${dateStr === today ? ' today' : ''}">
             <div class="weekly-table-day-head"><span>${escapeHtmlForReport(t(dayNameKeys[wd]))}</span><small>${escapeHtmlForReport(fmt(dateStr, { day: 'numeric', month: 'numeric' }))}</small><button type="button" class="weekly-table-add" data-wt-add="${dateStr}" aria-label="${escapeHtmlForReport(`${t('calendar_event_add_title')} · ${t(dayNameKeys[wd])} ${fmt(dateStr, { day: 'numeric', month: 'numeric' })}`)}">＋</button></div>
-            <div class="weekly-table-items">${items.length ? items.map(it => `<button type="button" class="weekly-table-item${it.done ? ' is-done' : ''}${it.kind === 'fixed' ? ' is-fixed' : ''}" data-wt="${it.kind}:${it.id}:${dateStr}">${it.time ? `<bdi class="weekly-table-time" dir="ltr">${escapeHtmlForReport(typeof calFmtTime === 'function' ? calFmtTime(String(it.time).slice(0, 5)) : String(it.time).slice(0, 5))}</bdi>` : ''}<span>${escapeHtmlForReport(it.title)}</span></button>`).join('') : '<span class="weekly-table-empty">—</span>'}</div>
+            <div class="weekly-table-items">${items.length ? items.map(it => `<button type="button" class="weekly-table-item${it.done ? ' is-done' : ''}${it.kind === 'fixed' ? ' is-fixed' : ''}${it.color ? ' calx-colored' : ''}" data-wt="${it.kind}:${it.id}:${dateStr}"${it.color ? ` style="--calx-c:${it.color}"` : ''}>${it.time ? `<bdi class="weekly-table-time" dir="ltr">${escapeHtmlForReport(typeof calFmtTime === 'function' ? calFmtTime(String(it.time).slice(0, 5)) : String(it.time).slice(0, 5))}</bdi>` : ''}<span>${escapeHtmlForReport(it.title)}</span></button>`).join('') : '<span class="weekly-table-empty">—</span>'}</div>
         </div>`;
     }
     grid.innerHTML = html;
@@ -7443,10 +7470,15 @@ async function renderSelectedCalendarDay() {
     if (!detail || !selectedCalendarDay) return;
     const [y, m, d] = selectedCalendarDay.split('-').map(Number);
     const dayOfWeek = dbDaysMap[new Date(y, m - 1, d).getDay()];
-    const [{ data: dataRaw }, { data: recurringDataRaw }] = await Promise.all([
-        supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId).eq('event_date', selectedCalendarDay).not('source', 'in', '(today_celebrated,daily_focus_dismissed)').order('day_sort_order', { ascending: true, nullsFirst: false }),
+    // 📅 יומן שלב 2: גם אירוע של כמה ימים שהתחיל קודם ונמשך עד היום הזה, ובלי יומנים שהוסתרו
+    let dayQuery = supabaseClient.from('calendar_events').select('*').eq('user_id', currentUserId);
+    dayQuery = typeof calxRange === 'function' ? calxRange(dayQuery, selectedCalendarDay, selectedCalendarDay) : dayQuery.eq('event_date', selectedCalendarDay);
+    const [{ data: dataRawAll }, { data: recurringDataRaw }] = await Promise.all([
+        dayQuery.not('source', 'in', '(today_celebrated,daily_focus_dismissed)').order('day_sort_order', { ascending: true, nullsFirst: false }),
         supabaseClient.from('weekly_schedule').select('*').eq('user_id', currentUserId).eq('day_of_week', dayOfWeek),
+        typeof calxLoadCalendars === 'function' ? calxLoadCalendars() : null,
     ]);
+    const dataRaw = (dataRawAll || []).filter(r => (typeof calxCovers !== 'function' || calxCovers(r, selectedCalendarDay)) && (typeof calxVisible !== 'function' || calxVisible(r)));
     // אותו סינון בדיוק כמו ב-loadTodayTasks - משבצות בסיס ריקות (task_title
     // "") הן פנימיות בלבד, לא משימות אמיתיות, ולא אמורות להופיע כאן כשורות ריקות
     const recurringData = (recurringDataRaw || []).filter(r => (r.task_title || '').trim());
@@ -7515,6 +7547,13 @@ async function renderSelectedCalendarDay() {
         row.appendChild(editBtn);
         if (typeof calQuickDuplicate === 'function') row.appendChild(dupBtn);
         row.appendChild(deleteBtn);
+        // 🎨 צבע היומן, "יום 2 מתוך 3", פנוי, מקום עם Waze / מפות, קבצים (calendar-details.js)
+        if (typeof calxExtraHtml === 'function') {
+            const color = calxColorOf(item);
+            if (color) { row.style.setProperty('--calx-c', color); row.classList.add('calx-colored'); }
+            const extra = calxExtraHtml(item, selectedCalendarDay);
+            if (extra) { row.classList.add('has-calx-extra'); row.insertAdjacentHTML('beforeend', extra); calxBindExtra(row, { [item.id]: item }); }
+        }
         detail.appendChild(row);
     });
 
@@ -8232,6 +8271,8 @@ async function openEditCalendarEvent(item) {
     document.getElementById('btn-delete-calendar-event').classList.remove('hidden');
     document.getElementById('btn-duplicate-calendar-event').classList.remove('hidden');
     if (typeof calUpdateEventTz2Hint === 'function') calUpdateEventTz2Hint();
+    // כל היום, עד תאריך, יומן, סמל, פנוי/עסוק, קבצים (calendar-details.js)
+    if (typeof calxFillModal === 'function') { await calxLoadCalendars(); calxFillModal(item); }
     openModal('modal-add-calendar-event');
 }
 // ⧉ מצב "שכפול" (calQuickDuplicate): הכותרת "שכפול", רק כפתור השכפול - בלי עדכון ומחיקה של המקורי
@@ -8270,7 +8311,11 @@ function openEditCalendarEventSeries(groupId, currentTitle) {
 const CALENDAR_KINDS = ['task', 'event', 'meeting'];
 let calendarEventKind = 'task';
 function calendarKindOf(item) { return item && CALENDAR_KINDS.includes(item.kind) ? item.kind : 'task'; }
-function calendarKindIcon(item) { const kind = calendarKindOf(item); return kind === 'meeting' ? '🤝' : kind === 'event' ? '📅' : ''; }
+function calendarKindIcon(item) {
+    // 🦷 סמל שנבחר לאירוע, או לפי המילים בכותרת (calendar-details.js, יומן שלב 2) - אחרת לפי הסוג
+    if (typeof calxIconOf === 'function') { const ic = calxIconOf(item); if (ic !== undefined) return ic; }
+    const kind = calendarKindOf(item); return kind === 'meeting' ? '🤝' : kind === 'event' ? '📅' : '';
+}
 // "10:00–11:00" בבידוד LTR - בעברית טווח שעות בלי בידוד מוצג הפוך ("11:00–10:00")
 function meetingTimeRange(item) {
     if (!item || !item.event_time) return '';
@@ -8289,6 +8334,8 @@ function setCalendarEventKind(kind) {
     });
     const isMeeting = calendarEventKind === 'meeting';
     document.querySelectorAll('#modal-add-calendar-event .calendar-meeting-only').forEach(el => el.classList.toggle('hidden', !isMeeting));
+    // 📍 מקום (עם Waze / מפות) ופנוי/עסוק - גם באירוע, לא רק בפגישה (יומן שלב 2)
+    document.querySelectorAll('#modal-add-calendar-event .calendar-place-only').forEach(el => el.classList.toggle('hidden', calendarEventKind === 'task'));
     document.querySelector('#modal-add-calendar-event .calendar-event-time-row').classList.toggle('is-meeting', isMeeting);
     document.getElementById('calendar-event-time-input').placeholder = t(isMeeting ? 'calendar_meeting_start_placeholder' : 'calendar_event_time_placeholder');
     document.getElementById('calendar-event-title-input').placeholder = t({ task: 'calendar_task_title_placeholder', event: 'calendar_event_title_placeholder', meeting: 'calendar_meeting_title_placeholder' }[calendarEventKind]);
@@ -8304,6 +8351,8 @@ function setCalendarEventKind(kind) {
 }
 // שדות הפגישה מהטופס (null לסוג שאינו פגישה - מעבר מפגישה למשימה מנקה אותם). null = שעת סיום לא תקינה
 function readCalendarMeetingFields() {
+    // אירוע: גם מקום (יומן שלב 2 - Waze / מפות ברשימת היום)
+    if (calendarEventKind === 'event') return { kind: 'event', end_time: null, meeting_with: null, location: document.getElementById('calendar-event-location-input').value.trim() || null, notes: null };
     if (calendarEventKind !== 'meeting') return { kind: calendarEventKind, end_time: null, meeting_with: null, location: null, notes: null };
     const endRaw = document.getElementById('calendar-event-end-time-input').value.trim();
     const endNorm = normalizeScheduleTimeInput(endRaw);
@@ -8353,6 +8402,7 @@ function resetCalendarEventModal() {
     document.getElementById('calendar-kind-row').classList.remove('hidden');
     // ברירת המחדל: משימה (כמו כל מה שנוסף כאן עד עכשיו) - קובע גם את הכותרת והכפתור
     setCalendarEventKind('task');
+    if (typeof calxResetModal === 'function') { calxResetModal(); calxLoadCalendars().then(() => calxRenderModal()); }
 }
 
 // דגל חד-פעמי נגד הגשה כפולה, באותו דפוס בדיוק כמו centerItemSubmitInFlight
@@ -8380,21 +8430,27 @@ async function addCalendarEventImpl() {
     const title = titleInput.value.trim();
     const date = dateInput.value;
     // הזמן רשות לגמרי - לא כל אירוע ביומן הוא "בשעה מסוימת" (למשל יום הולדת)
-    const timeNorm = normalizeScheduleTimeInput(timeInput.value);
-    if (timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
+    // 📅 יומן שלב 2: כל היום / עד תאריך / יומן / סמל / פנוי (calendar-details.js)
+    const calx = typeof calxReadModal === 'function' && !editingCalendarEventGroupId ? calxReadModal(date) : { fields: {} };
+    if (calx.error) { showAppToast(t(calx.error), 'error'); return; }
+    const allDay = !!calx.fields.all_day;
+    const timeNorm = normalizeScheduleTimeInput(allDay ? '' : timeInput.value);
+    if (!allDay && timeInput.value.trim() && (timeNorm.time === null || timeNorm.needsAmpm)) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
     const eventTime = timeNorm.time || null;
     const reminderMinutes = getReminderMinutesFromSelect('calendar-event-reminder');
     const reminderText = document.getElementById('calendar-event-reminder-text').value.trim();
     if (!supabaseClient || !currentUserId) { showAppToast(t('error_not_connected'), 'error'); return; }
-    // פגישה: שעת התחלה חובה, שעת סיום (רשות) אחריה
+    // פגישה: שעת התחלה חובה (חוץ מפגישה של כל היום), שעת סיום (רשות) אחריה
     const meeting = editingCalendarEventGroupId ? null : readCalendarMeetingFields();
+    if (meeting && allDay) meeting.end_time = null;
     if (!editingCalendarEventGroupId) {
         if (!meeting) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
-        if (meeting.kind === 'meeting' && !eventTime) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
+        if (meeting.kind === 'meeting' && !eventTime && !allDay) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
         if (meeting.end_time && eventTime && meeting.end_time <= eventTime) { showAppToast(t('calendar_meeting_end_before_start'), 'error'); return; }
     }
-    // ⚠️ חפיפה: כבר יש משהו באותו זמן - שואלים לפני ששומרים (calendar-views.js). בעריכה - רק אם התאריך או השעה השתנו
-    if (!editingCalendarEventGroupId && eventTime && date && typeof calFindOverlaps === 'function') {
+    // ⚠️ חפיפה: כבר יש משהו באותו זמן - שואלים לפני ששומרים (calendar-views.js). בעריכה - רק אם התאריך או השעה השתנו.
+    // "פנוי" לא מתנגש בכלום
+    if (!editingCalendarEventGroupId && eventTime && date && !calx.fields.is_free && typeof calFindOverlaps === 'function') {
         const orig = calendarEventEditOrig;
         const changed = !orig || orig.date !== date || orig.time !== eventTime || (orig.end || '') !== (meeting.end_time || '');
         if (changed) {
@@ -8423,12 +8479,24 @@ async function addCalendarEventImpl() {
     }
     if (editingCalendarEventId) {
         if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
-        const { error } = await supabaseClient.from('calendar_events').update({
+        const fields = {
             event_title: title, event_date: date, event_time: eventTime,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
-            ...meeting,
-        }).eq('id', editingCalendarEventId);
+            ...meeting, ...calx.fields,
+        };
+        // 🔁 מופע מסדרה: "רק את זה" או "את זה ואת הבאים" (25)
+        const seriesGroup = typeof calxM !== 'undefined' ? calxM.seriesGroup : null;
+        const scope = seriesGroup && typeof calxAskScope === 'function' ? await calxAskScope('edit') : 'this';
+        if (!scope) return;
+        let error = null;
+        if (scope === 'following') {
+            const n = await calxUpdateFollowing(editingCalendarEventId, fields, date);
+            if (n) showAppToast(t('calx_updated_following').replace('{n}', n));
+        } else {
+            ({ error } = await supabaseClient.from('calendar_events').update(fields).eq('id', editingCalendarEventId));
+        }
         if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+        if (typeof calxCommitFiles === 'function') await calxCommitFiles([editingCalendarEventId]);
         resetCalendarEventModal();
         closeModal('modal-add-calendar-event');
         showAppToast(t('calendar_event_updated_success'));
@@ -8446,27 +8514,34 @@ async function addCalendarEventImpl() {
         const recurUnit = recurUnitSelect.value;
         const recurInterval = parseInt(recurIntervalInput.value) || 1;
         const groupId = crypto.randomUUID();
+        // 🔁 החזרות של יומן שלב 2 (calendar-details.js): שנתית, "יום ג׳ השני בחודש", כמה ימים בשבוע, X פעמים / עד תאריך
+        const dates = typeof calxRecurrenceDates === 'function' ? calxRecurrenceDates(date, recurUnit, recurInterval, months) : generateRecurringDates(date, recurUnit, recurInterval, months);
+        // אירוע של כמה ימים שחוזר - כל מופע באותו אורך
+        const span = calx.fields.end_date ? calxDaysBetween(date, calx.fields.end_date) : 0;
         // recurrence_original_date/time - עוגן קבוע לתאריך/שעה שבהם המופע נוצר,
         // לעולם לא משתנה בעריכה מאוחרת (ר' openEditCalendarEvent) - זה מה
         // שמאפשר לדחיפה לגוגל (Events.instances) לאתר את המופע הנכון גם אחרי
         // שהתאריך/שעה שלו עצמם השתנו בעריכת-מופע-בודד
-        rows = generateRecurringDates(date, recurUnit, recurInterval, months).map(eventDate => ({
+        rows = dates.map(eventDate => ({
             username: currentUsername, user_id: currentUserId,
             event_title: title, event_date: eventDate, event_time: eventTime, recurrence_group_id: groupId,
             recurrence_original_date: eventDate, recurrence_original_time: eventTime,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
-            ...meeting,
+            ...meeting, ...calx.fields,
+            end_date: span > 0 ? addDaysToDateStr(eventDate, span) : null,
         }));
     } else {
         rows = [{
             username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null,
             reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
-            ...meeting,
+            ...meeting, ...calx.fields,
         }];
     }
 
-    const { error } = await supabaseClient.from('calendar_events').insert(rows);
+    const { data: insertedRows, error } = await supabaseClient.from('calendar_events').insert(rows).select('id');
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
+    // 📎 הקבצים שנבחרו עולים אחרי השמירה (צריך את מזהי האירועים)
+    if (typeof calxCommitFiles === 'function') await calxCommitFiles((insertedRows || []).map(r => r.id));
     resetCalendarEventModal();
     closeModal('modal-add-calendar-event');
     showAppToast(t('item_added_success'));
@@ -8493,12 +8568,18 @@ async function duplicateCalendarEvent() {
     if (!title || !date) { showAppToast(t('calendar_event_missing_fields'), 'error'); return; }
     const meeting = readCalendarMeetingFields();
     if (!meeting) { showAppToast(t('schedule_invalid_time_error'), 'error'); return; }
-    if (meeting.kind === 'meeting' && !eventTime) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
+    // יומן שלב 2: אותם פרטים בעותק (כל היום, יומן, סמל, פנוי, הקבצים), ואירוע של כמה ימים - באותו אורך מהתאריך החדש
+    const origDate = calendarEventEditOrig && calendarEventEditOrig.date;
+    const span = typeof calxM !== 'undefined' && calxM.endDate && origDate && calxM.endDate > origDate ? calxDaysBetween(origDate, calxM.endDate) : 0;
+    const calx = typeof calxReadModal === 'function' ? calxReadModal(null) : { fields: {} };
+    const dupEnd = span ? addDaysToDateStr(date, span) : null;
+    if (meeting.kind === 'meeting' && !eventTime && !calx.fields.all_day) { showAppToast(t('calendar_meeting_time_required'), 'error'); return; }
     if (meeting.end_time && eventTime && meeting.end_time <= eventTime) { showAppToast(t('calendar_meeting_end_before_start'), 'error'); return; }
     const { error } = await supabaseClient.from('calendar_events').insert({
-        username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: eventTime, recurrence_group_id: null,
+        username: currentUsername, user_id: currentUserId, event_title: title, event_date: date, event_time: calx.fields.all_day ? null : eventTime, recurrence_group_id: null,
         reminder_minutes: reminderMinutes > 0 ? reminderMinutes : null, reminder_text: reminderText || null,
-        ...meeting,
+        ...meeting, ...calx.fields, end_date: dupEnd || null,
+        attachments: typeof calxM !== 'undefined' && calxM.files.length ? calxM.files : null,
     });
     if (error) { showAppToast(t('error_adding_item') + error.message, 'error'); return; }
     resetCalendarEventModal();
@@ -10607,7 +10688,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_cart', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
     { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
     { tab: 'general', head: 'faq_cat_books', ids: ['books_what', 'books_deadline', 'books_home_chip', 'book_quotes'] },
-    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
+    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_details', 'cal_calendars', 'cal_repeat_more', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },
