@@ -174,9 +174,9 @@ async function calxDropFileIfUnused(path) {
 }
 
 // ---------- מצב החלון של האירוע ----------
-let calxM = { allDay: false, endDate: '', calendarId: null, icon: null, iconManual: false, isFree: false, files: [], pending: [], removed: [] };
+let calxM = { allDay: false, endDate: '', calendarId: null, icon: null, iconManual: false, isFree: false, files: [], pending: [], removed: [], rems: [], travel: 0 };
 function calxResetModal() {
-    calxM = { allDay: false, endDate: '', calendarId: null, icon: null, iconManual: false, isFree: false, files: [], pending: [], removed: [] };
+    calxM = { allDay: false, endDate: '', calendarId: null, icon: null, iconManual: false, isFree: false, files: [], pending: [], removed: [], rems: [], travel: 0 };
     calxRecReset();
     calxRenderModal();
 }
@@ -191,6 +191,8 @@ function calxFillModal(row) {
         files: Array.isArray(row.attachments) ? row.attachments.slice() : [],
         pending: [], removed: [],
         seriesGroup: row.recurrence_group_id || null,
+        rems: Array.isArray(row.extra_reminders) ? row.extra_reminders.map(Number).filter(n => n >= 0) : [],
+        travel: Number(row.travel_minutes) > 0 ? Number(row.travel_minutes) : 0,
     };
     calxRenderModal();
 }
@@ -204,6 +206,9 @@ function calxReadModal(dateStr) {
             calendar_id: calxM.calendarId || null,
             icon: calxM.iconManual ? (calxM.icon || '') : null,
             is_free: !!calxM.isFree,
+            // ⏰ יומן שלב 3: עוד תזכורות (דקות לפני) וזמן לצאת (דקות נסיעה)
+            extra_reminders: calxM.rems.length ? calxM.rems.slice().sort((a, b) => b - a) : null,
+            travel_minutes: calxM.travel > 0 ? calxM.travel : null,
         },
     };
 }
@@ -259,7 +264,82 @@ function calxRenderModal() {
             if (kind === 'saved' && calxM.files[Number(i)]) calxOpenFile(calxM.files[Number(i)]);
         }));
     }
+    calxRemsRender();
     calxRecRender();
+}
+
+// ---------- ⏰ יומן שלב 3: עוד תזכורות (26) וזמן לצאת (27) ----------
+// התזכורת הראשית נשארת בבחירה הרגילה (עם "בוצע" / "עוד 10 דק׳"); אלה תזכורות נוספות לפני האירוע - "יום לפני", "שעה לפני"...
+// אירוע בלי שעה (כל היום) - התזכורות נספרות מ-09:00 של אותו יום. זמן לצאת: התראה "הגיע הזמן לצאת" X דקות לפני (send-due-reminders)
+const CALX_REM_CHOICES = [0, 5, 10, 15, 30, 60, 120, 1440, 2880, 10080];
+const CALX_TRAVEL_CHOICES = [10, 15, 20, 30, 45, 60, 90];
+const CALX_REM_MAX = 5;
+function calxFmtDur(min) {
+    if (min >= 10080 && min % 10080 === 0) return calFmtUnit(min / 10080, 'week');
+    return calFmtMinutes(min);
+}
+function calxFmtBefore(min) { return min ? t('calx_rem_before').replace('{t}', calxFmtDur(min)) : t('calx_rem_at'); }
+function calxRemsRender() {
+    const box = document.getElementById('calx-rems');
+    if (box) {
+        box.innerHTML = calxM.rems.map((m, i) => `<span class="calx-chip calx-rem-chip on"><span>${calxEsc(calxFmtBefore(m))}</span><button type="button" class="calx-rem-x" data-calx-rem-rm="${i}" aria-label="${calxEsc(t('delete_btn') || '✕')}">✕</button></span>`).join('')
+            + (calxM.rems.length < CALX_REM_MAX ? `<button type="button" class="calx-chip" data-calx-rem-add>＋ ${calxEsc(t('calx_rem_add'))}</button>` : '');
+        box.querySelectorAll('[data-calx-rem-rm]').forEach(b => b.addEventListener('click', () => { calxM.rems.splice(Number(b.dataset.calxRemRm), 1); calxRemsRender(); }));
+        box.querySelector('[data-calx-rem-add]')?.addEventListener('click', () => calxOpenRemPicker('rem'));
+    }
+    const leave = document.getElementById('calx-leave');
+    if (leave) {
+        leave.innerHTML = calxM.travel
+            ? `<span class="calx-chip calx-rem-chip on"><span>${calxEsc(t('calx_leave_label').replace('{t}', calxFmtDur(calxM.travel)))}</span><button type="button" class="calx-rem-x" data-calx-leave-rm aria-label="${calxEsc(t('delete_btn') || '✕')}">✕</button></span>`
+            : `<button type="button" class="calx-chip" data-calx-leave-add>${calxEsc(t('calx_leave_btn'))}</button>`;
+        leave.querySelector('[data-calx-leave-rm]')?.addEventListener('click', () => { calxM.travel = 0; calxRemsRender(); });
+        leave.querySelector('[data-calx-leave-add]')?.addEventListener('click', () => calxOpenRemPicker('travel'));
+    }
+}
+// בחירה מתוך רשימה + "אחר" (מספר + יחידה) - לפי הכלל: בכל בחירה קבועה יש "אחר" עם הקלדה
+let calxRemPickKind = 'rem';
+let calxRemUnit = 1;
+function calxOpenRemPicker(kind) {
+    calxRemPickKind = kind;
+    const modal = document.getElementById('modal-calx-rem');
+    const list = document.getElementById('calx-rem-list');
+    if (!modal || !list) return;
+    document.getElementById('calx-rem-title').textContent = t(kind === 'travel' ? 'calx_leave_title' : 'calx_rem_title');
+    const choices = kind === 'travel' ? CALX_TRAVEL_CHOICES : CALX_REM_CHOICES.filter(m => !calxM.rems.includes(m));
+    list.innerHTML = choices.map(m => `<button type="button" class="calx-chip" data-calx-pick="${m}">${calxEsc(kind === 'travel' ? calxFmtDur(m) : calxFmtBefore(m))}</button>`).join('')
+        + `<button type="button" class="calx-chip" data-calx-pick="other">${calxEsc(t('calv_other'))}</button>`;
+    const other = document.getElementById('calx-rem-other');
+    other.classList.add('hidden');
+    document.getElementById('calx-rem-num').value = '';
+    calxRemUnit = 1;
+    const units = document.getElementById('calx-rem-units');
+    units.innerHTML = [[1, t('calx_unit_minutes')], [60, t('calx_unit_hours')], [1440, t('calendar_event_unit_days')]]
+        .filter(([u]) => kind !== 'travel' || u !== 1440)
+        .map(([u, l]) => `<button type="button" class="calx-chip${u === 1 ? ' on' : ''}" data-calx-unit="${u}" role="radio" aria-checked="${u === 1}">${calxEsc(l)}</button>`).join('');
+    units.querySelectorAll('[data-calx-unit]').forEach(b => b.addEventListener('click', () => {
+        calxRemUnit = Number(b.dataset.calxUnit);
+        units.querySelectorAll('[data-calx-unit]').forEach(x => { const on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-checked', on ? 'true' : 'false'); });
+    }));
+    list.querySelectorAll('[data-calx-pick]').forEach(b => b.addEventListener('click', () => {
+        if (b.dataset.calxPick === 'other') { other.classList.remove('hidden'); document.getElementById('calx-rem-num').focus(); return; }
+        calxApplyRemPick(Number(b.dataset.calxPick));
+    }));
+    modal.classList.add('open');
+}
+function calxRemOtherSave() {
+    const n = parseInt(document.getElementById('calx-rem-num').value, 10);
+    const unit = calxRemUnit || 1;
+    if (!(n >= 0)) return;
+    const max = calxRemPickKind === 'travel' ? 600 : 40320;
+    const min = Math.min(n * unit, max);
+    if (calxRemPickKind === 'travel' && min < 1) return;
+    calxApplyRemPick(min);
+}
+function calxApplyRemPick(min) {
+    if (calxRemPickKind === 'travel') calxM.travel = min;
+    else if (!calxM.rems.includes(min) && calxM.rems.length < CALX_REM_MAX) calxM.rems.push(min);
+    document.getElementById('modal-calx-rem').classList.remove('open');
+    calxRemsRender();
 }
 function calxToggleAllDay() { calxM.allDay = !calxM.allDay; calxRenderModal(); }
 function calxSetBusy(free) { calxM.isFree = !!free; calxRenderModal(); }

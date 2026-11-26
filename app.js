@@ -9880,14 +9880,29 @@ function handleNotificationDeepLink() {
     // 📲 rem = התזכורת שנגעו בה (sw.js) - נפתח עליה הפתק "בוצע? / להזכיר שוב" (openReminderFromNotification)
     let rem = null;
     try { rem = params.get('rem') ? JSON.parse(params.get('rem')) : null; } catch { rem = null; }
+    // 📅 יומן שלב 3: תזכורת נוספת / זמן לצאת / סיכום בוקר / "מה מחר" - נפתח היומן על היום הזה
+    const calDateParam = /^\d{4}-\d{2}-\d{2}$/.test(params.get('date') || '') ? params.get('date') : null;
     params.delete('open');
     params.delete('rem');
+    params.delete('date');
     const newUrl = window.location.pathname + (params.toString() ? `?${params}` : '');
     window.history.replaceState({}, '', newUrl);
     if (rem && rem.sourceType) { openTodayPeekPanel(); setTimeout(() => openReminderFromNotification(rem), 600); return; }
     if (open === 'peek') openTodayPeekPanel();
     // תזכורת ארוחה של New Me - נפתח ברגע שמצב הרכישה נטען (ר' updateNewMeShortcut)
     else if (open === 'newme') { if (typeof nmPendingDeepLink !== 'undefined') nmPendingDeepLink = true; else window.__nmDeepLink = true; }
+    else if (open === 'calendar') openCalendarOnDate(calDateParam || getLocalDateString());
+}
+// פותח את מסך היומן על תאריך מסוים (בתצוגה שנבחרה); הכרטיס של לוח החודש נפתח אם היה סגור
+function openCalendarOnDate(dateStr) {
+    if (typeof switchToTab === 'function') switchToTab('schedule-section');
+    setTimeout(() => {
+        const card = document.querySelector('.monthly-calendar-card');
+        if (card && !card.classList.contains('expanded') && typeof toggleCardSection === 'function') toggleCardSection(card.querySelector('.collapsible-header'));
+        if (typeof calSetView === 'function') calSetView(calActiveView(), dateStr);
+        if (calActiveView() === 'month' && typeof selectCalendarDay === 'function') setTimeout(() => selectCalendarDay(dateStr), 400);
+        setTimeout(() => card?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 450);
+    }, 300);
 }
 
 // מחיקת חשבון היא בלתי הפיכה לחלוטין - מוחקת את כל השורות של המשתמשת בכל
@@ -10688,7 +10703,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_cart', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
     { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
     { tab: 'general', head: 'faq_cat_books', ids: ['books_what', 'books_deadline', 'books_home_chip', 'book_quotes'] },
-    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_details', 'cal_calendars', 'cal_repeat_more', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
+    { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_details', 'cal_calendars', 'cal_repeat_more', 'cal_reminders', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
     { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note'] },

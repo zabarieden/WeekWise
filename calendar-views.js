@@ -8,7 +8,7 @@
 // ---------- הגדרות ----------
 const CAL_PREFS_KEY = 'weekwise_cal_prefs_v1';
 const CAL_VIEWS = ['month', 'week', '3day', 'day', 'year', 'list'];
-const CAL_DEFAULTS = { view: 'month', firstDay: 0, clock: '24', weekNums: false, days: [0, 1, 2, 3, 4, 5, 6], tz2: '', dur: 60, rem: 0 };
+const CAL_DEFAULTS = { view: 'month', firstDay: 0, clock: '24', weekNums: false, days: [0, 1, 2, 3, 4, 5, 6], tz2: '', dur: 60, rem: 0, morning: '', evening: '' };
 const CAL_HOUR_PX = 48;
 const CAL_INTERNAL_SOURCES = '(today_celebrated,daily_focus,daily_focus_dismissed)';
 let calPrefs = calLoadPrefs();
@@ -31,6 +31,9 @@ function calCleanPrefs(p) {
     out.tz2 = typeof out.tz2 === 'string' && calTzValid(out.tz2) ? out.tz2 : '';
     out.dur = Math.min(Math.max(parseInt(out.dur) || 60, 5), 720);
     out.rem = Math.min(Math.max(parseInt(out.rem) || 0, 0), 40320);
+    // ☀️ / 🌙 יומן שלב 3: סיכום בוקר ו"מה מחר" בערב - השעה, או ריק = כבוי (נקרא גם בשרת: send-due-reminders)
+    out.morning = /^([01]\d|2[0-3]):[0-5]\d$/.test(out.morning || '') ? out.morning : '';
+    out.evening = /^([01]\d|2[0-3]):[0-5]\d$/.test(out.evening || '') ? out.evening : '';
     return out;
 }
 function calSavePrefs(patch) {
@@ -785,6 +788,12 @@ function calRenderSettings() {
         <div class="cal-set-label">${calEsc(t('calv_set_rem'))}</div>
         <div class="cal-chip-row">${rems.map(r => chip('data-rem', r, p.rem === r, calEsc(r ? calFmtMinutes(r) : t('calv_rem_none')))).join('')}${chip('data-rem', 'other', !rems.includes(p.rem), calEsc(t('calv_other')))}</div>
         <input type="number" min="1" max="40320" id="cal-rem-custom" class="cal-num-input${rems.includes(p.rem) ? ' hidden' : ''}" value="${rems.includes(p.rem) ? '' : p.rem}" placeholder="${calEsc(t('calv_minutes_ph'))}">
+        <div class="cal-set-label">${calEsc(t('calx_sum_title'))}</div>
+        ${[['morning', '07:30'], ['evening', '21:00']].map(([k, def]) => `<div class="settings-toggle-row cal-set-toggle">
+            <label class="settings-label" for="calx-${k}-toggle">${calEsc(t('calx_sum_' + k))}</label>
+            <label class="switch"><input type="checkbox" id="calx-${k}-toggle" data-calx-sum="${k}" data-def="${def}" ${p[k] ? 'checked' : ''}><span class="switch-slider"></span></label>
+        </div>
+        <input type="time" id="calx-${k}-time" class="cal-num-input calx-sum-time${p[k] ? '' : ' hidden'}" value="${p[k] || def}" aria-label="${calEsc(t('calx_sum_' + k))}">`).join('')}
         <div class="cal-set-label">${calEsc(t('calv_set_tz'))}</div>
         <div class="cal-tz-device"><bdi>${calEsc(deviceTz ? calTzLabel(deviceTz) : '—')}</bdi></div>
         <div class="cal-set-label">${calEsc(t('calv_set_tz2'))}</div>
@@ -817,6 +826,18 @@ function calRenderSettings() {
     };
     bindOther('data-dur', 'cal-dur-custom', 'dur', 720);
     bindOther('data-rem', 'cal-rem-custom', 'rem', 40320);
+    // ☀️ / 🌙 הדלקה מבקשת הרשאת התראות אם עוד אין (בלי זה השרת לא יכול לשלוח)
+    box.querySelectorAll('[data-calx-sum]').forEach(tg => tg.addEventListener('change', () => {
+        const k = tg.dataset.calxSum;
+        const timeEl = document.getElementById(`calx-${k}-time`);
+        timeEl.classList.toggle('hidden', !tg.checked);
+        calSavePrefs({ [k]: tg.checked ? (timeEl.value || tg.dataset.def) : '' });
+        if (tg.checked && typeof Notification !== 'undefined' && Notification.permission !== 'granted' && typeof requestNotificationPermissionFromSettings === 'function') requestNotificationPermissionFromSettings();
+    }));
+    box.querySelectorAll('.calx-sum-time').forEach(el => el.addEventListener('change', () => {
+        const k = el.id.replace(/^calx-|-time$/g, '');
+        if (document.getElementById(`calx-${k}-toggle`)?.checked && /^\d{2}:\d{2}$/.test(el.value)) calSavePrefs({ [k]: el.value });
+    }));
     box.querySelectorAll('[data-tz2]').forEach(b => b.addEventListener('click', () => { calSavePrefs({ tz2: b.dataset.tz2 }); calRenderSettings(); }));
     const search = document.getElementById('cal-tz2-search');
     search.addEventListener('input', () => calRenderTzResults(search.value));

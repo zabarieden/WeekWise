@@ -62,6 +62,56 @@ const ACTION_WORDS: Record<string, [string, string]> = {
     fi: ["✓ Tehty", "10 min päästä"],
 };
 const DELIVERY_KEY = "user_id,source_type,source_id,source_date";
+// 📅 יומן שלב 3 (לפי בחירה מפורשת, 2026-11-24, 26-29): "הגיע הזמן לצאת", סיכום בוקר ו"מה מחר" בערב - בלי אימוג׳י בהתראה
+const CAL_WORDS: Record<string, { leave: string; today: string; tomorrow: string }> = {
+    he: { leave: "הגיע הזמן לצאת", today: "היום ביומן", tomorrow: "מחר ביומן" },
+    en: { leave: "Time to leave", today: "Today in your calendar", tomorrow: "Tomorrow in your calendar" },
+    es: { leave: "Hora de salir", today: "Hoy en tu calendario", tomorrow: "Mañana en tu calendario" },
+    fr: { leave: "Il est temps de partir", today: "Aujourd'hui dans votre calendrier", tomorrow: "Demain dans votre calendrier" },
+    ar: { leave: "حان وقت الخروج", today: "اليوم في التقويم", tomorrow: "غدًا في التقويم" },
+    ru: { leave: "Пора выходить", today: "Сегодня в календаре", tomorrow: "Завтра в календаре" },
+    de: { leave: "Zeit zum Losgehen", today: "Heute im Kalender", tomorrow: "Morgen im Kalender" },
+    pt: { leave: "Hora de sair", today: "Hoje no calendário", tomorrow: "Amanhã no calendário" },
+    ja: { leave: "出発の時間です", today: "今日の予定", tomorrow: "明日の予定" },
+    zh: { leave: "该出发了", today: "今天的日程", tomorrow: "明天的日程" },
+    hi: { leave: "निकलने का समय", today: "आज कैलेंडर में", tomorrow: "कल कैलेंडर में" },
+    ko: { leave: "출발할 시간이에요", today: "오늘 일정", tomorrow: "내일 일정" },
+    tr: { leave: "Çıkma zamanı", today: "Bugün takviminde", tomorrow: "Yarın takviminde" },
+    id: { leave: "Saatnya berangkat", today: "Hari ini di kalender", tomorrow: "Besok di kalender" },
+    it: { leave: "È ora di uscire", today: "Oggi nel calendario", tomorrow: "Domani nel calendario" },
+    vi: { leave: "Đến lúc khởi hành", today: "Hôm nay trong lịch", tomorrow: "Ngày mai trong lịch" },
+    pl: { leave: "Czas wychodzić", today: "Dziś w kalendarzu", tomorrow: "Jutro w kalendarzu" },
+    th: { leave: "ได้เวลาออกเดินทาง", today: "วันนี้ในปฏิทิน", tomorrow: "พรุ่งนี้ในปฏิทิน" },
+    ur: { leave: "نکلنے کا وقت", today: "آج کیلنڈر میں", tomorrow: "کل کیلنڈر میں" },
+    bn: { leave: "বেরোনোর সময়", today: "আজ ক্যালেন্ডারে", tomorrow: "আগামীকাল ক্যালেন্ডারে" },
+    sw: { leave: "Ni wakati wa kuondoka", today: "Leo kwenye kalenda", tomorrow: "Kesho kwenye kalenda" },
+    uk: { leave: "Час виходити", today: "Сьогодні в календарі", tomorrow: "Завтра в календарі" },
+    el: { leave: "Ώρα για αναχώρηση", today: "Σήμερα στο ημερολόγιο", tomorrow: "Αύριο στο ημερολόγιο" },
+    nl: { leave: "Tijd om te vertrekken", today: "Vandaag in je agenda", tomorrow: "Morgen in je agenda" },
+    ca: { leave: "Hora de sortir", today: "Avui al calendari", tomorrow: "Demà al calendari" },
+    ro: { leave: "E timpul de plecare", today: "Azi în calendar", tomorrow: "Mâine în calendar" },
+    yo: { leave: "Àkókò láti jáde", today: "Lónìí nínú kàlẹ́ńdà", tomorrow: "Lọ́la nínú kàlẹ́ńdà" },
+    sv: { leave: "Dags att gå", today: "I dag i kalendern", tomorrow: "I morgon i kalendern" },
+    nb: { leave: "På tide å dra", today: "I dag i kalenderen", tomorrow: "I morgen i kalenderen" },
+    da: { leave: "Tid til at tage af sted", today: "I dag i kalenderen", tomorrow: "I morgen i kalenderen" },
+    cs: { leave: "Čas vyrazit", today: "Dnes v kalendáři", tomorrow: "Zítra v kalendáři" },
+    hu: { leave: "Ideje indulni", today: "Ma a naptárban", tomorrow: "Holnap a naptárban" },
+    fi: { leave: "Aika lähteä", today: "Tänään kalenterissa", tomorrow: "Huomenna kalenterissa" },
+};
+// תזכורת נוספת / זמן לצאת שהתפספסו נשלחות עד חצי שעה באיחור, לא יותר
+const EXTRA_LATE_MINUTES = 30;
+// אירוע בלי שעה (כל היום): התזכורות הנוספות נספרות מ-09:00 של היום שלו
+const ALL_DAY_ANCHOR_MINUTES = 9 * 60;
+const CAL_INTERNAL_SOURCES = "(today_celebrated,daily_focus,daily_focus_dismissed)";
+const SUMMARY_MAX_LINES = 6;
+const dayNumOf = (dateStr: string) => { const [y, m, d] = dateStr.split("-").map(Number); return Math.floor(Date.UTC(y, m - 1, d) / 86400000); };
+const dateOfNum = (n: number) => new Date(n * 86400000).toISOString().slice(0, 10);
+const toMin = (time: string | null) => { if (!time) return null; const [h, m] = String(time).split(":").map((x) => parseInt(x, 10)); return Number.isNaN(h) || Number.isNaN(m) ? null : h * 60 + m; };
+const WEEKDAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+// "מחר" / "בעוד 3 ימים" בשפה של המשתמש/ת - Intl מתרגם לבד
+function relativeDay(lang: string, days: number) {
+    try { return new Intl.RelativeTimeFormat(lang, { numeric: "auto" }).format(days, "day"); } catch { return ""; }
+}
 
 // מחזיר את התאריך/שעה המקומיים של המשתמש (לפי אזור הזמן השמור), בלי לבנות Date חדש -
 // כי בניית Date "מקומי" מתוך IANA timezone דורשת חישוב offset, וזה המסלול הפשוט והבטוח.
@@ -160,11 +210,21 @@ async function handleRequest(): Promise<Response> {
     ]);
 
     const [{ data: prefs }, { data: presence }] = await Promise.all([
-        supabase.from("user_premium").select("user_id, reminder_all_devices, language").in("user_id", userIds),
+        supabase.from("user_premium").select("user_id, reminder_all_devices, language, calendar_prefs").in("user_id", userIds),
         supabase.from("reminder_presence").select("user_id").in("user_id", userIds).gt("visible_until", now.toISOString()),
     ]);
     const allDevicesUsers = new Set((prefs ?? []).filter((p) => p.reminder_all_devices).map((p) => p.user_id));
     const userLang = new Map((prefs ?? []).map((p) => [p.user_id, String(p.language || "he")]));
+    const userCalPrefs = new Map((prefs ?? []).map((p) => [p.user_id, (p.calendar_prefs && typeof p.calendar_prefs === "object" ? p.calendar_prefs : {}) as Record<string, unknown>]));
+    // תזכורות היומן החדשות (שלב 3) נתפסות כמו כל תזכורת - אבל שגיאה כאן = לא שולחים (לא מסתכנים בהתראה כל דקה)
+    const claimCalDelivery = async (userId: string, sourceType: string, sourceId: string, sourceDate: string, deviceKind: string) => {
+        const { data, error } = await supabase.from("reminder_deliveries").upsert(
+            { user_id: userId, source_type: sourceType, source_id: sourceId, source_date: sourceDate, channel: "push", device_kind: deviceKind },
+            { onConflict: DELIVERY_KEY, ignoreDuplicates: true },
+        ).select("source_id");
+        if (error) return false;
+        return (data ?? []).length > 0;
+    };
     const appOpenUsers = new Set((presence ?? []).map((p) => p.user_id));
 
     // "תופסים" את התזכורת: רק מי שמכניס ראשון את השורה מוסר אותה (האפליקציה עושה בדיוק אותו דבר).
@@ -261,6 +321,70 @@ async function handleRequest(): Promise<Response> {
             if (delivered) {
                 await supabase.from(row.table).update({ last_notified_date: wallClock.dateStr }).eq("id", row.id);
             }
+        }
+
+        // ⏰ יומן שלב 3: עוד תזכורות לפני אירוע (extra_reminders, דקות לפני) ו"הגיע הזמן לצאת" (travel_minutes).
+        // התראת מידע: בלי "בוצע" / "עוד 10 דק׳" - לחיצה פותחת את היומן על היום של האירוע. כל אחת נמסרת פעם אחת
+        // (reminder_deliveries: event_r<דקות> / event_leave לכל אירוע ותאריך). מחפשים עד 29 יום קדימה (התזכורת הכי רחוקה = 4 שבועות)
+        const lang = userLang.get(userId) || "he";
+        const calWords = CAL_WORDS[lang] || CAL_WORDS.en;
+        const todayNum = dayNumOf(wallClock.dateStr);
+        const nowAbs = todayNum * 1440 + nowMinutes;
+        const { data: extraEvents } = await supabase
+            .from("calendar_events")
+            .select("id, event_title, event_date, event_time, extra_reminders, travel_minutes, location, is_completed")
+            .eq("user_id", userId)
+            .gte("event_date", wallClock.dateStr)
+            .lte("event_date", dateOfNum(todayNum + 29))
+            .or("extra_reminders.not.is.null,travel_minutes.gt.0");
+        for (const ev of extraEvents ?? []) {
+            if (ev.is_completed) continue;
+            const evMin = toMin(ev.event_time);
+            const evAbs = dayNumOf(ev.event_date) * 1440 + (evMin ?? ALL_DAY_ANCHOR_MINUTES);
+            const list: { kind: string; m: number; leave: boolean }[] = (Array.isArray(ev.extra_reminders) ? ev.extra_reminders : [])
+                .map((m: number) => Number(m)).filter((m: number) => m >= 0 && m <= 40320)
+                .map((m: number) => ({ kind: `event_r${m}`, m, leave: false }));
+            if (Number(ev.travel_minutes) > 0 && evMin !== null) list.push({ kind: "event_leave", m: Number(ev.travel_minutes), leave: true });
+            for (const r of list) {
+                checked++;
+                const fire = evAbs - r.m;
+                if (nowAbs < fire || nowAbs - fire > EXTRA_LATE_MINUTES) continue;
+                if (!(await claimCalDelivery(userId, r.kind, ev.id, ev.event_date, targetKind))) continue;
+                const daysAway = dayNumOf(ev.event_date) - todayNum;
+                const when = [daysAway ? relativeDay(lang, daysAway) : "", ev.event_time ? String(ev.event_time).slice(0, 5) : (daysAway ? "" : relativeDay(lang, 0))].filter(Boolean).join(" · ");
+                const title = r.leave ? `${calWords.leave} · ${ev.event_title || ""}` : (ev.event_title || "NOT10.ai");
+                const body = [when, ev.location || ""].filter(Boolean).join(" · ");
+                const tag = `weekwise-cal-${r.kind}-${ev.id}-${ev.event_date}`;
+                await pushToUser(targets, { title, body, tag, data: { open: "calendar", date: ev.event_date } }, { urgency: "high", TTL: 1800 });
+            }
+        }
+
+        // ☀️ סיכום בוקר (היום) ו-🌙 "מה מחר" (בערב) - השעה נבחרת בהגדרות היומן (user_premium.calendar_prefs.morning / evening).
+        // עד חצי שעה באיחור, פעם אחת ביום (reminder_deliveries: cal_morning / cal_evening). יום ריק - לא שולחים כלום
+        const calPrefs = userCalPrefs.get(userId) || {};
+        for (const [kind, time, offset] of [["cal_morning", calPrefs.morning, 0], ["cal_evening", calPrefs.evening, 1]] as [string, unknown, number][]) {
+            const at = typeof time === "string" && /^\d{2}:\d{2}$/.test(time) ? toMin(time) : null;
+            if (at === null || nowMinutes < at || nowMinutes - at > EXTRA_LATE_MINUTES) continue;
+            checked++;
+            const date = dateOfNum(todayNum + offset);
+            if (!(await claimCalDelivery(userId, kind, userId, date, targetKind))) continue;
+            const [{ data: dayEvents }, { data: hiddenCals }, { data: fixed }] = await Promise.all([
+                supabase.from("calendar_events").select("event_title, event_time, calendar_id, is_completed")
+                    .eq("user_id", userId).lte("event_date", date).or(`event_date.eq.${date},end_date.gte.${date}`)
+                    .not("source", "in", CAL_INTERNAL_SOURCES),
+                supabase.from("user_calendars").select("id").eq("user_id", userId).eq("is_visible", false),
+                supabase.from("weekly_schedule").select("task_title, time_of_day").eq("user_id", userId).eq("day_of_week", WEEKDAY_NAMES[new Date(dayNumOf(date) * 86400000).getUTCDay()]),
+            ]);
+            const hidden = new Set((hiddenCals ?? []).map((c) => c.id));
+            const items = [
+                ...(dayEvents ?? []).filter((e) => !e.is_completed && !(e.calendar_id && hidden.has(e.calendar_id))).map((e) => ({ time: e.event_time ? String(e.event_time).slice(0, 5) : "", title: e.event_title || "" })),
+                ...(fixed ?? []).map((f) => ({ time: f.time_of_day ? String(f.time_of_day).slice(0, 5) : "", title: f.task_title || "" })),
+            ].filter((i) => i.title).sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+            if (!items.length) continue;
+            const lines = items.slice(0, SUMMARY_MAX_LINES).map((i) => `${i.time || "•"} ${i.title}`);
+            if (items.length > SUMMARY_MAX_LINES) lines.push(`+${items.length - SUMMARY_MAX_LINES}`);
+            const title = offset ? calWords.tomorrow : calWords.today;
+            await pushToUser(targets, { title, body: lines.join("\n"), tag: `weekwise-${kind}-${date}`, data: { open: "calendar", date } }, { urgency: "normal", TTL: 3600 });
         }
 
         // נודניק: "עוד לא" (בהתראה או בפופאפ) נכנס ל-reminder_snoozes - התראה חוזרת כל 5 דקות עד

@@ -95,6 +95,12 @@ self.addEventListener('notificationclick', (event) => {
         }));
         return;
     }
+    // 📅 יומן שלב 3 (תזכורת נוספת / זמן לצאת / סיכום בוקר / "מה מחר"): היומן נפתח על היום של האירוע
+    if (data && data.open === 'calendar') {
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(data.date || '') ? data.date : '';
+        event.waitUntil(focusOrOpenApp(`./index.html?open=calendar${date ? `&date=${date}` : ''}`));
+        return;
+    }
     // תזכורת ארוחה של New Me (data.open = 'newme') פותחת ישר את התפריט של היום; אחרת - הצצה להיום
     const target = data && data.open === 'newme' ? 'newme' : 'peek';
     event.waitUntil(Promise.all([reminderAction(data, 'dismiss'), focusOrOpenApp(`./index.html?open=${target}`)]));
