@@ -10833,7 +10833,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_books', ids: ['books_what', 'books_deadline', 'books_home_chip', 'book_quotes'] },
     { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_details', 'cal_calendars', 'cal_repeat_more', 'cal_reminders', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
-    { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'workout_pro', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
+    { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'workout_ready_preview', 'workout_log', 'workout_pro', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note', 'water_more'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
     { tab: 'general', head: 'faq_cat_goals', ids: ['achievements', 'goal_edit', 'change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
@@ -14077,6 +14077,7 @@ async function renderSportHistory() {
                 ${notesPart}
                 ${habitSourceBadge}
                 ${workoutBadge}
+                ${typeof wlHistoryLine === 'function' ? wlHistoryLine(row) : ''}
                 <span class="finance-history-date">${formattedDate}</span>
             </div>
             <button type="button" class="btn-delete-slot sport-share-btn" onclick="shareSportSession('${row.id}')" aria-label="${escapeHtmlForReport(t('share_picker_title'))}" title="${escapeHtmlForReport(t('share_picker_title'))}">${SPORT_SHARE_ICON}</button>

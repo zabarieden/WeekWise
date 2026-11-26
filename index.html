@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=680" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=681" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -1364,6 +1364,15 @@
                             </div>
                             <div id="workout-plan-body"></div>
                         </div>
+                    </div>
+
+                    <!-- 🏋️ יומן המתאמנים (workout-log.js): אימון עם תרגילים, סטים, משקל וחזרות - מסך מלא, תבניות, "כמו בפעם הקודמת" -->
+                    <div class="card expanded workout-log-card" id="workout-log-card">
+                        <div class="card-title-row collapsible-header" onclick="toggleCardSection(this)">
+                            <h2 data-i18n="wl_card_title">Workout with exercises</h2>
+                            <span class="card-toggle-icon">▼</span>
+                        </div>
+                        <div class="card-body" id="workout-log-card-body"></div>
                     </div>
 
                     <div class="card expanded">
@@ -2684,7 +2693,7 @@
         <div id="modal-workout-ai" class="apple-modal">
             <div class="modal-sheet wk-ai-sheet">
                 <div class="modal-header-bar"><span class="modal-pull-bar"></span></div>
-                <h3 data-i18n="workout_ai_title">Workout plan with AI</h3>
+                <h3 id="workout-ai-title" data-i18n="workout_ai_title">Workout plan with AI</h3>
                 <div id="workout-ai-body"></div>
             </div>
         </div>
@@ -4872,10 +4881,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=599"></script>
+    <script src="i18n/core.js?v=601"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=15"></script>
-    <script src="app.js?v=701"></script>
+    <script src="app.js?v=702"></script>
     <script src="calendar-views.js?v=5"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>
@@ -4884,7 +4893,8 @@
     <script src="change.js?v=2"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=5"></script>
-    <script src="workouts.js?v=19"></script>
+    <script src="workouts.js?v=20"></script>
+    <script src="workout-log.js?v=1"></script>
     <!-- 🖼️ כרטיסי שיתוף כתמונה ודפי PDF (10 המקומות, 2026-11-25) - אחרי workouts.js כי משתמש ברקע שלו -->
     <script src="share-cards.js?v=1"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->

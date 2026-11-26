@@ -520,6 +520,7 @@ function wkTodayHtml() {
             ${ex.length ? `
                 <button type="button" class="wk-ex-toggle" data-wk-ex-toggle="${main.id}" aria-expanded="${open}">${wkEsc(t('workout_ex_count').replace('{n}', ex.length))} <span aria-hidden="true">${open ? '▴' : '▾'}</span></button>
                 ${open ? `<ul class="wk-ex-list">${ex.map((e, i) => `<li><label><input type="checkbox" data-wk-ex-tick="${main.id}" data-i="${i}"${exTicks.includes(i) ? ' checked' : ''}><span>${wkEsc(e.name)}</span>${e.sets || e.reps ? `<bdi dir="ltr" class="wk-ex-sr">${wkEsc([e.sets, e.reps].filter(Boolean).join('×'))}</bdi>` : ''}</label></li>`).join('')}</ul>` : ''}` : ''}
+            ${ex.length && !done && !timed && typeof wlFromPlan === 'function' ? `<button type="button" class="wk-wl-link" data-wl-from-plan="${main.id}">${WK_ICONS.dumbbell}<span>${wkEsc(t('wl_card_title'))}</span></button>` : ''}
             <div class="wk-today-actions">${actions}</div>
         </div>`;
 }
@@ -1054,11 +1055,74 @@ function wkPaintTimer() {
 }
 
 // ---------- תוכניות מוכנות ----------
+// בקשה מפורשת (2026-11-26): "לראות אותם לפני ואז לבחור אימון שרוצים, וגם אפשרות עריכה לפני" - נגיעה בתוכנית
+// פותחת תצוגה מקדימה (אותו חלון כמו התוכנית עם AI): כל אימון עם הימים, המשך והתרגילים, ✓ לבחור מה נכנס,
+// ✏️ לערוך לפני (עורך האימון הרגיל), ואז "להכניס לטבלה" - במקום הטבלה או בנוסף לה. אחרי זה - עריכה רגילה מהטבלה
+function wkReadyToWorkouts(plan) {
+    return plan.items.map(it => ({
+        kind: it.kind, custom_name: null, days: [...it.days], time: null, place: null, notes: null,
+        duration_minutes: it.kind === 'rest' ? null : (it.duration || null), intensity: it.intensity || null,
+        exercises: it.exercises ? it.exercises.map(([n, sets, reps]) => ({ name: t('workout_ex_' + n), sets, reps })) : null,
+    }));
+}
 function chooseWorkoutReadyPlan(key) {
     const plan = WORKOUT_READY_PLANS.find(p => p.key === key);
     if (!plan) return;
-    if (workoutPlan.length) showDangerConfirm(t('workout_ready_replace_title'), t('workout_ready_replace_confirm'), () => applyWorkoutReadyPlan(plan), t('workout_ready_replace_btn'));
-    else applyWorkoutReadyPlan(plan);
+    const more = document.getElementById('workout-more-row');
+    if (more) more.classList.add('hidden');
+    // אותה תוכנית שוב - עם מה שכבר נערך ונבחר
+    if (!(wkAi && wkAi.source === 'ready' && wkAi.key === key)) {
+        const workouts = wkReadyToWorkouts(plan);
+        wkAi = { step: 'preview', source: 'ready', key, plan: { workouts, note: '' }, sel: new Set(workouts.map((_, i) => i)), history: [], again: 0 };
+    } else wkAi.step = 'preview';
+    renderWorkoutAi();
+    openModal('modal-workout-ai');
+}
+// ✓ על אימון בתצוגה המקדימה: נכנס / לא נכנס לטבלה
+function wkPvToggle(i) {
+    if (!wkAi || !wkAi.sel) return;
+    if (wkAi.sel.has(i)) wkAi.sel.delete(i); else wkAi.sel.add(i);
+    renderWorkoutAi();
+}
+// ✏️ לערוך אימון לפני שהוא נכנס: עורך האימון הרגיל, והשמירה חוזרת לתצוגה המקדימה (לא לטבלה)
+function wkPvEdit(i) {
+    const w = wkAi && wkAi.plan && wkAi.plan.workouts[i];
+    if (!w) return;
+    closeModal('modal-workout-ai');
+    workoutDraft = {
+        id: null, previewIdx: i, kind: w.kind, custom_name: w.custom_name || '', days: new Set(w.days || []), time: w.time || null,
+        duration: w.duration_minutes || '', intensity: w.intensity || null, place: w.place || null,
+        exercises: Array.isArray(w.exercises) ? w.exercises.map(e => ({ name: e.name || '', sets: e.sets || '', reps: e.reps || '' })) : [],
+        notes: w.notes || '', inRoutine: false, reminder: 0,
+    };
+    renderWorkoutEditor();
+    setTimeout(() => openModal('modal-workout-plan'), 60);
+}
+function wkPvBack() {
+    closeModal('modal-workout-plan');
+    workoutDraft = null;
+    if (!wkAi) return;
+    wkAi.step = 'preview';
+    renderWorkoutAi();
+    setTimeout(() => openModal('modal-workout-ai'), 60);
+}
+function wkPvListHtml() {
+    const ws = wkAi.plan.workouts;
+    const dayNames = w => (w.days || []).slice().sort((a, b) => a - b).map(d => t(weekdayShortKeys[d])).join(' · ');
+    return `<ul class="wk-pv-list">${ws.map((w, i) => {
+        const on = !wkAi.sel || wkAi.sel.has(i);
+        const rest = wkIsRest(w);
+        const ex = Array.isArray(w.exercises) ? w.exercises.filter(e => e && e.name) : [];
+        return `<li class="wk-pv${on ? '' : ' is-off'}${rest ? ' is-rest' : ''}"${wkCVar(w)}>
+            <button type="button" class="wk-pv-check" data-wk-pv-toggle="${i}" aria-pressed="${on}" aria-label="${wkEsc(wkName(w))}">${on ? WK_ICONS.check : ''}</button>
+            <div class="wk-pv-main">
+                <b class="wk-pv-name">${rest ? '' : wkStar(w, 'wk-star-inline')}${wkEsc(wkName(w))}${!rest && w.duration_minutes ? ` · <bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''}${!rest && w.intensity ? ` ${wkIntensityChip(w.intensity)}` : ''}</b>
+                <span class="wk-pv-days">${wkEsc(dayNames(w))}${w.time && !rest ? ` · <bdi dir="ltr">${wkEsc(w.time)}</bdi>` : ''}</span>
+                ${ex.length ? `<ul class="wk-pv-ex">${ex.map(e => `<li><span>${wkEsc(e.name)}</span>${e.sets || e.reps ? `<bdi dir="ltr">${wkEsc([e.sets, e.reps].filter(Boolean).join('×'))}</bdi>` : ''}</li>`).join('')}</ul>` : ''}
+            </div>
+            <button type="button" class="wk-pv-edit" data-wk-pv-edit="${i}" aria-label="${wkEsc(t('workout_edit_title'))}: ${wkEsc(wkName(w))}">${WK_ICONS.pen}<span>${wkEsc(t('edit_btn'))}</span></button>
+        </li>`;
+    }).join('')}</ul>`;
 }
 // מחיקת הטבלה הנוכחית לפני תוכנית חדשה (מוכנה או עם AI): קודם האירועים שלה מ-Google Calendar והפריטים שלה בשגרה
 async function wkClearPlan() {
@@ -1174,14 +1238,13 @@ function wkAiWeekHtml(plan) {
         if (!items.length) return `<li class="wk-row is-empty"><b class="wk-day">${dayLabel}</b><span class="wk-dot" aria-hidden="true"></span><span class="wk-time"></span><span class="wk-row-main wk-ai-main"></span><span></span></li>`;
         return items.map((w, i) => {
             const rest = wkIsRest(w);
-            const ex = Array.isArray(w.exercises) ? w.exercises.length : 0;
             return `
                 <li class="wk-row${rest ? ' is-rest' : ''}"${wkCVar(w)}>
                     <b class="wk-day">${i === 0 ? dayLabel : ''}</b>
                     ${rest ? '<span class="wk-dot" aria-hidden="true"></span>' : `<span class="wk-node" aria-hidden="true">${wkStar(w)}</span>`}
                     <span class="wk-time">${w.time && !rest ? `<bdi dir="ltr">${wkEsc(w.time)}</bdi>` : ''}</span>
                     <span class="wk-row-main wk-ai-main">
-                        <span class="wk-row-name">${wkEsc(wkName(w))}${!rest && w.duration_minutes ? ` · <bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''}${ex ? ` <small class="wk-ai-ex">· ${wkEsc(t('workout_ex_count').replace('{n}', ex))}</small>` : ''}</span>
+                        <span class="wk-row-name">${wkEsc(wkName(w))}${!rest && w.duration_minutes ? ` · <bdi dir="ltr">${w.duration_minutes}′</bdi>` : ''}</span>
                         ${!rest && w.intensity ? `<span class="wk-int-dot wk-int-${w.intensity}" title="${wkEsc(t('workout_int_' + w.intensity))}"></span>` : ''}
                     </span>
                     <span></span>
@@ -1193,6 +1256,9 @@ function wkAiWeekHtml(plan) {
 function renderWorkoutAi() {
     const box = document.getElementById('workout-ai-body');
     if (!box || !wkAi) return;
+    const ready = wkAi.source === 'ready';
+    const head = document.getElementById('workout-ai-title');
+    if (head) head.textContent = ready ? t('workout_ready_' + wkAi.key) : t('workout_ai_title');
     if (wkAi.step === 'form') {
         box.innerHTML = wkAiFormHtml();
     } else if (wkAi.step === 'loading') {
@@ -1200,14 +1266,21 @@ function renderWorkoutAi() {
     } else {
         const plan = wkAi.plan;
         const choose = wkAi.step === 'choose';
+        if (!wkAi.sel) wkAi.sel = new Set(plan.workouts.map((_, i) => i));
+        // השבוע מראה רק את מה שנבחר; מתחת - כל אימון בתוכנית עם ✓ לבחירה ו✏️ לעריכה לפני
+        const shown = { ...plan, workouts: plan.workouts.filter((_, i) => wkAi.sel.has(i)) };
         box.innerHTML = `
             ${plan.note ? `<p class="wk-ai-note">${wkEsc(plan.note)}</p>` : ''}
-            ${wkAiWeekHtml(plan)}
+            ${wkAiWeekHtml(shown)}
+            <span class="wk-label">${wkEsc(t('workout_pv_pick'))}</span>
+            ${wkPvListHtml()}
             ${WK_PRO_NOTE()}
             <div class="action-buttons-wrap wk-ai-actions is-stacked">${choose ? `
                 <button type="button" class="btn-primary" data-wk-ai-apply="replace">${wkEsc(t('workout_ai_replace'))}</button>
                 <button type="button" class="btn-secondary" data-wk-ai-apply="add">${wkEsc(t('workout_ai_add'))}</button>
-                <button type="button" class="btn-clear-specific" data-wk-ai-back>${wkEsc(t('cancel_btn'))}</button>` : `
+                <button type="button" class="btn-clear-specific" data-wk-ai-back>${wkEsc(t('cancel_btn'))}</button>` : ready ? `
+                <button type="button" class="btn-primary" data-wk-ai-insert>${wkEsc(t('workout_ai_apply'))}</button>
+                <button type="button" class="btn-clear-specific" onclick="closeModal('modal-workout-ai')">${wkEsc(t('close_btn'))}</button>` : `
                 <button type="button" class="btn-primary" data-wk-ai-insert>${wkEsc(t('workout_ai_apply'))}</button>
                 <button type="button" class="btn-secondary" data-wk-ai-again${wkAi.again >= WK_AI_MAX_AGAIN ? ' disabled' : ''}>${wkEsc(t('workout_ai_again'))}</button>
                 <button type="button" class="btn-clear-specific" data-wk-ai-edit>${wkEsc(t('workout_ai_edit'))}</button>`}
@@ -1243,6 +1316,8 @@ function wkBindAi(box) {
     box.querySelectorAll('[data-wk-ai-apply]').forEach(b => b.addEventListener('click', () => wkAiApply(b.dataset.wkAiApply)));
     const back = box.querySelector('[data-wk-ai-back]');
     if (back) back.addEventListener('click', () => { wkAi.step = 'preview'; renderWorkoutAi(); });
+    box.querySelectorAll('[data-wk-pv-toggle]').forEach(b => b.addEventListener('click', () => wkPvToggle(Number(b.dataset.wkPvToggle))));
+    box.querySelectorAll('[data-wk-pv-edit]').forEach(b => b.addEventListener('click', () => wkPvEdit(Number(b.dataset.wkPvEdit))));
 }
 // מה שנשלח: הבועה שנבחרה, או מה שנכתב ב"אחר"
 function wkAiPayload() {
@@ -1274,6 +1349,7 @@ async function wkAiBuild(again) {
     if (again) wkAi.again++;
     else { wkAi.history = []; wkAi.again = 0; }
     wkAi.plan = { workouts: out.workouts, note: out.note || '' };
+    wkAi.sel = null;
     wkAi.history.push(wkAiSummary(wkAi.plan));
     wkAi.step = 'preview';
     renderWorkoutAi();
@@ -1304,18 +1380,21 @@ async function wkAiRequest(answers, avoid) {
 // להכניס לטבלה: במקום הטבלה (כמו תוכנית מוכנה), או בנוסף לה - אז ימי המנוחה של ההצעה רק בימים שעוד ריקים
 async function wkAiApply(mode) {
     if (!wkAi || !wkAi.plan || !supabaseClient || !currentUserId) return;
+    // רק האימונים שנבחרו (✓) בתצוגה המקדימה
+    const chosen = wkAi.plan.workouts.filter((w, i) => !wkAi.sel || wkAi.sel.has(i));
+    if (!chosen.some(w => !wkIsRest(w))) { showAppToast(t('workout_pv_none'), 'error'); return; }
     const replace = mode !== 'add' || !workoutPlan.length;
     if (replace) await wkClearPlan();
     const taken = new Set(replace ? [] : workoutPlan.flatMap(w => wkDays(w)));
     const base = replace ? 0 : workoutPlan.length;
-    const rows = wkAi.plan.workouts.map(w => {
+    const rows = chosen.map(w => {
         const days = wkIsRest(w) ? (w.days || []).filter(d => !taken.has(d)) : (w.days || []);
         return days.length ? {
             user_id: currentUserId, kind: w.kind, custom_name: w.kind === 'custom' ? (w.custom_name || null) : null, days,
             time: wkIsRest(w) ? null : (w.time || null), duration_minutes: wkIsRest(w) ? null : (w.duration_minutes || null),
             intensity: wkIsRest(w) ? null : (w.intensity || null), place: wkIsRest(w) ? null : (w.place || null),
             exercises: Array.isArray(w.exercises) && w.exercises.length && wkHasExercises(w) ? w.exercises.map(e => ({ name: e.name, sets: e.sets || '', reps: e.reps || '' })) : null,
-            notes: null,
+            notes: wkIsRest(w) ? null : (w.notes || null),
         } : null;
     }).filter(Boolean).map((r, i) => ({ ...r, sort_order: base + i }));
     const { error } = await supabaseClient.from('workout_plan').insert(rows);
@@ -1356,8 +1435,10 @@ function renderWorkoutEditor() {
     const title = document.getElementById('workout-editor-title');
     if (!box || !workoutDraft) return;
     const d = workoutDraft;
-    if (title) title.textContent = t(d.id ? 'workout_edit_title' : 'workout_new_title');
+    if (title) title.textContent = t(d.id || d.previewIdx != null ? 'workout_edit_title' : 'workout_new_title');
     const rest = d.kind === 'rest';
+    // עריכה לפני שהאימון נכנס לטבלה (מהתצוגה המקדימה): בלי תזכורת / שגרה / מחיקה - אלה אחרי שהוא בטבלה
+    const pv = d.previewIdx != null;
     const savedTypes = typeof cachedCustomSportTypes !== 'undefined' ? cachedCustomSportTypes : [];
     const isSavedType = name => savedTypes.some(s => s.name === name);
     const customOn = d.kind === 'custom' && !isSavedType(d.custom_name);
@@ -1410,15 +1491,15 @@ function renderWorkoutEditor() {
             <button type="button" class="wk-ex-add" data-wk-ex-add>${wkEsc(t('workout_ex_add'))}</button>
         </div>
         ${WK_PRO_NOTE()}` : ''}
-        <span class="wk-label">${wkEsc(splitLeadingEmoji(t('workout_reminder_label'), '')[1])}</span>
+        ${pv ? '' : `<span class="wk-label">${wkEsc(splitLeadingEmoji(t('workout_reminder_label'), '')[1])}</span>
         <div class="color-filter-picker wk-rems">${wkReminderChipsHtml(d)}</div>
-        <input type="number" inputmode="numeric" min="1" max="1440" id="wk-rem-custom" class="wk-rem-custom${wkRemIsCustom(d.reminder) ? '' : ' hidden'}" value="${wkRemIsCustom(d.reminder) && d.reminder !== 'custom' ? wkEsc(d.reminder) : ''}" placeholder="${wkEsc(t('reminder_custom_minutes_placeholder'))}" aria-label="${wkEsc(t('reminder_custom_minutes_placeholder'))}">
+        <input type="number" inputmode="numeric" min="1" max="1440" id="wk-rem-custom" class="wk-rem-custom${wkRemIsCustom(d.reminder) ? '' : ' hidden'}" value="${wkRemIsCustom(d.reminder) && d.reminder !== 'custom' ? wkEsc(d.reminder) : ''}" placeholder="${wkEsc(t('reminder_custom_minutes_placeholder'))}" aria-label="${wkEsc(t('reminder_custom_minutes_placeholder'))}">`}
         <textarea id="wk-notes" rows="2" maxlength="300" placeholder="${wkEsc(t('workout_notes_ph'))}">${wkEsc(d.notes)}</textarea>
-        <label class="settings-toggle-row wk-routine-row"><span>${wkEsc(t('workout_routine_toggle'))}</span><span class="switch"><input type="checkbox" id="wk-in-routine"${d.inRoutine ? ' checked' : ''}><span class="slider"></span></span></label>`}
+        ${pv ? '' : `<label class="settings-toggle-row wk-routine-row"><span>${wkEsc(t('workout_routine_toggle'))}</span><span class="switch"><input type="checkbox" id="wk-in-routine"${d.inRoutine ? ' checked' : ''}><span class="slider"></span></span></label>`}`}
         <div class="action-buttons-wrap wk-editor-actions">
-            <button type="button" class="btn-primary" data-wk-save>${wkEsc(t('save_generic'))}</button>
+            <button type="button" class="btn-primary" data-wk-save>${wkEsc(t(pv ? 'workout_pv_save' : 'save_generic'))}</button>
             ${d.id ? `<button type="button" class="btn-clear-specific wk-delete" data-wk-delete>✕ ${wkEsc(t('workout_delete_btn'))}</button>` : ''}
-            <button type="button" class="btn-clear-specific" onclick="closeModal('modal-workout-plan')">${wkEsc(t('close_btn'))}</button>
+            ${pv ? `<button type="button" class="btn-clear-specific" data-wk-pv-back>${wkEsc(t('cancel_btn'))}</button>` : `<button type="button" class="btn-clear-specific" onclick="closeModal('modal-workout-plan')">${wkEsc(t('close_btn'))}</button>`}
         </div>`;
     if (typeof nmTimePickHandlers !== 'undefined') nmTimePickHandlers.workout = v => {
         workoutDraft.time = v;
@@ -1483,6 +1564,8 @@ function renderWorkoutEditor() {
         if (names.length) names[names.length - 1].focus();
     });
     box.querySelector('[data-wk-save]').addEventListener('click', saveWorkoutDraft);
+    const pvBack = box.querySelector('[data-wk-pv-back]');
+    if (pvBack) pvBack.addEventListener('click', wkPvBack);
     const del = box.querySelector('[data-wk-delete]');
     if (del) del.addEventListener('click', () => {
         closeModal('modal-workout-plan');
@@ -1518,6 +1601,19 @@ async function saveWorkoutDraft() {
     const rest = d.kind === 'rest';
     const duration = parseInt(d.duration, 10);
     if (!rest && !(duration > 0)) { showAppToast(t('workout_missing_duration'), 'error'); const inp = document.getElementById('wk-duration'); if (inp) inp.focus(); return; }
+    // עריכה מהתצוגה המקדימה של תוכנית מוכנה / AI: חוזר לתצוגה, עדיין לא בטבלה
+    if (d.previewIdx != null) {
+        const w = wkAi && wkAi.plan && wkAi.plan.workouts[d.previewIdx];
+        if (w) Object.assign(w, {
+            kind: d.kind, custom_name: d.kind === 'custom' ? d.custom_name : null, days: [...d.days].sort((a, b) => a - b),
+            time: rest ? null : (d.time || null), duration_minutes: rest ? null : duration, intensity: rest ? null : (d.intensity || null),
+            place: rest ? null : (d.place || null), notes: rest ? null : (d.notes.trim() || null),
+            exercises: !rest && wkHasExercises({ kind: d.kind }) ? d.exercises.filter(e => e.name).map(e => ({ name: e.name, sets: parseInt(e.sets, 10) || '', reps: e.reps || '' })) : null,
+        });
+        if (wkAi && wkAi.sel) wkAi.sel.add(d.previewIdx);
+        wkPvBack();
+        return;
+    }
     const reminderMinutes = rest ? 0 : (Number(d.reminder) > 0 ? Math.min(1440, Math.round(Number(d.reminder))) : 0);
     if (reminderMinutes && !d.time) { showAppToast(t('workout_reminder_need_time'), 'error'); const tb = document.getElementById('wk-time-btn'); if (tb) tb.focus(); return; }
     if (!rest && d.inRoutine && !d.time) { showAppToast(t('workout_routine_need_time'), 'error'); const tb = document.getElementById('wk-time-btn'); if (tb) tb.focus(); return; }

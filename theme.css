@@ -13161,6 +13161,140 @@ html.light-mode .ic-heart { color: #8b5cf6; filter: none; }
 .hamburger-drawer-item-icon .ic-dumbbell { width: 1.3rem; height: 1.3rem; }
 .categories-tile-icon .ic-dumbbell { width: 1.3em; height: 1.3em; margin-inline: auto; }
 
+/* 🏋️ סוגי האימון בעורך - יורדים שורה במקום שורה אחת שנחתכת (בקשה מפורשת: "אי אפשר לגרור... להגיע לאחר") */
+.wk-kinds { flex-wrap: wrap; }
+.wk-kinds .ai-brain-tab { flex: 1 1 auto; min-width: 66px; }
+/* "האימונים שלי" לכל הרוחב במחשב, והרישום מתחת (בקשה מפורשת 2026-11-26) */
+@media (min-width: 1024px) {
+    #sport-section.active-tab > #workout-plan-card { grid-column: 1 / -1; }
+}
+/* 📋 תצוגה מקדימה של תוכנית מוכנה / AI: ✓ לבחור, ✏️ לערוך לפני */
+.wk-pv-list { list-style: none; margin: 4px 0 6px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 8px; }
+.wk-pv { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 6px 8px; align-items: start; padding: 10px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--wk-c, var(--accent-purple)) 40%, var(--border-color)); background: color-mix(in srgb, var(--wk-c, var(--accent-purple)) 9%, var(--bg-row)); transition: opacity .2s ease; }
+.wk-pv.is-off { opacity: .5; }
+.wk-pv.is-rest { border-style: dashed; }
+.wk-pv-check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--wk-c, var(--accent-purple)); background: transparent; color: #fff; display: grid; place-items: center; padding: 0; cursor: pointer; }
+.wk-pv-check[aria-pressed="true"] { background: var(--wk-c, var(--accent-purple)); }
+.wk-pv-check .wk-ico { width: 15px; height: 15px; }
+.wk-pv-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.wk-pv-name { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: .9rem; color: var(--text-primary); overflow-wrap: anywhere; }
+.wk-pv-days { font-size: .78rem; color: var(--text-secondary); }
+.wk-pv-ex { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: .78rem; color: var(--text-primary); }
+.wk-pv-ex li { display: flex; justify-content: space-between; gap: 8px; border-top: 1px dashed var(--border-color); padding-top: 2px; }
+.wk-pv-ex li span { min-width: 0; overflow-wrap: anywhere; }
+.wk-pv-ex bdi { color: var(--text-secondary); flex-shrink: 0; }
+/* השבוע בתצוגה המקדימה: עמודת יום רחבה יותר (שמות ימים ארוכים) ושמות שיורדים שורה במקום להיחתך */
+.wk-line.wk-ai-line .wk-row { grid-template-columns: 46px 22px 36px minmax(0, 1fr) 4px; }
+.wk-line.wk-ai-line::before { inset-inline-start: 56px; }
+.wk-line.wk-ai-line .wk-day { font-size: .74rem; line-height: 1.1; }
+.wk-ai-line .wk-row-name { white-space: normal; overflow: visible; text-overflow: clip; flex: 1 1 auto; }
+/* מקום / עצימות בעורך האימון - יורדים שורה כמו סוגי האימון */
+.wk-editor-sheet .color-filter-picker { flex-wrap: wrap; }
+.wk-pv-edit { grid-column: 2; justify-self: start; display: inline-flex; align-items: center; gap: 4px; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-sheet); color: var(--text-primary); font: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.wk-pv-edit .wk-ico { width: 13px; height: 13px; }
+
+/* 🏋️ יומן המתאמנים (workout-log.js) */
+.wl-big-btn { width: 100%; }
+.wl-card-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.wl-card-row .wk-more-btn { flex: 1 1 auto; justify-content: center; }
+.wl-ic { width: 18px; height: 18px; flex-shrink: 0; color: var(--accent-purple, #a78bfa); }
+.wl-ov { position: fixed; inset: 0; z-index: 1500; background: rgba(0, 0, 0, .55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: flex; justify-content: center; }
+.phone-wrapper:has(.wl-ov) .hamburger-fab, .phone-wrapper:has(.wl-ov) #btn-ai-brain-fab { display: none !important; }
+.wl-sheet { position: relative; width: 100%; max-width: 720px; height: 100%; background: var(--bg-sheet); color: var(--text-primary); display: flex; flex-direction: column; box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); }
+.wl-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border-color); }
+.wl-x, .wl-menu-btn { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: 1rem; cursor: pointer; padding: 0; display: grid; place-items: center; }
+.wl-name { flex: 1; min-width: 0; font: inherit; font-weight: 800; font-size: 1rem; background: transparent; border: none; border-bottom: 1px dashed var(--border-color); color: var(--text-primary); padding: 4px 2px; border-radius: 0; }
+.wl-clock { flex: none; font-variant-numeric: tabular-nums; font-weight: 800; color: var(--accent-purple, #a78bfa); min-width: 3.2em; text-align: center; direction: ltr; }
+.wl-finish { flex: none; width: auto !important; padding: 8px 14px !important; margin: 0 !important; }
+.wl-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 12px 110px; display: flex; flex-direction: column; gap: 12px; }
+.wl-quick { display: flex; gap: 6px; }
+.wl-quick-in { flex: 1; min-width: 0; }
+.wl-quick-btn { flex: none; padding: 0 14px; border-radius: 12px; border: 1px solid var(--accent-purple, #a78bfa); background: color-mix(in srgb, var(--accent-purple, #a78bfa) 16%, transparent); color: var(--text-primary); font: inherit; font-weight: 800; cursor: pointer; }
+.wl-empty { margin: 8px 0; color: var(--text-secondary); text-align: center; font-size: .9rem; }
+.wl-ex { position: relative; padding: 10px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--bg-row); }
+.wl-ex.is-ss { border-inline-start: 4px solid var(--accent-purple, #a78bfa); }
+.wl-ex.is-ss-next { margin-top: -8px; border-start-start-radius: 4px; border-start-end-radius: 4px; }
+.wl-ss-tag { display: inline-block; margin-bottom: 4px; padding: 1px 8px; border-radius: 999px; font-size: .7rem; font-weight: 800; background: color-mix(in srgb, var(--accent-purple, #a78bfa) 22%, transparent); color: var(--text-primary); }
+.wl-ex-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.wl-ex-ic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: color-mix(in srgb, var(--accent-purple, #a78bfa) 14%, transparent); flex: none; }
+.wl-ex-name { flex: 1; min-width: 0; text-align: start; background: none; border: none; padding: 0; font: inherit; font-weight: 800; font-size: .95rem; color: var(--text-primary); cursor: pointer; overflow-wrap: anywhere; }
+.wl-ex-more { flex: none; width: 30px; height: 30px; border-radius: 50%; border: none; background: transparent; color: var(--text-secondary); font: inherit; font-size: 1.1rem; cursor: pointer; padding: 0; }
+.wl-pr { flex: none; padding: 2px 8px; border-radius: 999px; font-size: .7rem; font-weight: 800; color: #3b2a00; background: linear-gradient(135deg, #fde68a, #f59e0b); }
+.wl-grid, .wl-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) 62px 54px 38px; gap: 6px; align-items: center; }
+.wl-grid-head { font-size: .68rem; font-weight: 800; color: var(--text-secondary); text-align: center; margin-bottom: 2px; }
+.wl-grid-head span { min-width: 0; line-height: 1.15; }
+.wl-row { position: relative; padding: 3px 0; border-radius: 10px; transition: background .2s ease; }
+.wl-row.is-done { background: color-mix(in srgb, #4ade80 16%, transparent); }
+.wl-row.is-pr { background: color-mix(in srgb, #f59e0b 20%, transparent); }
+.wl-tag { height: 30px; border-radius: 9px; border: 1px solid var(--border-color); background: var(--bg-sheet); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; padding: 0; }
+.wl-tag-w { background: color-mix(in srgb, #fbbf24 22%, var(--bg-sheet)); }
+.wl-tag-f { background: color-mix(in srgb, var(--accent-purple, #a78bfa) 30%, var(--bg-sheet)); }
+.wl-tag-d { background: color-mix(in srgb, #60a5fa 26%, var(--bg-sheet)); }
+.wl-prev { height: 30px; min-width: 0; border: none; background: transparent; color: var(--text-secondary); font: inherit; font-size: .8rem; cursor: pointer; padding: 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-prev:disabled { cursor: default; opacity: .6; }
+.wl-in { width: 100%; height: 32px; box-sizing: border-box; text-align: center; padding: 0 4px !important; margin: 0 !important; font-weight: 700; direction: ltr; background: var(--bg-sheet) !important; border: 1px solid var(--border-color) !important; border-radius: 9px !important; color: var(--text-primary) !important; }
+.wl-in:focus { border-color: var(--accent-purple, #a78bfa) !important; outline: none; }
+.wl-cell-empty { display: block; }
+.wl-ok { width: 34px; height: 30px; justify-self: center; border-radius: 9px; border: 1px solid var(--border-color); background: var(--bg-sheet); color: transparent; font: inherit; font-weight: 900; cursor: pointer; padding: 0; }
+.wl-ok[aria-pressed="true"] { background: #22c55e; border-color: #22c55e; color: #fff; }
+.wl-add-set { width: 100%; margin-top: 6px; padding: 7px; border-radius: 10px; border: 1px dashed var(--border-color); background: transparent; color: var(--text-primary); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.wl-add-ex { width: 100%; }
+.wl-burst { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.wl-rest { position: absolute; inset-inline: 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px 14px; border-radius: 16px; background: color-mix(in srgb, var(--accent-purple, #a78bfa) 22%, var(--bg-sheet)); border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 50%, transparent); box-shadow: 0 8px 30px rgba(0, 0, 0, .35); overflow: hidden; }
+.wl-rest-label { font-size: .8rem; font-weight: 700; color: var(--text-secondary); }
+.wl-rest b { font-size: 1.3rem; font-variant-numeric: tabular-nums; flex: 1; }
+.wl-rest-bar { position: absolute; inset-inline-start: 0; bottom: 0; height: 4px; background: var(--accent-purple, #a78bfa); transition: width .5s linear; }
+.wl-rest-btn { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-sheet); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 800; cursor: pointer; }
+.wl-pop { position: fixed; inset: 0; z-index: 1600; background: rgba(0, 0, 0, .5); display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
+.wl-pop-card { width: 100%; max-width: 460px; max-height: 86vh; overflow-y: auto; overflow-x: hidden; padding: 16px; border-radius: 20px; background: var(--bg-sheet); border: 1px solid var(--border-color); color: var(--text-primary); box-shadow: 0 10px 40px rgba(0, 0, 0, .5); display: flex; flex-direction: column; gap: 10px; box-sizing: border-box; }
+.wl-pop-card h3 { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 1.05rem; overflow-wrap: anywhere; }
+.wl-pop-card > .btn-clear-specific, .wl-pop-card > .btn-secondary { width: 100%; margin: 0; }
+.wl-pop.is-picker .wl-pop-card { height: 86vh; }
+.wl-pick-search { width: 100%; box-sizing: border-box; margin: 0 !important; }
+.wl-pick-groups, .wl-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.wl-chip { padding: 6px 11px; border-radius: 999px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.wl-chip.is-on { background: color-mix(in srgb, var(--accent-purple, #a78bfa) 26%, transparent); border-color: var(--accent-purple, #a78bfa); }
+.wl-pick-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; min-height: 0; }
+.wl-pick-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border-radius: 12px; border: 1px solid transparent; background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .9rem; text-align: start; cursor: pointer; }
+.wl-pick-item span { flex: 1; display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.wl-pick-item small { color: var(--text-secondary); font-size: .74rem; }
+.wl-pick-item.is-other { border-style: dashed; border-color: var(--border-color); }
+.wl-tpl-row { display: flex; align-items: center; gap: 6px; }
+.wl-tpl-row .wl-pick-item { flex: 1; min-width: 0; }
+.wl-tpl-act { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; cursor: pointer; padding: 0; }
+.wl-menu { display: flex; flex-direction: column; gap: 6px; }
+.wl-menu button { width: 100%; padding: 11px 12px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; font-size: .9rem; font-weight: 700; text-align: start; cursor: pointer; }
+.wl-label { display: block; font-size: .78rem; font-weight: 800; color: var(--text-secondary); }
+.wl-pl-input { width: 100%; box-sizing: border-box; margin: 0 !important; text-align: center; font-weight: 800; direction: ltr; }
+.wl-pl-out { display: flex; flex-direction: column; gap: 6px; }
+.wl-plates { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; min-height: 76px; padding: 6px; border-radius: 12px; background: var(--bg-row); direction: ltr; }
+.wl-plate { display: grid; place-items: center; width: 34px; height: var(--h, 40px); border-radius: 6px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent-purple, #a78bfa) 70%, #fff), var(--accent-purple, #a78bfa)); color: #fff; font-size: .72rem; font-weight: 900; }
+.wl-pl-rest { margin: 0; font-size: .8rem; color: var(--text-secondary); text-align: center; }
+.wl-graph { width: 100%; height: auto; color: var(--accent-purple, #a78bfa); background: var(--bg-row); border-radius: 12px; }
+.wl-graph-best { margin: 0; font-weight: 800; text-align: center; }
+.wl-graph-list, .wl-sum-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.wl-graph-list li, .wl-sum-list li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 8px; border-radius: 10px; background: var(--bg-row); font-size: .84rem; }
+.wl-sum-list li span { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.wl-sum-list li bdi { color: var(--text-secondary); text-align: end; }
+.wl-sum { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.wl-sum div { display: flex; flex-direction: column; align-items: center; padding: 10px 4px; border-radius: 14px; background: color-mix(in srgb, var(--accent-purple, #a78bfa) 14%, var(--bg-row)); min-width: 0; }
+.wl-sum b { font-size: 1.25rem; }
+.wl-sum span { font-size: .74rem; color: var(--text-secondary); text-align: center; overflow-wrap: anywhere; }
+.wl-sum-prs { margin: 0; padding: 8px 10px; border-radius: 12px; background: color-mix(in srgb, #f59e0b 18%, transparent); font-size: .84rem; }
+.wl-tpl-q { margin: 0; font-size: .92rem; }
+.wl-discard { width: 100%; margin: 4px 0 0; }
+.wl-hist-line { display: block; }
+.wl-again-btn { align-self: flex-start; margin-top: 4px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--accent-purple, #a78bfa); background: color-mix(in srgb, var(--accent-purple, #a78bfa) 14%, transparent); color: var(--text-primary); font: inherit; font-size: .76rem; font-weight: 800; cursor: pointer; }
+.wl-sheet .wk-pro-note { margin-top: 0; }
+.wk-today:has(.wk-wl-link) { grid-template-areas: "when when" "icon name" "icon meta" "ex ex" "list list" "wl wl" "actions actions"; }
+/* שמות ימים ארוכים (ערבית, אורדו, הינדי, בנגלית, יורובה) ושמות אימון ארוכים - בלי חיתוך */
+.wk-line .wk-row { grid-template-columns: 44px 22px 50px minmax(0, 1fr) 34px; }
+.wk-line::before { inset-inline-start: 54px; }
+.wk-line .wk-day { font-size: .76rem; line-height: 1.1; }
+.wk-line .wk-row-name { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: break-word; }
+.wk-wl-link { grid-area: wl; justify-self: start; display: inline-flex; align-items: center; gap: 6px; align-self: center; margin: 2px auto 8px; padding: 7px 14px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 55%, transparent); background: color-mix(in srgb, var(--accent-purple, #a78bfa) 14%, transparent); color: var(--text-primary); font: inherit; font-size: .84rem; font-weight: 800; cursor: pointer; max-width: 100%; }
+.wk-wl-link .wk-ico { width: 16px; height: 16px; color: var(--accent-purple, #a78bfa); flex-shrink: 0; }
+
 /* 🎨 הסימן שקובץ העיצוב נטען עד הסוף (ר' __cssGuard ב-index.html): מחזיר את המסך ומסתיר את מסך ה-↻.
    להשאיר בסוף הקובץ - כללים חדשים להוסיף מעליו */
 html body { visibility: visible; }
