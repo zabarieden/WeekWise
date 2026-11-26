@@ -13052,6 +13052,71 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .hamburger-drawer-item.menu-pop { animation: menuPop .26s ease both; animation-delay: calc(var(--n, 0) * 30ms); }
 @keyframes menuPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .hamburger-drawer-item.menu-pop { animation: none; } .menu-fold-head::after { transition: none; } }
+/* 🏆 "ההתקדמות שלי" - לשונית "הישגים" בתוך "היעדים שלי" (progress.js, גרסה 3 שבחרה 2026-11-26): גרדיאנט ורוד-סגול-כחול וזכוכית */
+.gv-tabs { display: flex; gap: 6px; padding: 4px; margin: 0 0 12px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 6%, transparent); border: 1px solid color-mix(in srgb, var(--text-primary) 10%, transparent); }
+.gv-tab { flex: 1 1 0; min-width: 0; padding: 8px 10px; border: none; border-radius: 999px; background: none; color: var(--text-secondary); font: inherit; font-size: .9rem; font-weight: 800; cursor: pointer; overflow-wrap: anywhere; }
+.gv-tab.is-on { color: #fff; background: linear-gradient(120deg, #f472b6, #a78bfa 55%, #60a5fa); box-shadow: 0 4px 14px rgba(167, 139, 250, .35); }
+.gv-tab:focus-visible { outline: 2px solid var(--accent-purple, #a78bfa); outline-offset: 2px; }
+#goals-view-scroll.is-progress > :not(.gv-tabs):not(#gv-progress) { display: none !important; }
+.gv-progress { display: flex; flex-direction: column; gap: 12px; padding-bottom: 24px; }
+.pg-loading { height: 160px; border-radius: 20px; background: linear-gradient(100deg, color-mix(in srgb, var(--text-primary) 5%, transparent) 30%, color-mix(in srgb, var(--text-primary) 11%, transparent) 50%, color-mix(in srgb, var(--text-primary) 5%, transparent) 70%); background-size: 200% 100%; animation: pgShimmer 1.4s linear infinite; }
+@keyframes pgShimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+.pg-hero { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: 22px; background: linear-gradient(140deg, rgba(167, 139, 250, .28), rgba(244, 114, 182, .18) 60%, rgba(96, 165, 250, .2)); border: 1px solid color-mix(in srgb, var(--text-primary) 14%, transparent); }
+.pg-hero .ach-trophy.is-hero { width: 56px; height: 56px; flex-shrink: 0; filter: drop-shadow(0 0 10px rgba(245, 185, 58, .55)); }
+.pg-hero-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pg-big { font-size: 2.1rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; color: var(--text-primary); }
+.pg-label, .pg-next { font-size: .8rem; color: var(--text-secondary); overflow-wrap: anywhere; }
+.pg-level { font-size: 1.05rem; margin-top: 3px; color: var(--text-primary); overflow-wrap: anywhere; }
+.pg-info { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-inline-start: 3px; padding: 0; border-radius: 50%; border: none; vertical-align: 1px; font: italic 800 .66rem/1 Georgia, serif; color: #fff; background: color-mix(in srgb, var(--text-secondary) 55%, transparent); cursor: pointer; }
+.pg-info[aria-expanded="true"] { background: linear-gradient(135deg, #f472b6, #a78bfa); }
+.pg-bubble { margin: -4px 0 0; padding: 10px 12px; border-radius: 14px; font-size: .84rem; line-height: 1.55; color: var(--text-primary); background: color-mix(in srgb, #a78bfa 14%, transparent); border: 1px solid color-mix(in srgb, #f472b6 40%, transparent); }
+.pg-road { position: relative; padding: 4px 2px 0; }
+.pg-lane { position: absolute; inset-inline: 16px; top: 15px; height: 8px; border-radius: 99px; background: color-mix(in srgb, var(--text-primary) 12%, transparent); overflow: hidden; }
+.pg-lane i { position: absolute; inset-inline-start: 0; top: 0; bottom: 0; border-radius: inherit; background: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa); }
+.pg-signs { position: relative; display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); }
+.pg-sign { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 0; border: none; background: none; color: inherit; font: inherit; cursor: pointer; }
+.pg-dot { width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; background: color-mix(in srgb, var(--text-primary) 14%, var(--bg-card, #1d1236)); border: 2px solid color-mix(in srgb, var(--text-primary) 28%, transparent); }
+.pg-sign.is-done .pg-dot { background: linear-gradient(135deg, #f472b6, #60a5fa); border-color: #fff; }
+.pg-sign.is-now .pg-dot { width: 24px; height: 24px; margin-top: -1px; background: linear-gradient(135deg, #f472b6, #a78bfa, #60a5fa); border-color: #fff; box-shadow: 0 0 0 4px rgba(244, 114, 182, .3), 0 0 14px rgba(167, 139, 250, .8); }
+.pg-sign small { font-size: .66rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.pg-sign.is-fog { opacity: .5; }
+.pg-run { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding: 10px 12px; border-radius: 16px; font-size: .84rem; color: var(--text-primary); background: color-mix(in srgb, var(--text-primary) 6%, transparent); border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent); }
+.pg-run > span:last-child { color: var(--text-secondary); }
+.pg-cal { padding: 10px; border-radius: 18px; background: color-mix(in srgb, var(--text-primary) 5%, transparent); border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent); }
+.pg-cal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: var(--text-primary); font-size: .9rem; }
+.pg-cal-nav { width: 30px; height: 30px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--text-primary) 15%, transparent); background: none; color: var(--text-primary); font: inherit; font-size: 1.1rem; line-height: 1; cursor: pointer; }
+.pg-cal-nav:disabled { opacity: .3; cursor: default; }
+.pg-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.pg-cal-grid span { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-size: .7rem; color: var(--text-secondary); background: color-mix(in srgb, var(--text-primary) 5%, transparent); font-variant-numeric: tabular-nums; }
+.pg-cal-wd span { aspect-ratio: auto; background: none; font-weight: 800; font-size: .66rem; }
+.pg-cal-grid .pg-cal-pad { background: none; }
+.pg-cal-grid .is-p { color: #fff; font-weight: 800; background: linear-gradient(135deg, rgba(244, 114, 182, .85), rgba(96, 165, 250, .85)); }
+.pg-cal-grid .is-rest { color: var(--text-primary); background: color-mix(in srgb, #a78bfa 22%, transparent); border: 1px dashed color-mix(in srgb, var(--text-primary) 45%, transparent); }
+.pg-cal-grid .is-today { box-shadow: 0 0 0 2px #f5b93a; }
+.pg-sub { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 10px; margin: 6px 0 0; font-size: .95rem; color: var(--text-primary); }
+.pg-sub small { font-size: .74rem; font-weight: 500; color: var(--text-secondary); }
+.pg-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.pg-tile { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; padding: 14px 8px 10px; border-radius: 18px; text-align: center; color: var(--text-primary); font: inherit; cursor: pointer; overflow: hidden; background: color-mix(in srgb, var(--text-primary) 6%, transparent); border: 1px solid color-mix(in srgb, var(--text-primary) 13%, transparent); }
+.pg-tile.is-wide { grid-column: 1 / -1; }
+.pg-tile .ach-trophy.is-tile { width: 28px; height: 28px; }
+.pg-tile.is-new .ach-trophy.is-tile { opacity: .45; filter: grayscale(.6); }
+.pg-tile b { font-size: .84rem; line-height: 1.25; overflow-wrap: anywhere; }
+.pg-tile-st { font-size: .72rem; line-height: 1.3; color: var(--text-secondary); overflow-wrap: anywhere; }
+.pg-times { position: absolute; top: 7px; inset-inline-start: 7px; padding: 1px 7px; border-radius: 999px; font-size: .68rem; font-weight: 900; color: #ffe7a8; background: rgba(245, 185, 58, .22); border: 1px solid rgba(245, 185, 58, .5); font-variant-numeric: tabular-nums; }
+.pg-tile.is-new .pg-times { color: var(--text-secondary); background: none; border-color: color-mix(in srgb, var(--text-primary) 18%, transparent); }
+.pg-tile.is-got { border-color: rgba(245, 185, 58, .65); box-shadow: 0 0 18px rgba(245, 185, 58, .22) inset; }
+.pg-tile.is-got::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .16) 50%, transparent 65%); transform: translateX(-100%); animation: pgShine 3.4s ease-in-out infinite; }
+@keyframes pgShine { 0%, 40% { transform: translateX(-100%); } 70%, 100% { transform: translateX(100%); } }
+.pg-dots { display: grid; grid-template-columns: repeat(7, 15px); gap: 3px; justify-content: center; }
+.pg-dots i { height: 15px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-size: .5rem; font-weight: 800; color: var(--text-secondary); background: color-mix(in srgb, var(--text-primary) 10%, transparent); }
+.pg-dots i.on { color: #fff; background: linear-gradient(135deg, #f472b6, #60a5fa); }
+.pg-dots i.later { background: none; border: 1px dashed color-mix(in srgb, var(--text-primary) 22%, transparent); }
+.pg-tile.is-goal { padding-top: 12px; }
+html.light-mode .pg-times { color: #8a5a00; }
+@media (prefers-reduced-motion: reduce) { .pg-tile.is-got::after, .pg-loading { animation: none; } }
+/* 🏋️ "כדאי להתייעץ עם מאמן כושר מוסמך" ליד תרגילים ותוכניות (WK_PRO_NOTE ב-workouts.js) */
+.wk-pro-note { margin: 8px 0 4px; font-size: .76rem; line-height: 1.5; color: var(--text-secondary); text-align: start; }
+.wk-pro-note span { color: var(--accent-purple, #a78bfa); font-weight: 800; }
 /* 💜 → לב סגול מצויר, ריק מבפנים (withDrawnHeart ב-app.js) */
 .ic-heart { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -0.16em; color: #a78bfa; filter: drop-shadow(0 0 4px rgba(167, 139, 250, .55)); flex-shrink: 0; }
 html.light-mode .ic-heart { color: #8b5cf6; filter: none; }

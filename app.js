@@ -2232,8 +2232,8 @@ const APP_TOUR_STEPS = [
     { id: 'g_change', ch: 'goals', ctx: 'goals', icon: '🔄', target: '#gv-change-btn', titleKey: 'chg_title', text: 'apptour_g_change_text', when: () => !!document.getElementById('gv-change-btn') },
     // 📚 ספריית היעדים עצמה - נפתחת בסיור ומראה את הנושאים (לפי בקשה מפורשת, 2026-10-20)
     { id: 'g_lib', ch: 'goals', ctx: 'goals', glib: true, icon: '📚', target: '#goals-library .glib-grid .glib-tile', titleKey: 'glib_title', text: 'apptour_g_lib_text' },
-    // 🏅 ההישגים שלי - פריט חדש בתפריט, מיד אחרי היעדים (2026-11-15)
-    { id: 'm_achievements', ch: 'menu', ctx: 'menu', target: '[data-tour="m-achievements"]', text: 'apptour_m_achievements_text' },
+    // 🏆 "הישגים" - לשונית בתוך "היעדים שלי" (גרסה 3, 2026-11-26: במקום פריט נפרד בתפריט)
+    { id: 'g_progress', ch: 'goals', ctx: 'goals', icon: '🏆', target: '#gv-tabs [data-gv-tab="progress"]', titleKey: 'prog_tab_progress', text: 'apptour_m_achievements_text' },
     // 📚 פינת קריאה עברה מ"רשימות" ל"יעדים והתקדמות" (לפי בקשה מפורשת, 2026-11-26) - גם בסיור, לפי סדר התפריט
     { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
@@ -10806,11 +10806,11 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_books', ids: ['books_what', 'books_deadline', 'books_home_chip', 'book_quotes'] },
     { tab: 'general', head: 'faq_cat_myweek', ids: ['add_myweek_task', 'myweek_reminder', 'reminder_snooze', 'move_task_between_days', 'calendar_goals_reading', 'weekly_table', 'cal_views', 'cal_settings', 'cal_details', 'cal_calendars', 'cal_repeat_more', 'cal_reminders', 'cal_search_free', 'cal_drag_undo', 'task_not_done_by_eod'] },
     { tab: 'general', head: 'faq_cat_glance', ids: ['what_is_glance', 'add_onetime_event', 'meetings', 'delete_series_history', 'edit_single_occurrence'] },
-    { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
+    { tab: 'general', head: 'faq_cat_sport_water', ids: ['custom_sport_type', 'sport_photo', 'sport_workout_plan', 'workout_pro', 'sport_workout_jar', 'sport_workout_today', 'sport_workout_board', 'sport_workout_share', 'sport_workout_reminder', 'sport_workout_gcal', 'workout_calories', 'steps_in_sport', 'water_month'] },
     { tab: 'general', head: 'faq_cat_nutrition', ids: ['food_variety', 'food_list_languages', 'multi_food_separator', 'restaurant_calorie_accuracy', 'chain_data_source', 'save_meal_preset', 'saved_meals_page', 'recipes_gallery', 'recipe_examples', 'recipe_grams', 'recipe_to_preset', 'quick_add_preset_fab', 'quick_add_food_fab', 'edit_delete_nutrition_entry', 'daily_nutrition_goals', 'calorie_monthly_view', 'calorie_stats_total_vs_average', 'weight_note', 'water_more'] },
     { tab: 'general', head: 'faq_cat_finance', ids: ['finance_ai_add', 'finance_cat_budget', 'finance_cycle_day', 'finance_recurring', 'finance_custom_categories', 'receipts_feature', 'receipts_total', 'finance_monthly_balance'] },
-    { tab: 'general', head: 'faq_cat_goals', ids: ['goal_edit', 'change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
-    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes', 'badge_week', 'achievements'] },
+    { tab: 'general', head: 'faq_cat_goals', ids: ['achievements', 'goal_edit', 'change_flow', 'goal_small_steps', 'goal_friend', 'goal_library', 'glib_friends', 'monthly_goal_explain', 'vision_board_today', 'goal_days_challenge', 'goal_tasks_peek'] },
+    { tab: 'premium', head: null, ids: ['premium_benefits', 'cancel_subscription', 'ai_monthly_limits', 'sparkle_themes'] },
     // כל מה שעובד עם AI - כולו חלק מפרימיום (עם כמה ניסיונות חינם)
     { tab: 'premium', head: 'faq_cat_ai', ids: ['which_ai_button', 'ai_chat', 'ai_money', 'ai_chat_food_fix', 'ai_edit_or_delete', 'ai_phrasing_tips', 'ai_mixed_request', 'ai_bounded_duration', 'ai_reminder_in_text', 'ai_local_fallback', 'daily_focus_prompt', 'smart_split', 'sport_workout_ai', 'table_ai_builder', 'photo_scan_recipe', 'recipe_scan_multi', 'food_not_fried_default'] },
     { tab: 'new_me', head: 'faq_cat_nm_plan', ids: ['new_me_what', 'new_me_preview', 'new_me_plans', 'new_me_tour', 'nm_me1_guide', 'new_me_home_btn', 'new_me_no_ai', 'new_me_weight_optional', 'new_me_magic_themes'] },

@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=676" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=678" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -1579,10 +1579,6 @@
                         <span class="hamburger-drawer-item-icon">🎯</span>
                         <span class="hamburger-drawer-item-title" data-i18n="vision_board_menu_label">My Goals</span>
                     </button>
-                    <button type="button" data-tour="m-achievements" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openAchievements();">
-                        <span class="hamburger-drawer-item-icon">🏅</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="ach_title">My achievements</span>
-                    </button>
                     <!-- 📚 פינת קריאה - כאן ולא ב"רשימות" (לפי בקשה מפורשת, 2026-11-26): יש בה יעדי קריאה ותאריכים -->
                     <button type="button" data-tour="m-books" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openBooksSection();">
                         <span class="hamburger-drawer-item-icon">📚</span>
@@ -1689,6 +1685,12 @@
                     </button>
                 </div>
                 <div class="gv-scroll" id="goals-view-scroll">
+                    <!-- 🏆 "יעדים | הישגים" (הישגים גרסה 3, מקום B שבחרה 2026-11-26) - progress.js -->
+                    <div class="gv-tabs" id="gv-tabs" role="tablist">
+                        <button type="button" role="tab" class="gv-tab is-on" data-gv-tab="goals" aria-selected="true" data-i18n="prog_tab_goals">Goals</button>
+                        <button type="button" role="tab" class="gv-tab" data-gv-tab="progress" aria-selected="false" data-i18n="prog_tab_progress">Achievements</button>
+                    </div>
+                    <div id="gv-progress" class="gv-progress hidden" role="tabpanel"></div>
                     <!-- התאריך של היום (אפשרות 9 שבחרה, 2026-11-15; הפתק הצהוב "בדרך ל-10" נמחק לבקשתה) -->
                     <div class="gv-top-row"><p id="gv-date" class="gv-date"></p><button type="button" id="gv-level-chip" class="gv-level-chip hidden" onclick="openAchievements()"></button></div>
                     <!-- 🔄 "מה מפריע לי" - כפתור משלו בראש "היעדים שלי" (ההחלטה שלה, 2026-11-18) - change.js -->
@@ -4856,10 +4858,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=594"></script>
+    <script src="i18n/core.js?v=596"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=15"></script>
-    <script src="app.js?v=698"></script>
+    <script src="app.js?v=699"></script>
     <script src="calendar-views.js?v=5"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>
@@ -4868,13 +4870,15 @@
     <script src="change.js?v=2"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=5"></script>
-    <script src="workouts.js?v=18"></script>
+    <script src="workouts.js?v=19"></script>
     <!-- 🖼️ כרטיסי שיתוף כתמונה ודפי PDF (10 המקומות, 2026-11-25) - אחרי workouts.js כי משתמש ברקע שלו -->
     <script src="share-cards.js?v=1"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=11"></script>
     <script src="home.js?v=46"></script>
     <script src="water.js?v=3"></script>
+    <!-- 🏆 "ההתקדמות שלי" - לשונית הישגים בתוך "היעדים שלי" (גרסה 3, 2026-11-26) - אחרי water.js ו-workouts.js -->
+    <script src="progress.js?v=1"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=10"></script>

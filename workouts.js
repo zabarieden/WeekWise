@@ -193,6 +193,8 @@ function wkName(row) {
     if (row.kind === 'custom') return row.custom_name || t('workout_kind_custom');
     return t('workout_kind_' + row.kind);
 }
+// 🏋️ "כדאי להתייעץ עם מאמן כושר מוסמך" ליד תרגילים, תוכניות מוכנות ותוכנית ה-AI (לפי בקשה מפורשת, 2026-11-26: "חשוב")
+const WK_PRO_NOTE = () => `<p class="wk-pro-note"><span aria-hidden="true">ⓘ</span> ${wkEsc(t('workout_pro_note'))}</p>`;
 function wkHasExercises(row) { const info = wkKindInfo(row); return !!(info && info.exercises); }
 function wkPlaceLabel(p) {
     if (!p) return '';
@@ -318,6 +320,7 @@ function renderWorkoutPlan() {
                 <span class="wk-empty-icon" aria-hidden="true">${WK_ICONS.dumbbell}</span>
                 <b class="wk-empty-title">${wkEsc(t('workout_empty_title'))}</b>
                 <div class="wk-ready-list">${wkReadyChipsHtml()}</div>
+                ${WK_PRO_NOTE()}
                 <button type="button" class="btn-secondary wk-add-btn" data-wk-add>${wkEsc(t('workout_add_btn'))}</button>
             </div>`;
         wkBindCard(body);
@@ -442,7 +445,7 @@ function wkPanelHtml() {
             </div>`;
     }
     if (workoutPanel === 'ready') {
-        return `<div class="wk-panel" role="group" aria-label="${wkEsc(t('workout_ready_title'))}"><b class="wk-panel-title">${wkEsc(t('workout_ready_title'))}</b><div class="wk-ready-list">${wkReadyChipsHtml()}</div></div>`;
+        return `<div class="wk-panel" role="group" aria-label="${wkEsc(t('workout_ready_title'))}"><b class="wk-panel-title">${wkEsc(t('workout_ready_title'))}</b><div class="wk-ready-list">${wkReadyChipsHtml()}</div>${WK_PRO_NOTE()}</div>`;
     }
     return '';
 }
@@ -1200,6 +1203,7 @@ function renderWorkoutAi() {
         box.innerHTML = `
             ${plan.note ? `<p class="wk-ai-note">${wkEsc(plan.note)}</p>` : ''}
             ${wkAiWeekHtml(plan)}
+            ${WK_PRO_NOTE()}
             <div class="action-buttons-wrap wk-ai-actions is-stacked">${choose ? `
                 <button type="button" class="btn-primary" data-wk-ai-apply="replace">${wkEsc(t('workout_ai_replace'))}</button>
                 <button type="button" class="btn-secondary" data-wk-ai-apply="add">${wkEsc(t('workout_ai_add'))}</button>
@@ -1404,7 +1408,8 @@ function renderWorkoutEditor() {
                 <button type="button" class="wk-ex-del" data-wk-ex-del="${i}" aria-label="${wkEsc(t('workout_ex_delete'))}">${WK_ICONS.x}</button>
             </div>`).join('')}
             <button type="button" class="wk-ex-add" data-wk-ex-add>${wkEsc(t('workout_ex_add'))}</button>
-        </div>` : ''}
+        </div>
+        ${WK_PRO_NOTE()}` : ''}
         <span class="wk-label">${wkEsc(splitLeadingEmoji(t('workout_reminder_label'), '')[1])}</span>
         <div class="color-filter-picker wk-rems">${wkReminderChipsHtml(d)}</div>
         <input type="number" inputmode="numeric" min="1" max="1440" id="wk-rem-custom" class="wk-rem-custom${wkRemIsCustom(d.reminder) ? '' : ' hidden'}" value="${wkRemIsCustom(d.reminder) && d.reminder !== 'custom' ? wkEsc(d.reminder) : ''}" placeholder="${wkEsc(t('reminder_custom_minutes_placeholder'))}" aria-label="${wkEsc(t('reminder_custom_minutes_placeholder'))}">
