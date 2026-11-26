@@ -577,7 +577,7 @@ document.addEventListener('keydown', e => {
 // Me1 מדבר בלי פעלים בהווה (לא "אני אוהב/ת") - כדי שיתאים בכל שפה; למשתמש/ת - תמיד בלשון שמתאימה לכולם
 const NM1_ART = { hello: 'world/me1-hello.webp', dreams: 'world/me1-dreams.webp', joy: 'world/me1-joy.webp', heart: 'world/me1-heart.webp' };
 const NM1_INTRO = [['nm_m1_hi_title', 'nm_m1_hi_text'], [null, 'nm_m1_menu_text'], [null, 'nm_m1_day_text'], [null, 'nm_m1_magic_text'], [null, 'nm_m1_ready_text']];
-const NM1_STEP_LINES = { agree: 'nm_m1_q_agree', about: 'nm_m1_q_about', plan: 'nm_m1_q_plan', times: 'nm_m1_q_times', menu: 'nm_m1_q_menu', letter: 'nm_m1_q_letter' };
+const NM1_STEP_LINES = { agree: 'nm_m1_q_agree', about: 'nm_m1_q_about', plan: 'nm_m1_q_plan', times: 'nm_m1_q_times', names: 'nm_m1_q_names', menu: 'nm_m1_q_menu', letter: 'nm_m1_q_letter' };
 const NM1_TIPS = ['nm_m1_tip_rice', 'nm_m1_tip_love', 'nm_m1_tip_ai'];
 // בלי אימוג'י בשורות של Sky (לפי בקשה מפורשת, 2026-10-21): נורה מצוירת, וחץ קטן שמראה שיש עוד עצה (נגיעה = הבאה)
 const NM1_BULB_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/></svg>';

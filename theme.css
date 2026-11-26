@@ -12902,3 +12902,21 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .calx-rem-other .cal-num-input::-webkit-inner-spin-button, .calx-rem-other .cal-num-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .calx-rem-other .cal-num-input::placeholder { color: var(--text-secondary); opacity: 0.8; }
 :is(html.light-mode, [data-color-theme="bg_white"], [data-color-theme="bg_beige"], [data-color-theme="cotton_candy"], [data-color-theme="sherbet_sky"], [data-color-theme="aurora_pastel"], [data-color-theme="rainbow_mist"]) :is(.calx-rem-other .cal-num-input, .calx-sum-time) { background-color: rgba(0, 0, 0, 0.05); color: var(--accent-purple-text); color-scheme: light; }
+
+/* 🏷️ נוריש+: שעות קבועות / בלי שעות, ו"איך לקרוא לארוחות?" - כרטיס לכל סגנון עם תצוגה של היום */
+.nm-flow-picks { margin-bottom: 14px; }
+.nm-flow-pick { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 84px; text-align: center; }
+.nm-flow-icon { font-size: 1.5rem; line-height: 1; }
+.nm-names-cards { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+.nm-names-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; padding: 12px 14px; border-radius: 18px; border: 1.5px solid var(--border-color); background: var(--bg-row); color: var(--text-primary); font: inherit; text-align: start; cursor: pointer; transition: var(--transition); }
+.nm-names-card.selected { border-color: var(--accent-pink); background: color-mix(in srgb, var(--accent-pink) 14%, var(--bg-row)); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-pink) 10%, transparent); }
+.nm-names-card:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+.nm-names-label { font-weight: 900; font-size: .95rem; }
+.nm-names-preview { font-size: .82rem; color: var(--text-secondary); line-height: 1.45; overflow-wrap: anywhere; }
+.nm-names-card.selected .nm-names-preview { color: var(--text-primary); }
+.nm-names-count { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 6px 0 4px; }
+.nm-names-count .nm-slot-name { margin: 0; }
+.nm-names-stepper { display: inline-flex; align-items: center; gap: 10px; }
+.nm-names-stepper .nm-count-pick { width: 52px; min-height: 46px; }
+.nm-names-stepper .nm-count-pick:disabled { opacity: .35; cursor: default; }
+.nm-names-num { min-width: 26px; text-align: center; font-size: 1.35rem; }
