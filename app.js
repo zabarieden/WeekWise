@@ -2234,6 +2234,8 @@ const APP_TOUR_STEPS = [
     { id: 'g_lib', ch: 'goals', ctx: 'goals', glib: true, icon: '📚', target: '#goals-library .glib-grid .glib-tile', titleKey: 'glib_title', text: 'apptour_g_lib_text' },
     // 🏅 ההישגים שלי - פריט חדש בתפריט, מיד אחרי היעדים (2026-11-15)
     { id: 'm_achievements', ch: 'menu', ctx: 'menu', target: '[data-tour="m-achievements"]', text: 'apptour_m_achievements_text' },
+    // 📚 פינת קריאה עברה מ"רשימות" ל"יעדים והתקדמות" (לפי בקשה מפורשת, 2026-11-26) - גם בסיור, לפי סדר התפריט
+    { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
     { id: 'm_myweek', ch: 'menu', ctx: 'menu', target: '[data-tour="m-myweek"]', text: 'apptour_m_myweek_text', link: 'apptour_m_myweek_link' },
     // ⏰ השגרה שלי - הכפתור שלה עבר מהבית לתפריט (וגם "לערוך את השגרה" ב"היום שלי")
     { id: 'routine', ch: 'menu', ctx: 'menu', target: '[data-tour="m-routine"]', text: 'apptour_routine_text', link: 'apptour_routine_link', optional: true },
@@ -2252,7 +2254,6 @@ const APP_TOUR_STEPS = [
     { id: 'nb_pocket', ch: 'menu', ctx: 'notebooks', icon: '🎒', target: '#notebooks-section .bag-new-pocket', titleKey: 'nb_add_shelf_btn', text: 'apptour_nb_pocket_text', when: () => !!isPremiumUser },
     { id: 'm_notes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-notes"]', text: 'apptour_m_notes_text' },
     { id: 'm_shopping', ch: 'menu', ctx: 'menu', target: '[data-tour="m-shopping"]', text: 'apptour_m_shopping_text', link: 'apptour_m_shopping_link' },
-    { id: 'm_books', ch: 'menu', ctx: 'menu', target: '[data-tour="m-books"]', text: 'apptour_m_books_text', link: 'apptour_m_books_link' },
     { id: 'm_recipes', ch: 'menu', ctx: 'menu', target: '[data-tour="m-recipes"]', text: 'apptour_m_recipes_text', link: 'apptour_m_recipes_link' },
     { id: 'm_presets', ch: 'menu', ctx: 'menu', target: '[data-tour="m-presets"]', text: 'apptour_m_presets_text' },
     { id: 'm_meals', ch: 'menu', ctx: 'menu', target: '[data-tour="m-meals"]', text: 'apptour_m_meals_text', link: 'apptour_m_meals_link' },

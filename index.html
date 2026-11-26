@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=672" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=674" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -1583,6 +1583,11 @@
                         <span class="hamburger-drawer-item-icon">🏅</span>
                         <span class="hamburger-drawer-item-title" data-i18n="ach_title">My achievements</span>
                     </button>
+                    <!-- 📚 פינת קריאה - כאן ולא ב"רשימות" (לפי בקשה מפורשת, 2026-11-26): יש בה יעדי קריאה ותאריכים -->
+                    <button type="button" data-tour="m-books" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openBooksSection();">
+                        <span class="hamburger-drawer-item-icon">📚</span>
+                        <span class="hamburger-drawer-item-title" data-i18n="books_menu_label">Reading Corner</span>
+                    </button>
 
                     <div class="hamburger-drawer-section-title" data-i18n="hamburger_group_planning">Planning &amp; Calendar</div>
                     <button type="button" data-tour="m-myweek" class="hamburger-drawer-item" onclick="navigateFromMenu('schedule-section')">
@@ -1607,10 +1612,6 @@
                     <button type="button" data-tour="m-shopping" class="hamburger-drawer-item" onclick="navigateFromMenu('my-center-section', 'shopping')">
                         <span class="hamburger-drawer-item-icon">🛒</span>
                         <span class="hamburger-drawer-item-title" data-i18n="general_title">Shopping List</span>
-                    </button>
-                    <button type="button" data-tour="m-books" class="hamburger-drawer-item" onclick="closeHamburgerMenu(); openBooksSection();">
-                        <span class="hamburger-drawer-item-icon">📚</span>
-                        <span class="hamburger-drawer-item-title" data-i18n="books_menu_label">Reading Corner</span>
                     </button>
                     <!-- 🪶 היומן מ-New Me - רק למי שבחר/ה להוסיף אותו לתפריט (אפשר רק אחרי שהיומן נפתח בחדר), ר' updateDiaryMenuItem -->
                     <button type="button" class="hamburger-drawer-item hidden" id="hamburger-diary-item" onclick="closeHamburgerMenu(); openDiaryFromMenu();">
@@ -4855,10 +4856,10 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=593"></script>
+    <script src="i18n/core.js?v=594"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=15"></script>
-    <script src="app.js?v=697"></script>
+    <script src="app.js?v=698"></script>
     <script src="calendar-views.js?v=5"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>
@@ -4867,7 +4868,7 @@
     <script src="change.js?v=2"></script>
     <script src="bag.js?v=10"></script>
     <script src="tables.js?v=5"></script>
-    <script src="workouts.js?v=15"></script>
+    <script src="workouts.js?v=16"></script>
     <!-- 🖼️ כרטיסי שיתוף כתמונה ודפי PDF (10 המקומות, 2026-11-25) - אחרי workouts.js כי משתמש ברקע שלו -->
     <script src="share-cards.js?v=1"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->

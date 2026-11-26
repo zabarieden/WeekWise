@@ -130,7 +130,9 @@ function wkDarker(hex, amount = 0.27) {
 }
 // הצבעים מאחור → מלפנים
 function wkMultiColors(color, n) { return n >= 3 ? [color, wkDarker(color, 0.13), wkDarker(color)] : [color, wkDarker(color)]; }
-const WK_MULTI_DX = 3.84, WK_MULTI_DY = 2.88; // ההזזה בין כוכב לכוכב (ביחידות של כוכב 24)
+// ההזזה בין כוכב לכוכב (ביחידות של כוכב 24). הוגדלה (2026-11-26, "לא רואים את ה-2 כוכבים... לבדוק שרואים גם מהנייד"):
+// בגודל של נייד שני הכוכבים נראו ככוכב אחד - עכשיו עדיין חופפים, אבל רואים בבירור שהם שניים
+const WK_MULTI_DX = 6.6, WK_MULTI_DY = 3.9;
 // הכוכבים עצמם (בלי ה-svg) - בפינה (0,0), ברוחב 24 + DX·(n-1) ובגובה 24 + DY·(n-1)
 function wkMultiStarParts(color, n) {
     const cols = wkMultiColors(color, n);
