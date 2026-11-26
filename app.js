@@ -6786,6 +6786,8 @@ async function loadTodayTasks() {
     loadWeekOneTimeEvents();
     const container = document.getElementById('today-tasks-list');
     if (!container) return;
+    // הגדרות היום מהחשבון (גם "בלי שעה" בהתחלה / בסוף) - פעם אחת לכל טעינה
+    if (typeof calLoadServerPrefs === 'function') await calLoadServerPrefs();
     const todayDbDay = dbDaysMap[new Date().getDay()];
     const todayStr = getLocalDateString();
     // + השגרה של היום ("היום שלי" – הצצה להיום והשגרה שלי בציר זמן אחד, ר' home.js)
@@ -6846,7 +6848,7 @@ async function loadTodayTasks() {
         if (checkableItems.length > 0) {
             const celebration = document.createElement('p');
             celebration.className = 'today-tasks-celebration';
-            celebration.textContent = t('today_tasks_all_done_message');
+            celebration.innerHTML = withDrawnHeart(escapeHtmlForReport(t('today_tasks_all_done_message')));
             container.appendChild(celebration);
             // נצנצים על פני כל האפליקציה לרגע החגיגה. הדגל ב-Supabase (לא
             // localStorage) - דווח שהחגיגה חוזרת שוב במחשב אחרי שכבר נראתה
@@ -6887,7 +6889,7 @@ async function loadTodayTasks() {
             const messageKey = viewCount >= 7
                 ? TODAY_TASKS_ROTATING_MESSAGE_KEYS[Math.floor((viewCount - 7) / 2) % TODAY_TASKS_ROTATING_MESSAGE_KEYS.length]
                 : 'today_tasks_still_time_message';
-            encouragement.textContent = t(messageKey);
+            encouragement.innerHTML = withDrawnHeart(escapeHtmlForReport(t(messageKey)));
             container.appendChild(encouragement);
         }
     }
@@ -7088,6 +7090,29 @@ function spawnGentleConfettiBurst(container, count, originX, originY, colors) {
 // גיאומטרי מנותק של כל האפליקציה - לפי בקשה מפורשת אחרי שדווח שזה נראה
 // "נופל מהצד" (זה קרה כי top/left 50% היו יחסית ל-.phone-wrapper כולו,
 // שלא בהכרח ממורכז חזותית מול הכרטיס שבו מופיעה ההודעה בפועל)
+// 💜 → לב סגול מצויר, ריק מבפנים (לפי בקשה מפורשת, 2026-11-26: "לב סגול מצויר כמו הדברים של האפליקציה, ריק מבפנים").
+// רק בטקסט שמוצג במסך (מקבל HTML שכבר עבר escape); בשיתופים בוואטסאפ ה-💜 נשאר
+const HEART_SVG = '<svg class="ic-heart" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20.3s-7.7-4.7-9.4-9.7C1.5 7.2 3.7 4 7.1 4c2.1 0 3.8 1.2 4.9 3 1.1-1.8 2.8-3 4.9-3 3.4 0 5.6 3.2 4.5 6.6-1.7 5-9.4 9.7-9.4 9.7z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/></svg>';
+function withDrawnHeart(html) { return String(html).replace(/\s*💜/gu, ' ' + HEART_SVG); }
+
+// 🎆 כל מה שבשגרה של היום סומן ✓ (או "לא היום") ב"השגרה שלי" - זיקוקים ושורה קטנה עם לב (לפי בקשה מפורשת, 2026-11-26:
+// "בשגרה שלי סיימתי את כל המשימות ולא היו את הזיקוקים"). כל פעם שהפריט האחרון מסומן - גם אחרי ביטול וסימון מחדש
+function routineCheckAllDone() {
+    const body = document.getElementById('daily-board-body');
+    if (!body || !body.isConnected) return;
+    const checks = [...body.querySelectorAll('.daily-board-item-check')];
+    if (!checks.length || !checks.some(b => b.classList.contains('checked'))) return;
+    if (!checks.every(b => b.classList.contains('checked') || b.classList.contains('is-skip'))) return;
+    body.querySelector('.routine-done-banner')?.remove();
+    const banner = document.createElement('div');
+    banner.className = 'routine-done-banner';
+    banner.setAttribute('role', 'status');
+    banner.innerHTML = withDrawnHeart(`${escapeHtmlForReport(t('routine_all_done'))} 💜`);
+    body.prepend(banner);
+    triggerAllDoneSparkles(banner);
+    setTimeout(() => { banner.classList.add('is-leaving'); setTimeout(() => banner.remove(), 600); }, 4200);
+}
+
 function triggerAllDoneSparkles(anchorEl) {
     if (document.getElementById('all-done-sparkles')) return;
     const wrapper = document.querySelector('.phone-wrapper');
@@ -7098,8 +7123,10 @@ function triggerAllDoneSparkles(anchorEl) {
     wrapper.appendChild(overlay);
 
     let originX = null, originY = null;
-    if (anchorEl) {
-        const anchorRect = anchorEl.getBoundingClientRect();
+    // עוגן מוסתר (למשל "היום שלי" סגור כשמסמנים בתוך "השגרה שלי") - גודל 0, והזיקוקים היו נזרקים לפינה
+    // ולא נראים בכלל (דווח 2026-11-26: "לא היו את הזיקוקים"). אז - ממרכז המסך
+    const anchorRect = anchorEl ? anchorEl.getBoundingClientRect() : null;
+    if (anchorRect && (anchorRect.width || anchorRect.height)) {
         const wrapperRect = wrapper.getBoundingClientRect();
         originX = anchorRect.left + anchorRect.width / 2 - wrapperRect.left;
         originY = anchorRect.top + anchorRect.height / 2 - wrapperRect.top;
@@ -10771,7 +10798,7 @@ const HELP_FAQ_GROUPS = [
     { tab: 'general', head: 'faq_cat_start', ids: ['welcome', 'app_tour', 'menu_groups', 'switch_daily_weekly_monthly', 'other_manual_option', 'dictation', 'share_whatsapp', 'share_images', 'app_icon'] },
     // מסך הבית: "היום שלי", חיפוש, פתק מהיר, פוקוס ונגיעות אישיות (ר' home.js)
     { tab: 'general', head: 'faq_cat_home', ids: ['my_day', 'home_search', 'home_note_line', 'home_lists_btn', 'home_focus', 'home_recipes_shortcut', 'home_countdown', 'good_things', 'home_weather', 'home_calorie_badge', 'quick_date_peek'] },
-    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_item_days', 'routine_clash', 'routine_blocks', 'routine_day_note', 'habits_streaks', 'routine_nudge'] },
+    { tab: 'general', head: 'faq_cat_routine', ids: ['daily_board', 'routine_add_templates', 'routine_starter', 'routine_ai', 'routine_day_tabs', 'routine_daysoff', 'routine_exact_time', 'routine_notime_pos', 'routine_all_done', 'routine_item_days', 'routine_clash', 'routine_blocks', 'routine_day_note', 'habits_streaks', 'routine_nudge'] },
     // 🛒 רשימת קניות חכמה (2026-10-20): ↺/✕, משלוח בדרך, מחלקות, כמות ושיתוף
     { tab: 'general', head: 'faq_cat_notes', ids: ['drag_note_to_schedule', 'quick_note_shopping_list', 'quick_note_apple', 'quick_note_view_full_lists', 'restore_deleted_note', 'note_written_at', 'note_important', 'notes_sticky_look', 'shop_two_buttons', 'shop_cart', 'shop_delivery', 'shop_departments', 'shop_share_qty', 'shop_holidays', 'shop_basics'] },
     { tab: 'general', head: 'faq_cat_bag', ids: ['my_bag', 'bag_examples_list', 'bag_task_today', 'bag_pockets', 'my_notebooks', 'nb_shopping_link', 'what_are_tables', 'table_views', 'table_shopping_link', 'table_column_types', 'table_select_colors'] },
@@ -18883,6 +18910,8 @@ async function toggleRoutineItemCheckin(itemId, btn) {
     if (typeof syncWorkoutFromRoutineCheck === 'function') syncWorkoutFromRoutineCheck(itemId, todayStr, checked);
     // ✓ כאן = ✓ גם ב"היום שלי" (ציר הזמן במסך הבית) ובפינה שגדלה
     loadTodayTasks();
+    // 🎆 הפריט האחרון של היום - זיקוקים
+    if (checked) routineCheckAllDone();
 }
 
 // --- לוח "הרגלים" חודשי של הטאב הפעיל *בלבד* (לא כל הטאבים ביחד), לפי בקשה
@@ -19118,9 +19147,29 @@ function renderRoutineNewMeSyncRow() {
     row.classList.toggle('hidden', !show);
     if (show) document.getElementById('routine-newme-sync-toggle').checked = nmRoutineSyncOn();
 }
+// ⏱️ "בלי שעה" בהתחלה או בסוף של "השגרה שלי" ושל "היום שלי" (לפי בקשה מפורשת, 2026-11-26: "שתהיה בחירה לשים בתחילת
+// או בסוף הרשימה של השגרה", חשוב). נשמר בחשבון יחד עם הגדרות היומן (calPrefs.noTimeLast) - זהה בכל המכשירים
+function routineNoTimeLast() { return typeof calPrefs !== 'undefined' && !!calPrefs.noTimeLast; }
+function renderRoutineNoTimeChips() {
+    const wrap = document.getElementById('board-notime-pos');
+    if (!wrap) return;
+    const last = routineNoTimeLast();
+    wrap.innerHTML = [['start', 'routine_notime_start'], ['end', 'routine_notime_end']].map(([v, key]) => {
+        const on = (v === 'end') === last;
+        return `<button type="button" class="board-hour-chip${on ? ' active' : ''}" aria-pressed="${on}" data-notime="${v}">${escapeHtmlForReport(t(key))}</button>`;
+    }).join('');
+    wrap.querySelectorAll('[data-notime]').forEach(b => b.onclick = async () => {
+        if (typeof calLoadServerPrefs === 'function') await calLoadServerPrefs();
+        if (typeof calSavePrefs === 'function') calSavePrefs({ noTimeLast: b.dataset.notime === 'end' });
+        renderRoutineNoTimeChips();
+        renderDailyBoard();
+        if (typeof loadTodayTasks === 'function') loadTodayTasks();
+    });
+}
 function renderDailyBoardHourSettings() {
     const panel = document.getElementById('daily-board-hours-panel');
     if (!panel || panel.classList.contains('hidden')) return;
+    renderRoutineNoTimeChips();
     renderRoutineNewMeSyncRow();
     if (typeof nmEnsureHomeData === 'function' && typeof hasNewMe !== 'undefined' && hasNewMe) nmEnsureHomeData().then(renderRoutineNewMeSyncRow);
     renderRoutineTabDaysChips();
@@ -19151,6 +19200,7 @@ async function openDailyBoardModal() {
     renderRoutineNudge();
     openModal('modal-daily-board');
     dailyBoardOpenOnToday = true;
+    if (typeof calLoadServerPrefs === 'function') await calLoadServerPrefs();
     await loadRoutineTabs();
     await refreshRoutineNudge();
 }
@@ -19743,7 +19793,7 @@ async function routineReleaseDays(days, exceptId) {
 // --- ✨ שגרה חדשה עם AI (לפי בקשה מפורשת, 2026-10-09: "בהגדרות לו"ז של AI, והוא מוסיף ערכה חדשה לפי
 // בקשתך - שהמשתמש לא יצטרך להוסיף באופן ידני"). מתארים במילים, וה-AI (parse-routine-request) מחזיר טאב -
 // או כמה, כשיש שגרות שונות לימים שונים - עם ימים ופריטים בשעות עגולות. אותה מכסה כמו לו"ז ה-AI ---
-async function requestRoutineFromAI(text, days, btn) {
+async function requestRoutineFromAI(text, days, btn, opts = {}) {
     if (!isPremiumUser && cachedScheduleAiLifetimeUsed >= SCHEDULE_AI_FREE_LIFETIME_LIMIT) {
         showAppToast(t('ai_free_lifetime_limit_toast').replace('{limit}', '5').replace('{feature}', t('feature_name_schedule_ai')), 'error');
         openPremiumUpgradeModal();
@@ -19771,6 +19821,8 @@ async function requestRoutineFromAI(text, days, btn) {
             } else showAppToast(t('routine_ai_limit'), 'error');
             return null;
         }
+        // ה-AI לא מצא פריטים (למשל מילה אחת) - מי שקרא/ה יכול/ה להוסיף את הטקסט עצמו בלי שעה
+        if (opts.allowEmpty && result.error === 'no_items') return [];
         if (!res.ok || !Array.isArray(result.tabs) || !result.tabs.length) {
             // לחשבון המפתחת בלבד: הסיבה האמיתית מהשרת (למשל שגיאה של ספק ה-AI), כדי לדעת מה לתקן
             let why = '';
@@ -19921,14 +19973,17 @@ async function createRoutineWithAI() {
     const text = ta ? ta.value.trim() : '';
     if (!text) { showAppToast(t('routine_ai_empty'), 'error'); if (ta) ta.focus(); return; }
     const name = routineAiName;
-    // השם עוזר ל-AI להבין את ההקשר ("סוף שבוע: ...")
-    const aiTabs = await requestRoutineFromAI(`${name}: ${text}`, null, document.getElementById('routine-ai-create'));
+    // ⏱️ כשה-AI לא מצא בטקסט אף פריט (למשל מילה אחת: "אפליקציה") - מה שנכתב נכנס כפריט "בלי שעה", שורה / פסיק = פריט
+    // (לפי בקשה מפורשת, 2026-11-26: "הוספתי את המילה אפליקציה... וזה לא הוסיף לשגרה כי זה בלי שעה")
+    const plainParts = text.split(/[\n,،、;]+/).map(s => s.trim()).filter(Boolean).slice(0, 12);
+    const aiTabs = await requestRoutineFromAI(`${name}: ${text}`, null, document.getElementById('routine-ai-create'), { allowEmpty: true });
     if (!aiTabs) return;
+    const fallbackTabs = aiTabs.length ? aiTabs : [{ weekdays: [], items: plainParts.map(title => ({ title: title.slice(0, 80), time: null, hour: null })) }];
     const existing = dailyBoardTabs.find(tb => !tb.day_off && tb.name.trim().toLowerCase() === name.toLowerCase());
     // שגרות לימים שונים נכנסות לאותו טאב, וכל פריט מקבל את הימים שלו (בטאב חדש עם שגרה אחת - הימים הם של הטאב)
     const days = ai => (ai.weekdays && ai.weekdays.length && ai.weekdays.length < 7 ? ai.weekdays : null);
-    const perItemDays = !!existing || aiTabs.length > 1;
-    const items = aiTabs.flatMap(ai => (ai.items || []).map(it => ({ ...it, days: perItemDays ? days(ai) : null })));
+    const perItemDays = !!existing || fallbackTabs.length > 1;
+    const items = fallbackTabs.flatMap(ai => (ai.items || []).map(it => ({ ...it, days: perItemDays ? days(ai) : null })));
     if (!items.length) { showAppToast(t('routine_ai_failed'), 'error'); return; }
     let tab = existing;
     let inserted = [];
@@ -23004,7 +23059,7 @@ function renderGoalsTodayStrip(activeGoals) {
         return;
     }
     const doneCount = items.filter(it => it.done).length;
-    if (count) count.textContent = doneCount === items.length ? t('gv_today_all_done') : visionLtr(`${doneCount} / ${items.length}`);
+    if (count) count.innerHTML = doneCount === items.length ? withDrawnHeart(visionEsc(t('gv_today_all_done'))) : visionEsc(visionLtr(`${doneCount} / ${items.length}`));
     // 🔥 להבה שגדלה עם כל צעד של היום, ובוערת במלואה כשכולם נעשו (הבחירה שלה, 2026-11-15: r3 במקום טבעת)
     const head = section.querySelector('.gv-section-head h3');
     let flame = document.getElementById('gv-today-flame');
@@ -23676,7 +23731,7 @@ function buildGoalPath(goal, milestones, prog, opts = {}) {
             const bubble = document.createElement('div');
             bubble.className = 'gv-bubble';
             if (b.label) bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-label">${visionEsc(b.label)}</span>`);
-            bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-text">${visionEsc(b.text)}</span>`);
+            bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-text">${withDrawnHeart(visionEsc(b.text))}</span>`);
             if (b.sub) bubble.insertAdjacentHTML('beforeend', `<span class="gv-bubble-sub">${visionEsc(b.sub)}</span>`);
             if (b.action && !opts.demo) {
                 const btn = document.createElement('button');
@@ -25165,8 +25220,8 @@ async function renderDailyBoard() {
         card.appendChild(inner);
         return card;
     };
-    // "בלי שעה" ראשון - פריטים בלי שעה (מהעוזר או מ"בלי שעה" בחלון הפריט), כמו ב"היום שלי"
-    const bucketOrder = ['anytime', 'morning', 'noon', 'afternoon', 'evening'];
+    // "בלי שעה" - פריטים בלי שעה (מהעוזר או מ"בלי שעה" בחלון הפריט): בהתחלה או בסוף, לפי הבחירה ב-⚙️ (כמו ב"היום שלי")
+    const bucketOrder = routineNoTimeLast() ? ['morning', 'noon', 'afternoon', 'evening', 'anytime'] : ['anytime', 'morning', 'noon', 'afternoon', 'evening'];
     const bucketLabelKeys = { anytime: 'routine_bucket_anytime', morning: 'daily_board_bucket_morning', noon: 'daily_board_bucket_noon', afternoon: 'daily_board_bucket_afternoon', evening: 'daily_board_bucket_evening' };
     const customHours = getDailyBoardCustomHours(activeDailyBoardTabId);
     const activeTab = dailyBoardTabs.find(tb => tb.id === activeDailyBoardTabId);

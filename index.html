@@ -180,7 +180,7 @@
             document.addEventListener('DOMContentLoaded', function () { if (!ok()) retry(); else done(); });
         })();
     </script>
-    <link rel="stylesheet" id="theme-css" href="theme.css?v=671" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
+    <link rel="stylesheet" id="theme-css" href="theme.css?v=672" onload="window.__cssGuard && __cssGuard()" onerror="window.__cssGuard && __cssGuard()">
     <!-- חיבור ל-Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- 🌍 גיבוי: אם השרת הזה איטי או חסום במדינה מסוימת - אותה ספרייה משרת שני -->
@@ -3915,6 +3915,11 @@
                         <div class="daily-board-hours-chips" id="board-tab-days"></div>
                         <p class="daily-board-hours-panel-hint" data-i18n="routine_tab_days_hint">On these days My Routine opens straight on this tab.</p>
                     </div>
+                    <!-- ⏱️ "בלי שעה" בהתחלה או בסוף הרשימה (כל הטאבים וגם "היום שלי") - renderRoutineNoTimeChips -->
+                    <div class="daily-board-hours-settings-group">
+                        <span class="daily-board-hours-settings-group-label" data-i18n="routine_notime_label">No set time</span>
+                        <div class="daily-board-hours-chips" id="board-notime-pos" role="group"></div>
+                    </div>
                     <p class="daily-board-hours-panel-hint" data-i18n="daily_board_hours_settings_hint">These hours apply only to the tab currently selected above.</p>
                     <div class="daily-board-hours-settings-group">
                         <span class="daily-board-hours-settings-group-label" data-i18n="daily_board_bucket_morning">🌅 Morning</span>
@@ -4850,11 +4855,11 @@
     </div>
 
     <!-- כל שפה בקובץ משלה (2026-10-21): המנוע + רק השפה שבשימוש, לפני כל השאר. i18n.js הוא המקור; build-i18n.pl בונה את i18n/ -->
-    <script src="i18n/core.js?v=592"></script>
+    <script src="i18n/core.js?v=593"></script>
     <script>(function () { if (typeof SUPPORTED_LANGUAGES === 'undefined') return; var l = 'en'; try { l = localStorage.getItem('weekwise_lang') || 'en'; } catch (e) {} if (SUPPORTED_LANGUAGES.indexOf(l) < 0) l = 'en'; document.write('<script src="i18n/' + l + '.js?v=' + I18N_V + '"><\/script>'); })();</script>
     <script src="nourish-loader.js?v=15"></script>
-    <script src="app.js?v=696"></script>
-    <script src="calendar-views.js?v=4"></script>
+    <script src="app.js?v=697"></script>
+    <script src="calendar-views.js?v=5"></script>
     <!-- 📅 יומן שלב 2: פרטי האירוע וחזרות -->
     <script src="calendar-details.js?v=2"></script>
     <script src="ai-chat.js?v=10"></script>
@@ -4867,8 +4872,8 @@
     <script src="share-cards.js?v=1"></script>
     <!-- NOT10 Nourish+ (8 קבצים) נטען רק כשצריך - ר' nourish-loader.js (הגרסאות שלהם שם) -->
     <script src="books.js?v=11"></script>
-    <script src="home.js?v=45"></script>
-    <script src="water.js?v=2"></script>
+    <script src="home.js?v=46"></script>
+    <script src="water.js?v=3"></script>
     <script src="shop-depts.js?v=2"></script>
     <script src="shop-holidays.js?v=2"></script>
     <script src="shop.js?v=10"></script>

@@ -8,7 +8,8 @@
 // ---------- הגדרות ----------
 const CAL_PREFS_KEY = 'weekwise_cal_prefs_v1';
 const CAL_VIEWS = ['month', 'week', '3day', 'day', 'year', 'list'];
-const CAL_DEFAULTS = { view: 'month', firstDay: 0, clock: '24', weekNums: false, days: [0, 1, 2, 3, 4, 5, 6], tz2: '', dur: 60, rem: 0, morning: '', evening: '' };
+// noTimeLast: איפה "בלי שעה" ב"השגרה שלי" וב"היום שלי" - בסוף הרשימה (true) או בהתחלה (ברירת המחדל), לפי בקשה מפורשת 2026-11-26
+const CAL_DEFAULTS = { view: 'month', firstDay: 0, clock: '24', weekNums: false, days: [0, 1, 2, 3, 4, 5, 6], tz2: '', dur: 60, rem: 0, morning: '', evening: '', noTimeLast: false };
 const CAL_HOUR_PX = 48;
 const CAL_INTERNAL_SOURCES = '(today_celebrated,daily_focus,daily_focus_dismissed)';
 let calPrefs = calLoadPrefs();
@@ -34,6 +35,7 @@ function calCleanPrefs(p) {
     // ☀️ / 🌙 יומן שלב 3: סיכום בוקר ו"מה מחר" בערב - השעה, או ריק = כבוי (נקרא גם בשרת: send-due-reminders)
     out.morning = /^([01]\d|2[0-3]):[0-5]\d$/.test(out.morning || '') ? out.morning : '';
     out.evening = /^([01]\d|2[0-3]):[0-5]\d$/.test(out.evening || '') ? out.evening : '';
+    out.noTimeLast = !!out.noTimeLast;
     return out;
 }
 function calSavePrefs(patch) {

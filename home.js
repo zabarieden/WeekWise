@@ -457,12 +457,15 @@ function renderMyDayTimeline(container, items, focusItems) {
     }
     const untimed = shown.filter(it => it.minutes === null);
     const timed = shown.filter(it => it.minutes !== null).sort((a, b) => a.minutes - b.minutes);
+    // "בלי שעה" בהתחלה או בסוף - לפי הבחירה ב-⚙️ של "השגרה שלי" (routineNoTimeLast ב-app.js)
+    const untimedLast = typeof routineNoTimeLast === 'function' && routineNoTimeLast();
+    let untimedBox = null;
     if (untimed.length) {
-        const box = document.createElement('div');
-        box.className = 'myday-untimed';
+        untimedBox = document.createElement('div');
+        untimedBox.className = 'myday-untimed' + (untimedLast ? ' is-last' : '');
         // בלי כותרת "בלי שעה" (לפי בקשה מפורשת: "לא צריך לרשום שם כלום") - רק הפריטים
-        untimed.forEach(it => box.appendChild(it.build()));
-        container.appendChild(box);
+        untimed.forEach(it => untimedBox.appendChild(it.build()));
+        if (!untimedLast) container.appendChild(untimedBox);
     }
     if (timed.length) {
         const line = document.createElement('div');
@@ -481,6 +484,7 @@ function renderMyDayTimeline(container, items, focusItems) {
         if (!nowPlaced) line.appendChild(myDayNowMarker(now));
         container.appendChild(line);
     }
+    if (untimedBox && untimedLast) container.appendChild(untimedBox);
 }
 function myDayNowMarker(now) {
     const el = document.createElement('div');
@@ -531,7 +535,7 @@ function renderMyDayBar(items) {
     if (!pick) {
         // רק ארוחות של New Me (בלי משימות) - שורה שקטה במקום "כל הכבוד, סיימת את כל המשימות" (ר' loadTodayTasks)
         const onlyMeals = total > 0 && items.every(it => !it.checkable || it.kind === 'newme');
-        nextEl.innerHTML = `<span class="myday-bar-empty">${myDayEsc(!total ? t('myday_bar_empty') : onlyMeals ? t('myday_meals_all_done') : t('today_tasks_all_done_message'))}</span>`;
+        nextEl.innerHTML = `<span class="myday-bar-empty">${withDrawnHeart(myDayEsc(!total ? t('myday_bar_empty') : onlyMeals ? t('myday_meals_all_done') : t('today_tasks_all_done_message')))}</span>`;
         return;
     }
     const label = t(pick.label === 'now' ? 'myday_now' : pick.label === 'next' ? 'myday_next' : pick.label === 'earlier' ? 'myday_earlier' : 'myday_later');
@@ -720,7 +724,9 @@ function homeFocusDaysTo(dateStr) {
 function homeFocusGoalsHtml() {
     const goals = homeFocusGoals();
     const yearEnd = `${new Date().getFullYear()}-12-31`;
-    const head = `<div class="hf-goals-head"><span>🎯 ${myDayEsc(t('home_focus_goals_title'))} <small>· ${myDayEsc(t('home_focus_days_left').replace('{n}', homeFocusDaysTo(yearEnd)))}</small></span>${goals.length
+    // בלי "עד סוף השנה · עוד N ימים" בכותרת (לפי בקשה מפורשת, 2026-11-26: "עד סוף השנה זה מלחיץ") - רק "המטרות שלי",
+    // בתחתית המסך, ועיפרון עדין
+    const head = `<div class="hf-goals-head"><span>🎯 ${myDayEsc(t('home_focus_goals_title'))}</span>${goals.length
         // ✏️ סמל קטן במקום המילה "החלפה" (לפי בקשה מפורשת, 2026-11-18)
         ? `<button type="button" class="hf-goals-pick hf-goals-edit" onclick="openHomeFocusGoalPicker()" aria-label="${myDayEsc(t('home_focus_goals_change'))}" title="${myDayEsc(t('home_focus_goals_change'))}">${HF_PENCIL}</button>`
         : `<button type="button" class="hf-goals-pick" onclick="openHomeFocusGoalPicker()">${myDayEsc(t('home_focus_goals_choose'))}</button>`}</div>`;
@@ -898,8 +904,10 @@ function renderHomeFocus() {
     homeFocusDeck = [];
     const goalsHtml = homeFocusGoalsHtml();
     // השגרה בפנים, מצומצמת (לפי בקשה מפורשת, 2026-11-17: "לשים גם את השגרה ביותר צמצום")
+    // "בלי שעה" בהתחלה או בסוף - לפי הבחירה ב-⚙️ של "השגרה שלי"
+    const noTimeAt = typeof routineNoTimeLast === 'function' && !routineNoTimeLast() ? -1 : 1e4;
     const items = myDayItems.filter(it => it.checkable || it.kind === 'routine')
-        .slice().sort((x, y) => (x.minutes === null ? 1e4 : x.minutes) - (y.minutes === null ? 1e4 : y.minutes));
+        .slice().sort((x, y) => (x.minutes === null ? noTimeAt : x.minutes) - (y.minutes === null ? noTimeAt : y.minutes));
     const demoBlock = homeFocusDemoOn() && !homeFocusBlocks(items).list.length ? homeFocusDemoBlock() : null;
     const demoHtml = demoBlock ? homeFocusBlockHtml(demoBlock, [], null, true) : '';
     if (!items.length) {
@@ -908,8 +916,8 @@ function renderHomeFocus() {
             const sz = r * 2.6;
             return `<path d="M${x} ${y - sz}Q${x} ${y} ${x + sz} ${y}Q${x} ${y} ${x} ${y + sz}Q${x} ${y} ${x - sz} ${y}Q${x} ${y} ${x} ${y - sz}Z" class="hf-star${gold ? ' is-gold' : ''}" style="animation-delay:${d}s"/>`;
         }).join('');
-        body.innerHTML = demoHtml ? `${goalsHtml}<section class="hf-today"><ul class="hf-list">${demoHtml}</ul></section>`
-            : `${goalsHtml}<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>`;
+        body.innerHTML = demoHtml ? `<section class="hf-today"><ul class="hf-list">${demoHtml}</ul></section>${goalsHtml}`
+            : `<div class="home-focus-rest" role="img" aria-label="${myDayEsc(t('home_focus_empty'))}"><svg viewBox="0 0 240 190" aria-hidden="true">${stars}</svg></div>${goalsHtml}`;
         return;
     }
     const pick = myDayPickNow(myDayItems);
@@ -946,12 +954,12 @@ function renderHomeFocus() {
         if (b) { if (!shown.has(b.key)) { shown.add(b.key); rows += homeFocusBlockHtml(b, items, pick, false); } return; }
         rows += rowHtml(it, i);
     });
-    body.innerHTML = `${goalsHtml}
+    body.innerHTML = `
         <section class="hf-today">
             ${countable.length ? `<div class="hf-sum"><span><b>${myDayEsc(t('home_focus_done_n').replace('{n}', done))}</b> · ${myDayEsc(left ? t('home_focus_left_n').replace('{n}', left) : t('home_focus_all_done'))}</span><span class="hf-pct">${pct}%</span></div>
             <div class="hf-bar" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></div>` : ''}
             <ul class="hf-list">${rows}</ul>
-        </section>`;
+        </section>${goalsHtml}`;
     body.querySelectorAll('.hf-check[data-i]').forEach(btn => { btn.onclick = () => { btn.disabled = true; btn.classList.add('is-ticking'); items[Number(btn.dataset.i)].toggle(true); }; });
     body.querySelectorAll('.hf-undo[data-i]:not([data-hf])').forEach(btn => { btn.onclick = () => { btn.disabled = true; items[Number(btn.dataset.i)].toggle(false); }; });
     // הבלוקים, ההערות וההצעה - לחיצה אחת שמטפלת בכולם (data-hf)
@@ -1474,7 +1482,8 @@ async function refreshHomeWeather(force) {
         });
         const out = await res.json();
         if (!res.ok || !out.sky) throw new Error(out.error || 'weather');
-        const next = { sky: out.sky, day: !!out.day, at: Date.now() };
+        // temp / tmax (°C) - ל"יום חם" ביעד המים המומלץ (water.js)
+        const next = { sky: out.sky, day: !!out.day, at: Date.now(), ...(Number.isFinite(out.temp) ? { temp: out.temp } : {}), ...(Number.isFinite(out.tmax) ? { tmax: out.tmax } : {}) };
         try { localStorage.setItem(HOME_WEATHER_CACHE_KEY, JSON.stringify(next)); } catch {}
         applyHomeWeather(next);
     } catch (e) {

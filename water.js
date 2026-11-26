@@ -291,7 +291,9 @@ async function waterSuggest() {
         // יום חם - כשמזג האוויר בבית יודע את הטמפרטורה (cache.temp)
         let cache = null;
         try { cache = JSON.parse(localStorage.getItem('weekwise_weather_cache') || 'null'); } catch {}
-        if (cache && Number(cache.temp) >= 28 && Date.now() - (cache.at || 0) < 6 * 3600000) { out.ml += 500; out.why.push('hot'); }
+        // הכי חם ב-12 השעות הקרובות (tmax), ואם אין - עכשיו (temp). 28° ומעלה = +500 מ״ל
+        const hot = cache && Number.isFinite(Number(cache.tmax ?? cache.temp)) ? Number(cache.tmax ?? cache.temp) : null;
+        if (hot !== null && hot >= 28 && Date.now() - (cache.at || 0) < 6 * 3600000) { out.ml += 500; out.why.push('hot'); }
         out.ml = Math.min(6000, Math.max(1500, out.ml));
     } catch {}
     waterSuggestCache = out;

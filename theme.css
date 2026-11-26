@@ -12618,8 +12618,12 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 /* 💎 NOT10 Nourish+ באותו גודל כמו ◎ ו-☰ (לפי בקשה מפורשת, 2026-11-25: "הוא קטן ולא באותו הגודל של הפוקוס והפתקים") */
 #btn-newme-shortcut .nm-icon { width: 25px; height: 25px; }
 /* ✏️ במקום המילה "החלפה" במטרות של הפוקוס (2026-11-18) */
-.hf-goals-pick.hf-goals-edit { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: color-mix(in srgb, var(--focus-neon) 14%, transparent); }
-.hf-goals-edit svg { width: 16px; height: 16px; }
+/* ✏️ עדין (לפי בקשה מפורשת, 2026-11-26: "שהעריכה תהיה יותר עדינה"): בלי עיגול מלא, קטן ושקוף למחצה - מתחזק בנגיעה */
+.hf-goals-pick.hf-goals-edit { width: 30px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 50%; background: none; opacity: .55; transition: opacity .2s ease, background .2s ease; }
+.hf-goals-pick.hf-goals-edit:hover, .hf-goals-pick.hf-goals-edit:focus-visible { opacity: 1; background: color-mix(in srgb, var(--focus-neon) 12%, transparent); }
+.hf-goals-edit svg { width: 14px; height: 14px; }
+/* המטרות בתחתית הפוקוס - קו דק מעליהן, מרווח מהרשימה */
+#home-focus-body .hf-today + .hf-goals, #home-focus-body .home-focus-rest + .hf-goals { margin-top: 18px; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--text-secondary) 18%, transparent); }
 
 /* 📅 "לראות ביומן" מהעוזר: היום שנפתח מהבהב לרגע בצבע הערכה (2026-11-24) */
 #monthly-calendar-day-detail.is-flash { border-radius: 16px; animation: calDayFlash 1.8s ease; }
@@ -13041,6 +13045,20 @@ html[dir="rtl"] .chg-icon-btn[data-act="back"] svg { transform: scaleX(-1); }
 .hamburger-drawer-item.menu-pop { animation: menuPop .26s ease both; animation-delay: calc(var(--n, 0) * 30ms); }
 @keyframes menuPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .hamburger-drawer-item.menu-pop { animation: none; } .menu-fold-head::after { transition: none; } }
+/* 💜 → לב סגול מצויר, ריק מבפנים (withDrawnHeart ב-app.js) */
+.ic-heart { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -0.16em; color: #a78bfa; filter: drop-shadow(0 0 4px rgba(167, 139, 250, .55)); flex-shrink: 0; }
+html.light-mode .ic-heart { color: #8b5cf6; filter: none; }
+/* 🎆 "כל השגרה של היום נעשתה" בראש "השגרה שלי" (routineCheckAllDone) */
+.routine-done-banner {
+    display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 10px; padding: 10px 14px; border-radius: 14px;
+    font-weight: 700; font-size: .92rem; text-align: center; color: var(--text-primary);
+    background: color-mix(in srgb, var(--accent-purple, #a78bfa) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent-purple, #a78bfa) 40%, transparent);
+    animation: routineDoneIn .45s cubic-bezier(.2, .9, .3, 1.3) both; transition: opacity .5s ease, transform .5s ease;
+}
+.routine-done-banner.is-leaving { opacity: 0; transform: translateY(-6px); }
+@keyframes routineDoneIn { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .routine-done-banner { animation: none; } }
 /* 🟣 המשקולת הסגולה של "שגרת אימונים" (במקום האיש הרץ) */
 .ic-dumbbell { display: block; width: 1.2em; height: 1.2em; }
 .hamburger-drawer-item-icon .ic-dumbbell { width: 1.3rem; height: 1.3rem; }

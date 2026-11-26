@@ -7,7 +7,8 @@
 // User-Agent, as their terms require. The browser sends coordinates already rounded to 2
 // decimals (about 1 km); nothing is stored, and MET Norway never sees the user's IP.
 //
-// Body: { lat, lon }  →  { sky: "clear" | "partly" | "clouds" | "rain" | "snow" | "storm" | "fog", day, symbol }
+// Body: { lat, lon }  →  { sky: "clear" | "partly" | "clouds" | "rain" | "snow" | "storm" | "fog", day, symbol, temp, tmax }
+// (temp = °C now, tmax = the highest °C in the next 12 hours - used for the water tracker's "hot day")
 //
 // Deploy: supabase functions deploy weather   (JWT verified by the gateway - logged-in users only)
 
@@ -63,8 +64,19 @@ Deno.serve(async (req) => {
         }) || series[0];
         const symbol: string = step?.data?.next_1_hours?.summary?.symbol_code || step?.data?.next_6_hours?.summary?.symbol_code || "";
         if (!symbol) return jsonResponse({ error: "no_symbol" }, 502);
+        // 💧 the temperature now and the highest one in the next 12 hours (°C, whole degrees) - for the
+        // "hot day" bump of the suggested water goal (water.js); nothing about it is stored on the server
+        const tempOf = (p: any) => Number(p?.data?.instant?.details?.air_temperature);
+        const temp = tempOf(step);
+        const until = now + 12 * 3600 * 1000;
+        const ahead = series.filter((p) => { const at = Date.parse(p.time); return at >= now - 3600 * 1000 && at <= until; }).map(tempOf).filter(Number.isFinite);
+        const tmax = ahead.length ? Math.max(...ahead) : temp;
         return jsonResponse(
-            { sky: skyFromSymbol(symbol), day: !/_night$/.test(symbol), symbol },
+            {
+                sky: skyFromSymbol(symbol), day: !/_night$/.test(symbol), symbol,
+                ...(Number.isFinite(temp) ? { temp: Math.round(temp) } : {}),
+                ...(Number.isFinite(tmax) ? { tmax: Math.round(tmax) } : {}),
+            },
             200,
             { "Cache-Control": "private, max-age=1800" },
         );
