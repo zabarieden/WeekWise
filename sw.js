@@ -1,7 +1,31 @@
 // Service Worker: מאפשר קבלת Web Push והצגת התראות גם כשהאפליקציה סגורה/ברקע.
-// לא עושה caching של האתר - התפקיד היחיד כאן הוא push + notificationclick.
-self.addEventListener('install', () => { self.skipWaiting(); });
-self.addEventListener('activate', (event) => { event.waitUntil(self.clients.claim()); });
+// לא עושה caching של האתר עצמו - רק דף אחד ל"אין אינטרנט" (ר' למטה), push ו-notificationclick.
+// 📴 בלי חיבור (בחירתה 2026-11-26, מסך 8 - "הספר נח"): כשפותחים את האפליקציה ואין רשת, במקום דף השגיאה של הדפדפן מוצג
+// offline.html - הספר שלנו נושם, שלוש נקודות זהב, וכפתור ↻. שמור במטמון משלו; כל שאר הבקשות הולכות לרשת כרגיל
+const OFFLINE_CACHE = 'not10-offline-v1';
+const OFFLINE_FILES = ['offline.html', 'splash-book.webp?v=3'];
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+    event.waitUntil(caches.open(OFFLINE_CACHE).then((c) => c.addAll(OFFLINE_FILES)).catch(() => { /* בפעם הבאה */ }));
+});
+self.addEventListener('activate', (event) => {
+    event.waitUntil(Promise.all([
+        self.clients.claim(),
+        caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith('not10-offline-') && k !== OFFLINE_CACHE).map((k) => caches.delete(k)))),
+    ]));
+});
+self.addEventListener('fetch', (event) => {
+    const req = event.request;
+    // פתיחה של דף (ניווט): אם הרשת נכשלה - הדף של "אין אינטרנט"
+    if (req.mode === 'navigate') {
+        event.respondWith(fetch(req).catch(() => caches.match('offline.html', { cacheName: OFFLINE_CACHE }).then((r) => r || Response.error())));
+        return;
+    }
+    // תמונת הספר (במסך הפתיחה, במסך ↻ ובדף "אין אינטרנט"): מהרשת, ובלי רשת - מהמטמון. כל שאר הבקשות - רגיל
+    if (req.method === 'GET' && /\/splash-book\.webp(\?|$)/.test(req.url)) {
+        event.respondWith(fetch(req).catch(() => caches.match('splash-book.webp?v=3', { cacheName: OFFLINE_CACHE }).then((r) => r || Response.error())));
+    }
+});
 
 self.addEventListener('push', (event) => {
     let payload = { title: 'NOT10.ai', body: '' };

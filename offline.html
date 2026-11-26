@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#cfa77c">
+<title>NOT10.ai</title>
+<!-- 📴 אין אינטרנט (בחירתה 2026-11-26: מסך 8 - "הספר נח"): sw.js מגיש את הדף הזה כשפותחים את האפליקציה בלי חיבור.
+     בלי מילים - עובד בכל שפה. ברגע שהחיבור חוזר האפליקציה נטענת לבד; ↻ מנסה מיד -->
+<style>
+    html, body { margin: 0; height: 100%; }
+    body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; background: radial-gradient(ellipse 80% 58% at 50% 44%, #f8ecd9 0%, #e8cfac 46%, #cfa77c 100%); font: 700 16px/1 system-ui, sans-serif; overflow: hidden; }
+    .book { width: min(56vw, 40vh, 300px); animation: breathe 4s ease-in-out infinite; }
+    .book img { display: block; width: 100%; height: auto; filter: drop-shadow(0 16px 18px rgba(92, 52, 20, .33)); }
+    .dots { display: flex; gap: 12px; }
+    .dots i { width: 11px; height: 11px; border-radius: 50%; background: #b8730f; animation: dot 1.5s ease-in-out infinite; }
+    .dots i:nth-child(2) { animation-delay: .25s; } .dots i:nth-child(3) { animation-delay: .5s; }
+    button { width: 64px; height: 64px; border: none; border-radius: 50%; background: #b8730f; color: #fffaf0; font: 700 30px/1 system-ui, sans-serif; cursor: pointer; box-shadow: 0 8px 20px rgba(92, 52, 20, .3); }
+    button:focus-visible { outline: 3px solid #ffe4a3; outline-offset: 3px; }
+    @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(.96); } }
+    @keyframes dot { 0%, 100% { opacity: .25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-6px); } }
+    @media (prefers-reduced-motion: reduce) { .book, .dots i { animation: none; } .dots i { opacity: .7; } }
+</style>
+</head>
+<body>
+    <div class="book"><img src="splash-book.webp?v=3" alt=""></div>
+    <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <button type="button" aria-label="↻" onclick="location.reload()">↻</button>
+    <script>
+        // החיבור חזר - חוזרים לאפליקציה לבד (גם בבדיקה כל כמה שניות, כי לא כל טלפון מודיע על "online")
+        function back() { location.reload(); }
+        window.addEventListener('online', back);
+        setInterval(function () {
+            fetch('index.html?ping=' + Date.now(), { method: 'HEAD', cache: 'no-store' }).then(function (r) { if (r.ok) back(); }).catch(function () {});
+        }, 6000);
+    </script>
+</body>
+</html>
