@@ -55,17 +55,24 @@ function reminderBody(row: any, forPatch = false, appOrigin = false) {
 // כי PATCH ממזג אובייקטים מקוננים ואירוע שעבר משעה ל"כל היום" היה נשאר עם שניהם
 function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false, appOrigin = false) {
     const body: any = { summary: row.event_title || "(No title)" };
-    if (row.event_time) {
+    // יומן שלב 2: אירוע של כמה ימים (end_date) - הסיום ביום האחרון שלו
+    const multiEnd = row.end_date && row.end_date > row.event_date ? row.end_date : null;
+    if (row.event_time && !row.all_day) {
         // פגישה עם שעת סיום (אחרי ההתחלה) - הסיום האמיתי; אחרת שעה אחת כברירת מחדל
-        const end = row.end_time && row.end_time > row.event_time ? { date: row.event_date, time: row.end_time } : addHour(row.event_date, row.event_time);
+        const end = multiEnd ? { date: multiEnd, time: row.end_time || row.event_time }
+            : row.end_time && row.end_time > row.event_time ? { date: row.event_date, time: row.end_time } : addHour(row.event_date, row.event_time);
         body.start = { dateTime: `${row.event_date}T${row.event_time}:00`, timeZone };
         body.end = { dateTime: `${end.date}T${end.time}:00`, timeZone };
         if (forPatch) { body.start.date = null; body.end.date = null; }
     } else {
         body.start = { date: row.event_date };
-        body.end = { date: addDays(row.event_date, 1) };
+        body.end = { date: addDays(multiEnd || row.event_date, 1) };
         if (forPatch) { body.start.dateTime = null; body.start.timeZone = null; body.end.dateTime = null; body.end.timeZone = null; }
     }
+    // פנוי / עסוק: "פנוי" נשלח לגוגל כ-transparent. חזרה ל"עסוק" נשלחת רק לאירוע שנוצר באפליקציה
+    // (באירוע שנוצר בגוגל לא דורסים את מה שנבחר שם)
+    if (row.is_free) body.transparency = "transparent";
+    else if (forPatch && appOrigin) body.transparency = "opaque";
     const reminders = reminderBody(row, forPatch, appOrigin);
     if (reminders) body.reminders = reminders;
     // פגישה (kind='meeting'): המקום/הקישור והפרטים (עם מי + הערות) נשלחים לגוגל. באירוע שאינו
@@ -76,6 +83,9 @@ function buildOneTimeEventBody(row: any, timeZone: string, forPatch = false, app
         if (row.meeting_with) lines.push(`👤 ${row.meeting_with}`);
         if (row.notes) lines.push(row.notes);
         body.description = lines.join("\n\n");
+    } else if (row.kind === "event" && row.location) {
+        // יומן שלב 2: גם לאירוע יש מקום - נשלח רק כשמולא (לא מוחקים מיקום שנכתב בגוגל)
+        body.location = row.location;
     }
     return body;
 }
@@ -105,8 +115,40 @@ function inferRRule(sortedDates: string[]): string | null {
     const sameDom = parsed.every((p) => p.d === parsed[0].d);
     const monthNums = parsed.map((p) => p.y * 12 + p.m);
     const monthDiffs = monthNums.slice(1).map((v, i) => v - monthNums[i]);
-    if (sameDom && monthDiffs.every((d) => d === monthDiffs[0] && d > 0)) {
+    const evenMonths = monthDiffs.every((d) => d === monthDiffs[0] && d > 0);
+    if (sameDom && evenMonths) {
         return `FREQ=MONTHLY;INTERVAL=${monthDiffs[0]};COUNT=${count}`;
+    }
+    // יומן שלב 2 (calendar-details.js): "יום ג׳ השני בחודש" / "יום ב׳ האחרון בחודש"
+    const DAY_CODES = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+    const wdOfNum = (n: number) => new Date(n * 86400000).getUTCDay();
+    const wds = dayNums.map(wdOfNum);
+    if (evenMonths && wds.every((w) => w === wds[0])) {
+        const nths = parsed.map((p) => Math.ceil(p.d / 7));
+        if (nths.every((n) => n === nths[0]) && nths[0] <= 4) return `FREQ=MONTHLY;INTERVAL=${monthDiffs[0]};BYDAY=${nths[0]}${DAY_CODES[wds[0]]};COUNT=${count}`;
+        const dim = (p: { y: number; m: number }) => new Date(Date.UTC(p.y, p.m, 0)).getUTCDate();
+        if (parsed.every((p) => p.d + 7 > dim(p))) return `FREQ=MONTHLY;INTERVAL=${monthDiffs[0]};BYDAY=-1${DAY_CODES[wds[0]]};COUNT=${count}`;
+    }
+    // כמה ימים בשבוע בסדרה אחת (למשל א׳, ג׳ ו-ה׳) - בודקים שהכלל מייצר בדיוק את אותם תאריכים
+    const daySet = [...new Set(wds)];
+    if (daySet.length > 1) {
+        for (const wkst of [1, 0]) {
+            for (let n = 1; n <= 8; n++) {
+                const first = dayNums[0];
+                const weekStart = first - ((wdOfNum(first) - wkst + 7) % 7);
+                const out: number[] = [];
+                for (let w = 0; out.length < count && w < 3000; w += n) {
+                    for (let i = 0; i < 7 && out.length < count; i++) {
+                        const dn = weekStart + w * 7 + i;
+                        if (dn >= first && daySet.includes(wdOfNum(dn))) out.push(dn);
+                    }
+                }
+                if (out.length === count && out.every((v, i) => v === dayNums[i])) {
+                    const byDay = daySet.sort((a, b) => ((a - wkst + 7) % 7) - ((b - wkst + 7) % 7)).map((d) => DAY_CODES[d]).join(",");
+                    return `FREQ=WEEKLY;INTERVAL=${n};BYDAY=${byDay};WKST=${DAY_CODES[wkst]};COUNT=${count}`;
+                }
+            }
+        }
     }
     return null;
 }
@@ -146,7 +188,7 @@ Deno.serve(async () => {
 
     const { data: pending, error: pendingErr } = await supabase
         .from("calendar_sync_outbox")
-        .select("id, calendar_event_id, user_id, action, google_event_id, google_calendar_id, recurrence_group_id, attempts, created_at, is_series_title_edit")
+        .select("id, calendar_event_id, user_id, action, google_event_id, google_calendar_id, recurrence_group_id, attempts, created_at, is_series_title_edit, instance_date, instance_time")
         .is("processed_at", null)
         .order("created_at", { ascending: true })
         .limit(200);
@@ -168,7 +210,7 @@ Deno.serve(async () => {
         byUser.get(row.user_id)!.push(row);
     }
     for (const [, userRows] of byUser) {
-        const deleteRows = userRows.filter((r) => r.action === "delete");
+        const deleteRows = userRows.filter((r) => r.action === "delete" || r.action === "delete_instance");
         if (deleteRows.length <= DELETE_BURST_THRESHOLD) continue;
         const cutoff = Date.now() - DELETE_HOLD_MS;
         const tooFresh = new Set(deleteRows.filter((r) => new Date(r.created_at).getTime() > cutoff).map((r) => r.id));
@@ -238,10 +280,42 @@ Deno.serve(async () => {
         // מחיקות - כל שורה בנפרד. הטריגר כבר דואג שסדרה חוזרת רק תגיע לכאן
         // כשהמופע האחרון שלה נמחק (ר' הערת הטריגר), אז google_event_id כאן
         // תמיד באמת אמור להימחק לגמרי, לא רק מופע בודד מתוך סדרה חיה
-        const deletes = rows.filter((r) => r.action === "delete");
+        // 'delete_instance' (יומן שלב 2): מופע אחד מתוך סדרה שעוד חיה, או "זה וכל הבאים" -
+        // נמחק בגוגל רק המופע הזה, לפי העוגן (תאריך+שעה מקוריים). אם אף שורה באפליקציה כבר
+        // לא חולקת את המזהה - זה אירוע עצמאי (סדרה ש"פורקה") ונמחק ישירות
+        const deletes = rows.filter((r) => r.action === "delete" || r.action === "delete_instance");
+        const instancesCache = new Map<string, any[]>();
         for (const delRow of deletes) {
             try {
-                if (delRow.google_event_id) {
+                if (delRow.action === "delete_instance" && delRow.google_event_id) {
+                    const eventsBase = eventsBaseFor(delRow.google_calendar_id || primaryCalId);
+                    const { data: still } = await supabase.from("calendar_events").select("id")
+                        .eq("user_id", userId).eq("google_event_id", delRow.google_event_id).limit(1);
+                    let targetId: string | null = delRow.google_event_id;
+                    if (still && still.length) {
+                        const key = `${eventsBase}|${delRow.google_event_id}`;
+                        if (!instancesCache.has(key)) {
+                            try { instancesCache.set(key, await fetchAllInstances(eventsBase, delRow.google_event_id, accessToken)); }
+                            catch (e) { if (/failed: (404|410)/.test(String(e))) instancesCache.set(key, []); else throw e; }
+                        }
+                        const anchorDate = delRow.instance_date;
+                        const anchorTime = delRow.instance_time ? String(delRow.instance_time).slice(0, 5) : null;
+                        const match = instancesCache.get(key)!.find((inst: any) => {
+                            const ost = inst.originalStartTime;
+                            if (!ost) return false;
+                            if (ost.date) return ost.date === anchorDate;
+                            if (ost.dateTime) return ost.dateTime.slice(0, 10) === anchorDate && (!anchorTime || ost.dateTime.slice(11, 16) === anchorTime);
+                            return false;
+                        });
+                        targetId = match ? match.id : null;
+                    }
+                    if (targetId) {
+                        const res = await fetch(`${eventsBase}/${encodeURIComponent(targetId)}`, {
+                            method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` },
+                        });
+                        if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`instance delete failed: ${res.status} ${await res.text()}`);
+                    }
+                } else if (delRow.google_event_id) {
                     const eventsBase = eventsBaseFor(delRow.google_calendar_id || primaryCalId);
                     const res = await fetch(`${eventsBase}/${encodeURIComponent(delRow.google_event_id)}`, {
                         method: "DELETE", headers: { Authorization: `Bearer ${accessToken}` },
@@ -258,7 +332,7 @@ Deno.serve(async () => {
             }
         }
 
-        const upserts = rows.filter((r) => r.action !== "delete");
+        const upserts = rows.filter((r) => r.action !== "delete" && r.action !== "delete_instance");
         const oneTimeUpserts = upserts.filter((r) => !r.recurrence_group_id);
         const recurringUpserts = upserts.filter((r) => r.recurrence_group_id);
 
@@ -271,7 +345,7 @@ Deno.serve(async () => {
             const rowIds = rowsForEvent.map((r) => r.id);
             try {
                 const { data: current } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_group_id, kind, end_time, meeting_with, location, notes")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_group_id, kind, end_time, meeting_with, location, notes, all_day, end_date, is_free")
                     .eq("id", eventId).maybeSingle();
 
                 if (!current || !SYNCED_SOURCES.includes(current.source) || current.recurrence_group_id) {
@@ -285,7 +359,8 @@ Deno.serve(async () => {
                 const timeZone = await getTZ(targetCalId);
                 // נוצר באפליקציה = יש לו שורת 'insert' בתור (הטריגר לא מכניס כזו לאירוע שיובא מגוגל)
                 let appOrigin = false;
-                if (current.google_event_id && !current.event_time) {
+                // (גם לאירוע עם שעה - "עסוק" אחרי "פנוי" נשלח רק לאירוע שנוצר באפליקציה)
+                if (current.google_event_id) {
                     const { data: insertRows } = await supabase.from("calendar_sync_outbox")
                         .select("id").eq("calendar_event_id", eventId).eq("action", "insert").limit(1);
                     appOrigin = !!(insertRows && insertRows.length);
@@ -329,7 +404,7 @@ Deno.serve(async () => {
             const rowIds = rowsForGroup.map((r) => r.id);
             try {
                 const { data: siblings } = await supabase.from("calendar_events")
-                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_original_date, recurrence_original_time, kind, end_time, meeting_with, location, notes")
+                    .select("id, event_title, event_date, event_time, reminder_minutes, google_event_id, google_calendar_id, source, recurrence_original_date, recurrence_original_time, kind, end_time, meeting_with, location, notes, all_day, end_date, is_free")
                     .eq("recurrence_group_id", groupId).eq("source", "calendar").order("event_date", { ascending: true });
 
                 if (!siblings || siblings.length === 0) {
@@ -342,8 +417,12 @@ Deno.serve(async () => {
                 const alreadySynced = siblings.filter((s) => s.google_event_id);
 
                 if (alreadySynced.length > 0) {
-                    const masterId = alreadySynced[0].google_event_id;
-                    const seriesCalId = alreadySynced[0].google_calendar_id || primaryCalId;
+                    // האב = המזהה שרוב המופעים חולקים (לא בהכרח של הראשון: מופע ששוחזר ב"ביטול"
+                    // אחרי מחיקה נשלח לגוגל כאירוע נפרד עם מזהה משלו)
+                    const idCounts = new Map<string, number>();
+                    for (const s of alreadySynced) idCounts.set(s.google_event_id, (idCounts.get(s.google_event_id) || 0) + 1);
+                    const masterId = [...idCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+                    const seriesCalId = (alreadySynced.find((s) => s.google_event_id === masterId) || alreadySynced[0]).google_calendar_id || primaryCalId;
                     const eventsBase = eventsBaseFor(seriesCalId);
                     const timeZone = await getTZ(seriesCalId);
                     // מזהים עריכת-כותרת-לכל-הסדרה לפי הדגל is_series_title_edit
@@ -359,6 +438,49 @@ Deno.serve(async () => {
                     const titleEditRows = rowsForGroup.filter((r) => r.is_series_title_edit);
                     const occurrenceEditRows = rowsForGroup.filter((r) => !r.is_series_title_edit);
 
+                    // מופע שמתנהל בגוגל כאירוע עצמאי (מזהה משלו): מתעדכן ישירות לפי המזהה שלו.
+                    // מופע בלי מזהה (שוחזר ב"ביטול" אחרי מחיקה) - נשלח לגוגל כאירוע נפרד
+                    const patchStandalone = async (s: any) => {
+                        const body = buildOneTimeEventBody(s, timeZone, true, true);
+                        const res = await fetch(`${eventsBaseFor(s.google_calendar_id || primaryCalId)}/${encodeURIComponent(s.google_event_id)}`, {
+                            method: "PATCH", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(body),
+                        });
+                        if (!res.ok && res.status !== 404 && res.status !== 410) throw new Error(`standalone occurrence update failed: ${res.status} ${await res.text()}`);
+                        if (res.ok) {
+                            const ev = await res.json();
+                            await supabase.from("calendar_events").update({
+                                google_etag: ev.etag || null, google_updated: ev.updated || null, google_synced_at: nowIso(),
+                            }).eq("id", s.id);
+                        }
+                    };
+                    const pushRestored = async (s: any) => {
+                        const res = await fetch(eventsBase, {
+                            method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify(buildOneTimeEventBody(s, timeZone)),
+                        });
+                        if (!res.ok) throw new Error(`restored occurrence push failed: ${res.status} ${await res.text()}`);
+                        const ev = await res.json();
+                        await supabase.from("calendar_events").update({
+                            google_event_id: ev.id, google_calendar_id: seriesCalId, google_etag: ev.etag || null, google_updated: ev.updated || null,
+                            google_synced_at: nowIso(),
+                        }).eq("id", s.id);
+                    };
+
+                    // סדרה ש"פורקה" (לא נמצא לה כלל-חזרה - כל מופע נשלח כאירוע נפרד עם מזהה משלו):
+                    // אין בגוגל אב ומופעים, אז כל שורה שנערכה מתעדכנת ישירות לפי המזהה שלה.
+                    // בלי זה עריכה של מופע בסדרה כזו לא הגיעה לגוגל בכלל
+                    const flattened = alreadySynced.length > 1 && idCounts.size === alreadySynced.length;
+                    if (flattened) {
+                        const touched = new Set(rowsForGroup.map((r) => r.calendar_event_id));
+                        const targets = titleEditRows.length ? siblings : siblings.filter((s) => touched.has(s.id));
+                        for (const s of targets) {
+                            if (s.google_event_id) await patchStandalone(s);
+                            else await pushRestored(s);
+                        }
+                        await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", rowIds);
+                        processedCount += rowIds.length;
+                        continue;
+                    }
+
                     // PATCH ולא PUT בכוונה - כדי לא לדרוס/למחוק בטעות את שדה
                     // ה-recurrence הקיים על אירוע-האב בגוגל, שולחים רק את מה
                     // שבאמת השתנה
@@ -373,8 +495,10 @@ Deno.serve(async () => {
                             const ev = await res.json();
                             await supabase.from("calendar_events").update({
                                 google_etag: ev.etag || null, google_updated: ev.updated || null, google_synced_at: nowIso(),
-                            }).eq("recurrence_group_id", groupId);
+                            }).eq("recurrence_group_id", groupId).eq("google_event_id", masterId);
                         }
+                        // מופעים עצמאיים של הסדרה (ששוחזרו) - גם הם מקבלים את הכותרת החדשה
+                        for (const s of alreadySynced.filter((x) => x.google_event_id !== masterId)) await patchStandalone(s);
                         await supabase.from("calendar_sync_outbox").update({ processed_at: nowIso() }).in("id", titleEditRows.map((r) => r.id));
                         processedCount += titleEditRows.length;
                     }
@@ -391,6 +515,8 @@ Deno.serve(async () => {
                         const occurrenceTouchedSiblings = siblings.filter((s) => occurrenceIds.has(s.id));
                         const instances = await fetchAllInstances(eventsBase, masterId, accessToken);
                         for (const s of occurrenceTouchedSiblings) {
+                            if (!s.google_event_id) { await pushRestored(s); continue; }
+                            if (s.google_event_id !== masterId) { await patchStandalone(s); continue; }
                             const anchorDate = s.recurrence_original_date || s.event_date;
                             const anchorTime = s.recurrence_original_time || s.event_time;
                             const match = instances.find((inst: any) => {

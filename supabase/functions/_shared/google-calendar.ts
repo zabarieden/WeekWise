@@ -157,12 +157,29 @@ function mapGoogleEventToRow(userId: string, username: string | null, calendarId
     // אירוע יום-שלם (all-day) מגיע עם date בלבד (לא dateTime) - אין שעה
     const startDate = ev.start?.date || (ev.start?.dateTime ? ev.start.dateTime.slice(0, 10) : null);
     const startTime = ev.start?.dateTime ? ev.start.dateTime.slice(11, 16) : null;
+    // יומן שלב 2: אירוע של כמה ימים. ביום-שלם גוגל שולחת את יום הסיום "לא כולל" (היום שאחרי)
+    let endDate: string | null = null;
+    if (startDate && ev.end?.date && !ev.start?.dateTime) {
+        const [y, m, d] = ev.end.date.split("-").map(Number);
+        const last = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+        if (last > startDate) endDate = last;
+    } else if (startDate && ev.end?.dateTime) {
+        const endDay = ev.end.dateTime.slice(0, 10);
+        const endsAtMidnight = ev.end.dateTime.slice(11, 16) === "00:00";
+        const [y, m, d] = endDay.split("-").map(Number);
+        const dayBefore = new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
+        const realEnd = endsAtMidnight ? dayBefore : endDay;
+        if (realEnd > startDate) endDate = realEnd;
+    }
     return {
         user_id: userId,
         username,
         event_title: ev.summary || "(No title)",
         event_date: startDate,
         event_time: startTime,
+        end_date: endDate,
+        // "פנוי" בגוגל (transparent) = "פנוי" באפליקציה - לא נחשב חפיפה
+        is_free: ev.transparency === "transparent",
         source: "calendar",
         recurrence_group_id: null,
         google_event_id: ev.id,

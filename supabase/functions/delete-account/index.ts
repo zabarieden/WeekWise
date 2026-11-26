@@ -50,7 +50,7 @@ const USER_SCOPED_TABLES = [
 ];
 
 // תמונות שהמשתמש/ת העלה/תה - כולן בתיקייה ששמה מזהה המשתמש/ת
-const USER_PHOTO_BUCKETS = ["new-me-photos", "sport-photos", "receipt-photos", "recipe-photos", "goal-vision-photos"];
+const USER_PHOTO_BUCKETS = ["new-me-photos", "sport-photos", "receipt-photos", "recipe-photos", "goal-vision-photos", "calendar-files"];
 
 // ניתוק יומן גוגל לפני מחיקת הנתונים: מבטלים את ההרשאה אצל גוגל, עוצרים את ערוצי העדכונים
 // ומוחקים את החיבור. חייב לקרות לפני מחיקת האירועים - אחרת מחיקת האירועים מהאפליקציה
